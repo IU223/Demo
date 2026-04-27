@@ -1,0 +1,53 @@
+/* 让整个登录区域撑满屏幕并居中 */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f0f2f5;
+  /* 经典的 Ant Design 浅灰背景色 */
+}
+
+/* 卡片样式，限制最大宽度 */
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.login-form {
+  margin-top: 10px;
+}
+
+.login-form-margin {
+  margin-bottom: 24px;
+}
+
+/* 忘记密码靠右对齐 */
+.text-right {
+  text-align: right;
+}
+
+/* 登录按钮撑满整行 */
+.login-form-button {
+  width: 100%;
+  height: 40px;
+  font-size: 16px;
+}
+
+/* 小眼睛图标鼠标手势 */
+.password-icon {
+  cursor: pointer;
+  color: #888;
+}
+
+.password-icon:hover {
+  color: #1890ff;
+}
+
+/* 注册链接居中 */
+.register-link {
+  text-align: center;
+  margin-top: 16px;
+}

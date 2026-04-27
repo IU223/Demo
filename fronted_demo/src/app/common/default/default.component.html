@@ -1,0 +1,57 @@
+<nz-layout class="app-layout">
+  <!-- 侧边栏 -->
+  <nz-sider class="menu-sidebar" nzCollapsible nzWidth="256px" nzBreakpoint="md" [(nzCollapsed)]="isCollapsed"
+    [nzTrigger]="null">
+    <div class="sidebar-logo">
+      <a href="https://ng.ant.design/" target="_blank">
+        <img src="https://ng.ant.design/assets/img/logo.svg" alt="logo">
+        <h1>Ant Design Of Angular</h1>
+      </a>
+    </div>
+
+    <!-- 导航菜单 -->
+    <ul nz-menu nzTheme="dark" nzMode="inline" [nzInlineCollapsed]="isCollapsed">
+
+      <!-- 1. 首页 -->
+      <li nz-menu-item [nzSelected]="activeMenu === 'home'" (click)="selectMenu('home')">
+        <a routerLink="/default/welcome">
+          <span nz-icon nzType="home"></span>
+          <span>首页</span>
+        </a>
+      </li>
+
+      <!-- 2. 报表 -->
+      <li nz-menu-item [nzSelected]="activeMenu === 'reports'" (click)="selectMenu('reports')">
+        <a routerLink="/default/report">
+          <span nz-icon nzType="table"></span>
+          <span>报表</span>
+        </a>
+      </li>
+
+      <!-- 3. 权限 -->
+      <li nz-menu-item [nzSelected]="activeMenu === 'permissions'" (click)="selectMenu('permissions')">
+        <a routerLink="/default/permissions">
+          <span nz-icon nzType="apartment"></span>
+          <span>权限</span>
+        </a>
+      </li>
+
+    </ul>
+  </nz-sider>
+
+  <!-- 右侧主体内容 -->
+  <nz-layout>
+    <nz-header>
+      <div class="app-header">
+        <span class="header-trigger" (click)="isCollapsed = !isCollapsed">
+          <span class="trigger" nz-icon [nzType]="isCollapsed ? 'menu-unfold' : 'menu-fold'"></span>
+        </span>
+      </div>
+    </nz-header>
+    <nz-content>
+      <div class="inner-content">
+        <router-outlet></router-outlet>
+      </div>
+    </nz-content>
+  </nz-layout>
+</nz-layout>
