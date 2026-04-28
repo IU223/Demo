@@ -1,0 +1,118 @@
+.filter-section {
+  background-color: #ffffff;
+  /* 还原图2的浅灰背景色 */
+  padding: 16px;
+  border-bottom: 1px solid #ffffff;
+
+  .filter-row {
+    display: flex;
+    align-items: flex-end;
+    /* 让底部输入框保持在同一水平线 */
+    flex-wrap: nowrap;
+    /* 强制要求：所有输入控件都在同一行，不换行 */
+    gap: 24px;
+    /* 各个控件组之间的左右间距 */
+    position: relative;
+    /* 关键：为右侧按钮的绝对定位提供参照系 */
+    // padding-right: 15px;
+    /* 右侧留出空白，防止屏幕变窄时输入框被按钮遮挡 */
+
+    .filter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      /* 调小间距：缩小 Label 和下方输入控件的上下间距 */
+
+      label {
+        font-size: 14px;
+        color: #666;
+        margin: 0;
+        line-height: 1;
+        height: 14px;
+      }
+
+      /* 1. 满足要求：时间框长度调长 */
+      .date-range {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        border: 1px solid #d9d9d9;
+        border-radius: 2px;
+        padding: 0px;
+        width: 320px;
+        /* 整体宽度调长 */
+
+        /* 隐藏内部 date-picker 的自带边框，融为一体 */
+        nz-date-picker {
+          flex: 1;
+
+          /* 让两个时间框平分 320px 的宽度 */
+          ::ng-deep .ant-picker {
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent;
+            width: 100%;
+            padding: 4px 0;
+          }
+        }
+
+        .range-separator {
+          color: #333;
+          padding: 0 12px;
+          font-weight: 500;
+        }
+      }
+
+      &.search-box {
+        width: 300px;
+        /* 搜索框宽度 */
+      }
+
+      /* 搜索与重置按钮容器 */
+      &.query-buttons {
+        flex-direction: row;
+        /* 按钮横向排列 */
+        gap: 8px;
+      }
+
+    }
+  }
+}
+
+/* 表格与工具栏区域 */
+.table-wrapper {
+  background: #fff;
+  border-radius: 4px;
+  /* 为整个表格区域添加一个浅色外边框，让整体更像一个卡片 */
+  border: 1px solid #f0f0f0;
+
+  /* 核心：工具栏样式 */
+  .table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    /* 标题居左，按钮居右 */
+    align-items: center;
+    padding: 16px 20px;
+
+    /* 工具栏下方的下划线 */
+    border-bottom: 1px solid #e8e8e8;
+
+    .table-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.85);
+    }
+
+    .table-actions {
+      display: flex;
+      gap: 12px;
+      /* 按钮之间的间距 */
+      align-items: center;
+    }
+  }
+
+  /* 样式优化：去除自带表格顶部的边框，防止与刚刚加的下划线重叠造成双线 */
+  ::ng-deep .ant-table-bordered .ant-table-container {
+    border-top: none;
+  }
+}
