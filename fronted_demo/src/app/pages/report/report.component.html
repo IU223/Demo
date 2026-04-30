@@ -7,10 +7,10 @@
       <div class="filter-item">
         <label>时间</label>
         <div class="date-range">
-          <nz-date-picker [(ngModel)]="startDate" nzPlaceHolder="开始日期" (ngModelChange)="onSearch()">
+          <nz-date-picker [(ngModel)]="startDate" nzPlaceHolder="开始日期">
           </nz-date-picker>
           <span class="range-separator">至</span>
-          <nz-date-picker [(ngModel)]="endDate" nzPlaceHolder="结束日期" (ngModelChange)="onSearch()">
+          <nz-date-picker [(ngModel)]="endDate" nzPlaceHolder="结束日期">
           </nz-date-picker>
         </div>
       </div>
@@ -18,6 +18,7 @@
       <!-- 地区选择 -->
       <div class="filter-item">
         <label>地区</label>
+        <!-- 地区改变只需触发获取新厂别即可，不需要自动 onSearch -->
         <nz-select [(ngModel)]="selectedArea" nzShowSearch (ngModelChange)="onAreaChange($event)" style="width: 150px;">
           <nz-option *ngFor="let option of areaOptions" [nzValue]="option.value" [nzLabel]="option.label">
           </nz-option>
@@ -27,7 +28,8 @@
       <!-- 厂别选择 -->
       <div class="filter-item">
         <label>厂别</label>
-        <nz-select [(ngModel)]="selectedFactory" nzShowSearch (ngModelChange)="onSearch()" style="width: 150px;">
+        <!-- 移除 (ngModelChange)="onSearch()" -->
+        <nz-select [(ngModel)]="selectedFactory" nzShowSearch style="width: 150px;">
           <nz-option *ngFor="let option of factoryOptions" [nzValue]="option.value" [nzLabel]="option.label">
           </nz-option>
         </nz-select>
@@ -80,10 +82,11 @@
           </th>
           <th nzWidth="120px">工号</th>
           <th nzWidth="100px">姓名</th>
-          <th nzWidth="150px">英文姓名</th>
+          <th nzWidth="125px">英文姓名</th>
           <th nzWidth="80px" nzAlign="center">地区</th>
           <th nzWidth="80px" nzAlign="center">厂别</th>
           <th>部门</th>
+          <th>入职时间</th>
           <th nzWidth="80px" nzAlign="center">状态</th>
           <th nzWidth="120px" nzAlign="center">操作</th>
         </tr>
@@ -96,13 +99,15 @@
           <td>{{ data.employee_id }}</td>
           <td>{{ data.name }}</td>
           <td>{{ data.name_a }}</td>
-          <td nzAlign="center">{{ data.area }}</td>
-          <td nzAlign="center">{{ data.factory }}</td>
-          <td>{{ data.department }}</td>
+          <td nzAlign="center">{{ data.region_name}}</td>
+          <td nzAlign="center">{{ data.plant_name }}</td>
+          <td>{{ data.dept_desc }}</td>
+          <td>{{ data.hire_date | date:'yyyy-MM-dd' }}</td>
           <td nzAlign="center">
-            <nz-tag [nzColor]="data.status === '在职' ? 'green' : 'default'">
-              {{ data.status }}
+            <nz-tag [nzColor]="data.status ? 'green' : 'default'">
+              {{ data.status ? '在职' : '离职' }}
             </nz-tag>
+
           </td>
           <td nzAlign="center">
             <a (click)="onView(data)" class="action-link">查看</a>
@@ -114,3 +119,5 @@
     </nz-table>
   </div>
 </div>
+
+<!-- 新增对话框 -->

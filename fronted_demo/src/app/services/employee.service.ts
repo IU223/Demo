@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Employee, EmployeeFilter, EmployeeResponse, SelectOption } from '../models/employee';
 import { environment } from '../../environments/environment.development';
 
@@ -10,33 +11,43 @@ import { environment } from '../../environments/environment.development';
 })
 export class EmployeeService {
   private apiUrl = `${environment.apiUrl}/employees`;
-  private apiUrlPlant = `${environment.apiUrl}/plant`;
-  private apiUrlRegion = `${environment.apiUrl}/region`;
+  private apiUrlPlant = `${environment.apiUrl}/plants`;
+  private apiUrlRegion = `${environment.apiUrl}/regions`;
 
   constructor(private http: HttpClient) { }
-
+  private formatDate(d: Date): string {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
   /**
    * 获取员工列表
    */
   getEmployees(filter?: EmployeeFilter): Observable<EmployeeResponse> {
     let params = new HttpParams();
 
-    // 构建 LoopBack 4 filter
     const loopbackFilter: any = {
       where: {},
       skip: filter?.skip || 0,
       limit: filter?.limit || 10,
       order: ['hire_date DESC']
     };
-
-    // 日期范围筛选
     if (filter?.startDate || filter?.endDate) {
       loopbackFilter.where.hire_date = {};
+
       if (filter.startDate) {
-        loopbackFilter.where.hire_date.gte = filter.startDate.toISOString().split('T')[0];
+        const startDate = new Date(filter.startDate);
+        startDate.setHours(0, 0, 0, 0);
+        loopbackFilter.where.hire_date.gte = startDate.toISOString();
+        console.log('开始日期 (ISO):', startDate.toISOString());
       }
+
       if (filter.endDate) {
-        loopbackFilter.where.hire_date.lte = filter.endDate.toISOString().split('T')[0];
+        const endDate = new Date(filter.endDate);
+        endDate.setHours(23, 59, 59, 999);
+        loopbackFilter.where.hire_date.lte = endDate.toISOString();
+        console.log('结束日期 (ISO):', endDate.toISOString());
       }
     }
 
@@ -45,20 +56,28 @@ export class EmployeeService {
       loopbackFilter.where.or = [
         { employee_id: { like: `%${filter.searchText}%` } },
         { name: { like: `%${filter.searchText}%` } },
+        { dept_desc: { like: `%${filter.searchText}%` } },
       ];
     }
 
-    params = params.set('filter', JSON.stringify(loopbackFilter));
-
-    // 添加地区和厂别筛选（通过关联查询）
+    // 【修改点】将地区和厂别筛选合并到 LoopBack 4 filter的 where 对象中
     if (filter?.area && filter.area !== '1') {
-      params = params.set('area', filter.area);
+      loopbackFilter.where.region_name = filter.area;
     }
     if (filter?.factory && filter.factory !== '1') {
-      params = params.set('factory', filter.factory);
+      loopbackFilter.where.plant_name = filter.factory;
     }
 
-    return this.http.get<EmployeeResponse>(this.apiUrl, { params });
+    params = params.set('filter', JSON.stringify(loopbackFilter));
+    console.log('请求参数:', params.toString());
+    return this.http.get<Employee[] | EmployeeResponse>(this.apiUrl, { params }).pipe(
+      map((resp: Employee[] | EmployeeResponse) => {
+        if (Array.isArray(resp)) {
+          return { data: resp, total: resp.length } as EmployeeResponse;
+        }
+        return resp as EmployeeResponse;
+      })
+    );
   }
 
   /**
@@ -101,18 +120,44 @@ export class EmployeeService {
   /**
    * 获取地区列表
    */
+  /**
+  * 获取地区列表 (修正映射逻辑，让 value 也是名称，方便提交查询)
+  */
   getAreas(): Observable<SelectOption[]> {
-    return this.http.get<SelectOption[]>(`${this.apiUrlRegion}`);
+    return this.http.get<any[]>(`${this.apiUrlRegion}`).pipe(
+      map(list => {
+        const options: SelectOption[] = list.map(item => {
+          const name = item.region_name ?? item.name ?? item.label ?? '';
+          return { value: name, label: name };
+        });
+        if (!options.find(o => o.value === '1')) {
+          options.unshift({ value: '1', label: '全部' });
+        }
+        return options;
+      })
+    );
   }
 
   /**
-   * 获取厂别列表
+   * 获取厂别列表 (修正映射逻辑)
    */
   getFactories(area?: string): Observable<SelectOption[]> {
     let params = new HttpParams();
+    // 这里需注意：若厂别接口依赖 region_name，传入正确的参数
     if (area && area !== '1') {
-      params = params.set('area', area);
+      params = params.set('region_name', area);
     }
-    return this.http.get<SelectOption[]>(`${this.apiUrlPlant}`, { params });
+    return this.http.get<any[]>(`${this.apiUrlPlant}`, { params }).pipe(
+      map(list => {
+        const options: SelectOption[] = list.map(item => {
+          const name = item.plant_name ?? item.name ?? item.label ?? '';
+          return { value: name, label: name };
+        });
+        if (!options.find(o => o.value === '1')) {
+          options.unshift({ value: '1', label: '全部' });
+        }
+        return options;
+      })
+    );
   }
 }

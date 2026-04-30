@@ -1,7 +1,6 @@
-// report.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzInputModule } from 'ng-zorro-antd/input';
@@ -12,7 +11,8 @@ import { NzMessageModule, NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzTagModule } from 'ng-zorro-antd/tag';
-
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
 
 import { EmployeeService } from '../../services/employee.service';
 import { Employee, EmployeeFilter, SelectOption } from '../../models/employee';
@@ -23,6 +23,7 @@ import { Employee, EmployeeFilter, SelectOption } from '../../models/employee';
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     NzTableModule,
     NzButtonModule,
     NzInputModule,
@@ -32,7 +33,9 @@ import { Employee, EmployeeFilter, SelectOption } from '../../models/employee';
     NzMessageModule,
     NzModalModule,
     NzDividerModule,
-    NzTagModule
+    NzTagModule,
+    NzFormModule,
+    NzSwitchModule
   ],
   templateUrl: './report.component.html',
   styleUrls: ['./report.component.scss']
@@ -61,11 +64,26 @@ export class ReportComponent implements OnInit {
   areaOptions: SelectOption[] = [{ label: '全部', value: '1' }];
   factoryOptions: SelectOption[] = [{ label: '全部', value: '1' }];
 
+  // ✅ 新增：对话框相关
+  isModalVisible = false;
+  isEditMode = false;
+  modalTitle = '新增员工';
+  employeeForm!: FormGroup;
+  submitting = false;
+  currentEmployeeId: string = '';
+
+  // ✅ 对话框中的地区和厂别选项（不含"全部"）
+  modalAreaOptions: SelectOption[] = [];
+  modalFactoryOptions: SelectOption[] = [];
+
   constructor(
     private employeeService: EmployeeService,
     private message: NzMessageService,
-    private modal: NzModalService
-  ) { }
+    private modal: NzModalService,
+    private fb: FormBuilder
+  ) {
+    this.initForm();
+  }
 
   ngOnInit(): void {
     this.loadAreas();
@@ -73,13 +91,32 @@ export class ReportComponent implements OnInit {
     this.loadData();
   }
 
+  private initForm(): void {
+    this.employeeForm = this.fb.group({
+      employee_id: ['', [Validators.required, Validators.pattern(/^[A-Z0-9]+$/)]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      name: ['', [Validators.required]],
+      name_a: [''],
+      Sex: [true],
+      dept_desc: ['', [Validators.required]],
+      region_name: [null, [Validators.required]],
+      plant_name: [null, [Validators.required]],
+      role_id: [2, [Validators.required]],
+      hire_date: [new Date(), [Validators.required]],
+      resin_date: [null],
+      status: [true],
+      hasaccess: [true]
+    });
+  }
   /**
    * 加载地区列表
    */
   loadAreas(): void {
     this.employeeService.getAreas().subscribe({
       next: (areas) => {
+        console.log('加载地区列表成功:', areas);
         this.areaOptions = areas;
+        console.log('地区选项:', this.areaOptions);
       },
       error: (error) => {
         console.error('加载地区列表失败:', error);
@@ -100,6 +137,22 @@ export class ReportComponent implements OnInit {
       }
     });
   }
+  // 【新增】禁用开始日期：不能晚于选择的结束日期
+  disabledStartDate = (startValue: Date): boolean => {
+    if (!startValue || !this.endDate) {
+      return false;
+    }
+    // 忽略时分秒进行日期比对
+    return startValue.getTime() > this.endDate.getTime();
+  };
+
+  // 【新增】禁用结束日期：不能早于选择的开始日期
+  disabledEndDate = (endValue: Date): boolean => {
+    if (!endValue || !this.startDate) {
+      return false;
+    }
+    return endValue.getTime() < this.startDate.getTime();
+  };
 
   /**
    * 地区变化时更新厂别列表
@@ -107,7 +160,7 @@ export class ReportComponent implements OnInit {
   onAreaChange(area: string): void {
     this.selectedFactory = '1';
     this.loadFactories(area);
-    this.onSearch();
+    // 移除 this.onSearch() 以防没点搜索按钮就刷新数据，交由用户点击"搜索"
   }
 
   /**
@@ -129,6 +182,7 @@ export class ReportComponent implements OnInit {
     this.employeeService.getEmployees(filter).subscribe({
       next: (response) => {
         this.listOfData = response.data;
+        console.log('加载数据成功:', this.listOfData[0]);
         this.total = response.total;
         this.loading = false;
         this.refreshCheckedStatus();

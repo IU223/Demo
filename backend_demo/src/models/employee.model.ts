@@ -26,14 +26,25 @@ export class Employee extends Entity {
   name_a?: string;
 
   @property({
-    type: 'number',
+    type: 'boolean',
   })
-  dept_id?: number;
+  Sex?: boolean;
+
 
   @property({
-    type: 'number',
+    type: 'string',
   })
-  plant_id?: number;
+  dept_desc?: string;
+
+  @property({
+    type: 'string',
+  })
+  plant_name?: string;
+
+  @property({
+    type: 'string',
+  })
+  region_name?: string;
 
   @property({
     type: 'number',
@@ -51,9 +62,9 @@ export class Employee extends Entity {
   resin_date?: string;
 
   @property({
-    type: 'number',
+    type: 'boolean',
   })
-  status?: number;
+  status?: boolean;
 
   @property({
     type: 'boolean',

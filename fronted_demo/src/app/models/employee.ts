@@ -3,9 +3,9 @@ export interface Employee {
   employee_id: string;
   name?: string;
   name_a?: string;
-  area?: string;
-  factory?: string;
-  department?: string;
+  dept_desc?: string;
+  plant_name?: string;
+  region_name?: string;
   status?: string;
   hire_date?: string;
   resin_date?: string;
