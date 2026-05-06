@@ -1,9 +1,9 @@
 // src/app/services/employee.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Employee, EmployeeFilter, EmployeeResponse, SelectOption } from '../models/employee';
+import { Employee, EmployeeFilter, EmployeeResponse, SelectOption, RoleOption } from '../models/employee';
 import { environment } from '../../environments/environment.development';
 
 @Injectable({
@@ -13,6 +13,8 @@ export class EmployeeService {
   private apiUrl = `${environment.apiUrl}/employees`;
   private apiUrlPlant = `${environment.apiUrl}/plants`;
   private apiUrlRegion = `${environment.apiUrl}/regions`;
+  private apiUrlDept = `${environment.apiUrl}/departments`;
+  private apiUrlRole = `${environment.apiUrl}/roles`;
 
   constructor(private http: HttpClient) { }
   private formatDate(d: Date): string {
@@ -33,24 +35,24 @@ export class EmployeeService {
       limit: filter?.limit || 10,
       order: ['hire_date DESC']
     };
+
+    // ========== ★ 新增：时间范围筛选 ==========
     if (filter?.startDate || filter?.endDate) {
-      loopbackFilter.where.hire_date = {};
+      const hireDateCondition: any = {};
 
       if (filter.startDate) {
-        const startDate = new Date(filter.startDate);
-        startDate.setHours(0, 0, 0, 0);
-        loopbackFilter.where.hire_date.gte = startDate.toISOString();
-        console.log('开始日期 (ISO):', startDate.toISOString());
+        // gte = greater than or equal（大于等于）
+        hireDateCondition.gte = this.formatDate(filter.startDate);
       }
-
       if (filter.endDate) {
-        const endDate = new Date(filter.endDate);
-        endDate.setHours(23, 59, 59, 999);
-        loopbackFilter.where.hire_date.lte = endDate.toISOString();
-        console.log('结束日期 (ISO):', endDate.toISOString());
+        // lte = less than or equal（小于等于），取当天 23:59:59
+        // 如果后端只比较日期字符串，直接用日期即可；
+        // 如果后端字段是 datetime，则追加时间部分确保包含当天
+        hireDateCondition.lte = this.formatDate(filter.endDate) + 'T23:59:59';
       }
-    }
 
+      loopbackFilter.where.hire_date = hireDateCondition;
+    }
     // 搜索文本（工号、姓名、部门）
     if (filter?.searchText && filter.searchText.trim()) {
       loopbackFilter.where.or = [
@@ -91,9 +93,16 @@ export class EmployeeService {
    * 创建员工
    */
   createEmployee(employee: Partial<Employee>): Observable<Employee> {
+
     return this.http.post<Employee>(this.apiUrl, employee);
   }
-
+  /**
+    * 批量创建员工（使用 forkJoin 并行发送多个创建请求）
+    */
+  createEmployees(employees: Partial<Employee>[]): Observable<Employee[]> {
+    const requests = employees.map(emp => this.createEmployee(emp));
+    return forkJoin(requests);
+  }
   /**
    * 更新员工
    */
@@ -138,6 +147,7 @@ export class EmployeeService {
     );
   }
 
+
   /**
    * 获取厂别列表 (修正映射逻辑)
    */
@@ -157,6 +167,32 @@ export class EmployeeService {
           options.unshift({ value: '1', label: '全部' });
         }
         return options;
+      })
+    );
+  }
+  getDepartments(): Observable<SelectOption[]> {
+    return this.http.get<any[]>(this.apiUrlDept).pipe(
+      map(list => {
+        return list.map(item => {
+          const name = item.dept_desc ?? item.name ?? item.label ?? '';
+          return { value: name, label: name } as SelectOption;
+        });
+      })
+    );
+  }
+
+  /**
+   * 获取角色列表
+   * 后端返回示例: [{ role_id: 1, role_name: "管理员" }, { role_id: 2, role_name: "普通用户" }, ...]
+   */
+  getRoles(): Observable<RoleOption[]> {
+    return this.http.get<any[]>(this.apiUrlRole).pipe(
+      map(list => {
+        return list.map(item => {
+          const id = item.role_id ?? item.id ?? item.value;
+          const name = item.role_name ?? item.name ?? item.label ?? '';
+          return { value: id, label: name } as RoleOption;
+        });
       })
     );
   }

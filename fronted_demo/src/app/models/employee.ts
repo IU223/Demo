@@ -31,3 +31,8 @@ export interface SelectOption {
   value: string;
   label: string;
 }
+// ★ 新增：角色选项（value 为 number 类型）
+export interface RoleOption {
+  label: string;
+  value: number;
+}

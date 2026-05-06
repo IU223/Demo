@@ -4,13 +4,16 @@
   <div class="filter-section">
     <div class="filter-row">
       <!-- 时间范围 -->
+      <!-- 时间范围 -->
       <div class="filter-item">
         <label>时间</label>
         <div class="date-range">
-          <nz-date-picker [(ngModel)]="startDate" nzPlaceHolder="开始日期">
+          <nz-date-picker [(ngModel)]="startDate" nzPlaceHolder="开始日期" [nzDisabledDate]="disabledStartDate"
+            (ngModelChange)="onStartDateChange($event)" nzFormat="yyyy-MM-dd">
           </nz-date-picker>
           <span class="range-separator">至</span>
-          <nz-date-picker [(ngModel)]="endDate" nzPlaceHolder="结束日期">
+          <nz-date-picker [(ngModel)]="endDate" nzPlaceHolder="结束日期" [nzDisabledDate]="disabledEndDate"
+            (ngModelChange)="onEndDateChange($event)" nzFormat="yyyy-MM-dd">
           </nz-date-picker>
         </div>
       </div>
@@ -120,4 +123,121 @@
   </div>
 </div>
 
-<!-- 新增对话框 -->
+<!-- ===================== ★ 新增员工对话框 ★ ===================== -->
+<nz-modal [(nzVisible)]="isModalVisible" [nzTitle]="modalTitleTpl" [nzFooter]="modalFooterTpl" [nzWidth]="520"
+  [nzMaskClosable]="false" [nzClosable]="true" (nzOnCancel)="handleModalCancel()">
+
+  <!-- 标题 -->
+  <ng-template #modalTitleTpl>
+    <div class="custom-modal-title">{{ modalTitle }}</div>
+  </ng-template>
+
+  <!-- 内容区 -->
+  <ng-container *nzModalContent>
+    <div class="modal-form-wrapper">
+      <form nz-form [formGroup]="employeeForm" nzLayout="horizontal">
+
+        <!-- 工号 -->
+        <nz-form-item>
+          <nz-form-label [nzSpan]="6" nzRequired>工号</nz-form-label>
+          <nz-form-control [nzSpan]="16" nzErrorTip="请输入正确的工号（大写字母和数字）">
+            <input nz-input formControlName="employee_id" placeholder="请输入工号" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <!-- 性别 -->
+        <nz-form-item>
+          <nz-form-label [nzSpan]="6" nzRequired>性别</nz-form-label>
+          <nz-form-control [nzSpan]="16">
+            <nz-radio-group formControlName="Sex">
+              <label nz-radio [nzValue]="true">男</label>
+              <label nz-radio [nzValue]="false">女</label>
+            </nz-radio-group>
+          </nz-form-control>
+        </nz-form-item>
+
+        <!-- 姓名 -->
+        <nz-form-item>
+          <nz-form-label [nzSpan]="6" nzRequired>姓名</nz-form-label>
+          <nz-form-control [nzSpan]="16" nzErrorTip="请输入姓名">
+            <input nz-input formControlName="name" placeholder="单行输入" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <!-- 英文姓名 -->
+        <nz-form-item>
+          <nz-form-label [nzSpan]="6">英文姓名</nz-form-label>
+          <nz-form-control [nzSpan]="16">
+            <input nz-input formControlName="name_a" placeholder="单行输入" />
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label [nzSpan]="6" nzRequired>部门</nz-form-label>
+          <nz-form-control [nzSpan]="16" nzErrorTip="请选择部门">
+            <nz-select formControlName="dept_desc" nzPlaceHolder="请选择部门" nzShowSearch nzAllowClear>
+              <nz-option *ngFor="let opt of deptOptions" [nzLabel]="opt.label" [nzValue]="opt.value">
+              </nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+        <!-- 地区 -->
+        <nz-form-item>
+          <nz-form-label [nzSpan]="6" nzRequired>地区</nz-form-label>
+          <nz-form-control [nzSpan]="16" nzErrorTip="请选择地区">
+            <nz-select formControlName="region_name" nzPlaceHolder="请选择地区" nzShowSearch nzAllowClear
+              (ngModelChange)="onModalAreaChange($event)">
+              <nz-option *ngFor="let opt of modalAreaOptions" [nzLabel]="opt.label" [nzValue]="opt.value">
+              </nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <!-- 厂别 -->
+        <nz-form-item>
+          <nz-form-label [nzSpan]="6" nzRequired>厂别</nz-form-label>
+          <nz-form-control [nzSpan]="16" nzErrorTip="请选择厂别">
+            <nz-select formControlName="plant_name" nzPlaceHolder="请选择厂别" nzShowSearch nzAllowClear>
+              <nz-option *ngFor="let opt of modalFactoryOptions" [nzLabel]="opt.label" [nzValue]="opt.value">
+              </nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label [nzSpan]="6" nzRequired>角色</nz-form-label>
+          <nz-form-control [nzSpan]="16" nzErrorTip="请选择角色">
+            <nz-select formControlName="role_id" nzPlaceHolder="请选择角色" nzShowSearch nzAllowClear>
+              <nz-option *ngFor="let opt of roleOptions" [nzLabel]="opt.label" [nzValue]="opt.value">
+              </nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+      </form>
+
+      <!-- ★ 批量分页导航 -->
+      <div class="batch-pagination" *ngIf="!isEditMode">
+        <a class="page-link" [class.disabled]="currentBatchIndex === 0" (click)="onPrevEmployee()">上一页</a>
+        <span class="page-info">
+          <span class="current">{{ currentBatchIndex + 1 }}</span>/<span>{{ batchEmployees.length }}</span>
+        </span>
+        <a class="page-link" (click)="onNextEmployee()">下一页</a>
+      </div>
+
+      <!-- 删除本条 -->
+      <div class="batch-delete" *ngIf="!isEditMode && batchEmployees.length > 1">
+        <a class="delete-link" (click)="onDeleteCurrentEmployee()">
+          <span nz-icon nzType="delete" nzTheme="outline"></span> 删除本条
+        </a>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- 底部按钮 -->
+  <ng-template #modalFooterTpl>
+    <div class="modal-footer">
+      <button nz-button nzType="primary" (click)="handleModalOk()" [nzLoading]="submitting">确定</button>
+      <button nz-button nzType="default" (click)="handleModalCancel()">取消</button>
+    </div>
+  </ng-template>
+</nz-modal>
