@@ -1,0 +1,67 @@
+-- Regions
+--DROP TABLE IF EXISTS region;
+--CREATE TABLE region (
+--  region_id        integer PRIMARY KEY,
+--  region_name      varchar(255),
+--  longitude        double precision,
+--  latitude         double precision
+--);
+--
+-- Plants
+--DROP TABLE IF EXISTS plant;
+--CREATE TABLE plant (
+--  plant_id         integer PRIMARY KEY,
+--  plant_name       varchar(255),
+--  region_id        integer
+--);
+--
+-- Departments
+--DROP TABLE IF EXISTS department;
+--CREATE TABLE departments (
+--  dept_id          integer PRIMARY KEY,
+--  dept_code        varchar(128),
+--  dept_desc        varchar(255),
+--  dept_desc_a      varchar(255)
+--);
+--
+-- Roles
+--
+--CREATE TABLE role (
+--  role_id          integer PRIMARY KEY,
+--  role_name        varchar(255),
+--  home_page_auth   integer,
+--  report_page_auth integer,
+--  auth_page_auth   integer
+--);
+--
+-- Employees
+--DROP TABLE IF EXISTS employee;
+--CREATE TABLE employee (
+--  employee_id      varchar(128) PRIMARY KEY,
+--  password         varchar(255),
+--  name             varchar(255),
+--  name_a           varchar(255),
+--  Sex              boolean,
+--  dept_desc        varchar(255),
+--  plant_name       varchar(255),
+--  region_name      varchar(255),
+--  role_id          integer,
+--  hire_date        timestamptz,
+--  resin_date       timestamptz,
+--  status           boolean,
+--  hasaccess        boolean
+--  
+--);
+
+--INSERT INTO role (role_id, role_name, home_page_auth, report_page_auth, auth_page_auth) VALUES (1, 'Admin', 15, 15, 15);
+--INSERT INTO role (role_id, role_name, home_page_auth, report_page_auth, auth_page_auth) VALUES (2, 'User', 1, 1, 1);
+--INSERT INTO region (region_id, region_name, longitude, latitude) VALUES (1, '中山', 22, 113);
+--INSERT INTO region (region_id, region_name, longitude, latitude) VALUES (2, '中国台湾', 20, 119);
+--INSERT INTO plant (plant_id, plant_name, region_id) VALUES (1, 'zs1', 1);
+--INSERT INTO plant (plant_id, plant_name, region_id) VALUES (2, 'zs2', 1);
+--INSERT INTO plant (plant_id, plant_name, region_id) VALUES (3, 'zs3', 1);
+--INSERT INTO plant (plant_id, plant_name, region_id) VALUES (4, 'tw1', 2);
+--INSERT INTO plant (plant_id, plant_name, region_id) VALUES (5, 'tw2', 2);
+--INSERT INTO plant (plant_id, plant_name, region_id) VALUES (6, 'tw3', 2);
+--INSERT INTO department (dept_id, dept_code, dept_desc, dept_desc_a) VALUES (1, 'MLE500', '智慧制造应用系统发展二部', 'machine learning engineering application system development department ');
+INSERT INTO employee (employee_id, password, name, name_a, sex, dept_desc, plant_name, region_name, role_id, hire_date, resin_date, status, hasaccess) VALUES ('Z26040002', 'password123', '许永锋', 'Yongfeng YF Xu', true, '智慧制造应用系统发展二部', 'zs3', '中山', 1, '2026-04-27', NULL, true, true);

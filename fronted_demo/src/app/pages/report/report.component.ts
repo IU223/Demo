@@ -78,13 +78,8 @@ export class ReportComponent implements OnInit {
   // ===================== 对话框下拉选项（不含"全部"） =====================
   modalAreaOptions: SelectOption[] = [];
   modalFactoryOptions: SelectOption[] = [];
-
-  // ★ 部门选项 — 从 API 获取
   deptOptions: SelectOption[] = [];
-
-  // ★ 角色选项 — 从 API 获取
   roleOptions: RoleOption[] = [];
-
   // ===================== 批量新增 =====================
   batchEmployees: any[] = [];
   currentBatchIndex: number = 0;
@@ -101,8 +96,8 @@ export class ReportComponent implements OnInit {
   ngOnInit(): void {
     this.loadAreas();
     this.loadFactories();
-    this.loadDepartments();   // ★ 初始化加载部门
-    this.loadRoles();         // ★ 初始化加载角色
+    this.loadDepartments();
+    this.loadRoles();
     this.loadData();
   }
 
@@ -112,8 +107,8 @@ export class ReportComponent implements OnInit {
     this.employeeForm = this.fb.group({
       employee_id: ['', [Validators.required, Validators.pattern(/^[A-Z0-9]+$/)]],
       password: ['123456'],
-      name: ['', [Validators.required]],
-      name_a: [''],
+      name: ['', [Validators.required, Validators.pattern(/^[\u4e00-\u9fff\u3400-\u4dbf]+$/)]],
+      name_a: ['', [Validators.required, Validators.pattern(/^[a-zA-Z\s]+$/)]],
       Sex: [true],
       dept_desc: [null, [Validators.required]],
       region_name: [null, [Validators.required]],
@@ -143,9 +138,7 @@ export class ReportComponent implements OnInit {
       hasaccess: true
     };
   }
-
-  // ===================== ★ 下拉列表加载 =====================
-
+  // =====================下拉列表加载 =====================
   loadAreas(): void {
     this.employeeService.getAreas().subscribe({
       next: (areas) => { this.areaOptions = areas; },
@@ -175,10 +168,6 @@ export class ReportComponent implements OnInit {
       }
     });
   }
-
-  /**
-   * ★ 加载角色列表（从 API 获取）
-   */
   loadRoles(): void {
     this.employeeService.getRoles().subscribe({
       next: (roles) => {
@@ -215,6 +204,7 @@ export class ReportComponent implements OnInit {
       next: (response) => {
         this.listOfData = response.data;
         this.total = response.total;
+        console.log('加载员工数据成功:', this.total);
         this.loading = false;
         this.refreshCheckedStatus();
       },
@@ -252,7 +242,7 @@ export class ReportComponent implements OnInit {
     this.loadData();
   }
 
-  // ===================== ★ 新增员工对话框 =====================
+  // =====================  新增员工对话框 =====================
 
   onAdd(): void {
     this.isEditMode = false;
@@ -281,14 +271,32 @@ export class ReportComponent implements OnInit {
   /**
    * 弹框内地区变化 → 联动更新厂别选项
    */
-  onModalAreaChange(area: string): void {
-    this.employeeForm.patchValue({ plant_name: null });
+  onModalAreaChange(area: string, preferredPlant?: string): void {
+    // 加载指定地区的厂别选项，异步完成后恢复或校验 plant_name
     this.employeeService.getFactories(area).subscribe(factories => {
       this.modalFactoryOptions = factories.filter(f => f.value !== '1');
+      // 如果调用时传入了首选厂别，则尝试恢复（可能是 value 或 label）
+      if (preferredPlant) {
+        const foundByValue = this.modalFactoryOptions.find(f => f.value === preferredPlant);
+        if (foundByValue) {
+          this.employeeForm.patchValue({ plant_name: foundByValue.value });
+        } else {
+          const foundByLabel = this.modalFactoryOptions.find(f => f.label === preferredPlant);
+          if (foundByLabel) {
+            this.employeeForm.patchValue({ plant_name: foundByLabel.value });
+          }
+        }
+      } else {
+        // 若当前表单中的 plant_name 不在新选项中，则清空以避免不一致
+        const current = this.employeeForm.get('plant_name')?.value;
+        if (current && !this.modalFactoryOptions.find(f => f.value === current || f.label === current)) {
+          this.employeeForm.patchValue({ plant_name: null });
+        }
+      }
     });
   }
 
-  // ===================== ★ 批量分页导航 =====================
+  // =====================  批量分页导航 =====================
 
   private saveFormToBatch(): void {
     this.batchEmployees[this.currentBatchIndex] = { ...this.employeeForm.getRawValue() };
@@ -299,7 +307,7 @@ export class ReportComponent implements OnInit {
     this.employeeForm.reset();
     this.employeeForm.patchValue(data);
     if (data.region_name) {
-      this.onModalAreaChange(data.region_name);
+      this.onModalAreaChange(data.region_name, data.plant_name);
     }
   }
 
@@ -334,7 +342,7 @@ export class ReportComponent implements OnInit {
     this.message.success('已删除当前记录');
   }
 
-  // ===================== ★ 提交 & 取消 =====================
+  // =====================  提交 & 取消 =====================
 
   handleModalOk(): void {
     this.saveFormToBatch();
@@ -408,7 +416,7 @@ export class ReportComponent implements OnInit {
     const d = new Date(date);
     if (isNaN(d.getTime())) return null;
 
-    return d.toISOString();  // → "2026-05-06T06:30:00.000Z" ✅
+    return d.toISOString();
   }
 
 
@@ -443,6 +451,7 @@ export class ReportComponent implements OnInit {
       nzCancelText: '取消',
       nzOnOk: () => {
         const ids = Array.from(this.setOfCheckedId);
+        console.log('准备删除的员工ID列表:', ids);
         return this.employeeService.deleteEmployees(ids).toPromise().then(
           (result) => {
             this.message.success(`成功删除 ${result?.count || ids.length} 条记录`);
@@ -506,25 +515,4 @@ export class ReportComponent implements OnInit {
     return endValue.getTime() < this.startDate.getTime();
   };
 
-  /**
-   * ★ 开始日期变化回调（可选：自动清空不合法的结束日期）
-   */
-  onStartDateChange(date: Date | null): void {
-    this.startDate = date;
-    // 如果新开始日期晚于当前结束日期，自动清空结束日期
-    if (this.startDate && this.endDate && this.startDate.getTime() > this.endDate.getTime()) {
-      this.endDate = null;
-    }
-  }
-
-  /**
-   * ★ 结束日期变化回调
-   */
-  onEndDateChange(date: Date | null): void {
-    this.endDate = date;
-    // 如果新结束日期早于当前开始日期，自动清空开始日期
-    if (this.startDate && this.endDate && this.endDate.getTime() < this.startDate.getTime()) {
-      this.startDate = null;
-    }
-  }
 }

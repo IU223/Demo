@@ -1,7 +1,7 @@
 // src/app/services/employee.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Employee, EmployeeFilter, EmployeeResponse, SelectOption, RoleOption } from '../models/employee';
 import { environment } from '../../environments/environment.development';
@@ -111,27 +111,21 @@ export class EmployeeService {
   }
 
   /**
-   * 删除单个员工
-   */
-  deleteEmployee(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
-  }
-
-  /**
-   * 批量删除员工
+   * 批量软删除（标记为离职）
    */
   deleteEmployees(ids: string[]): Observable<{ count: number }> {
-    return this.http.delete<{ count: number }>(`${this.apiUrl}/batch`, {
-      body: { ids }
-    });
+    if (!ids || ids.length === 0) {
+      return of({ count: 0 });
+    }
+    const where = JSON.stringify({ employee_id: { inq: ids } });
+    const params = new HttpParams().set('where', where);
+    // LoopBack 的 updateAll 返回 Count 类型 {count: number}
+    return this.http.patch<{ count: number }>(`${this.apiUrl}`, { status: false }, { params });
   }
 
   /**
    * 获取地区列表
    */
-  /**
-  * 获取地区列表 (修正映射逻辑，让 value 也是名称，方便提交查询)
-  */
   getAreas(): Observable<SelectOption[]> {
     return this.http.get<any[]>(`${this.apiUrlRegion}`).pipe(
       map(list => {

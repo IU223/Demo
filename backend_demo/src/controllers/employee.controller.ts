@@ -162,4 +162,5 @@ export class EmployeeControllerController {
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     await this.employeeRepository.deleteById(id);
   }
+
 }

@@ -9,11 +9,11 @@
         <label>时间</label>
         <div class="date-range">
           <nz-date-picker [(ngModel)]="startDate" nzPlaceHolder="开始日期" [nzDisabledDate]="disabledStartDate"
-            (ngModelChange)="onStartDateChange($event)" nzFormat="yyyy-MM-dd">
+            nzFormat="yyyy-MM-dd">
           </nz-date-picker>
           <span class="range-separator">至</span>
           <nz-date-picker [(ngModel)]="endDate" nzPlaceHolder="结束日期" [nzDisabledDate]="disabledEndDate"
-            (ngModelChange)="onEndDateChange($event)" nzFormat="yyyy-MM-dd">
+            nzFormat="yyyy-MM-dd">
           </nz-date-picker>
         </div>
       </div>
@@ -159,15 +159,15 @@
         <!-- 姓名 -->
         <nz-form-item>
           <nz-form-label [nzSpan]="6" nzRequired>姓名</nz-form-label>
-          <nz-form-control [nzSpan]="16" nzErrorTip="请输入姓名">
+          <nz-form-control [nzSpan]="16" nzErrorTip="请输入正确姓名(简体中文或者繁体中文)">
             <input nz-input formControlName="name" placeholder="单行输入" />
           </nz-form-control>
         </nz-form-item>
 
         <!-- 英文姓名 -->
         <nz-form-item>
-          <nz-form-label [nzSpan]="6">英文姓名</nz-form-label>
-          <nz-form-control [nzSpan]="16">
+          <nz-form-label [nzSpan]="6" nzRequired>英文姓名</nz-form-label>
+          <nz-form-control [nzSpan]="16" nzErrorTip="请输入正确英文名(大小写字母)">
             <input nz-input formControlName="name_a" placeholder="单行输入" />
           </nz-form-control>
         </nz-form-item>
