@@ -83,6 +83,44 @@ export class EmployeeService {
   }
 
   /**
+   * 获取符合条件的员工总数（用于分页）
+   */
+  getEmployeesCount(filter?: EmployeeFilter): Observable<number> {
+    let where: any = {};
+
+    if (filter?.startDate || filter?.endDate) {
+      const hireDateCondition: any = {};
+      if (filter.startDate) {
+        hireDateCondition.gte = this.formatDate(filter.startDate);
+      }
+      if (filter.endDate) {
+        hireDateCondition.lte = this.formatDate(filter.endDate) + 'T23:59:59';
+      }
+      where.hire_date = hireDateCondition;
+    }
+
+    if (filter?.searchText && filter.searchText.trim()) {
+      where.or = [
+        { employee_id: { like: `%${filter.searchText}%` } },
+        { name: { like: `%${filter.searchText}%` } },
+        { dept_desc: { like: `%${filter.searchText}%` } },
+      ];
+    }
+
+    if (filter?.area && filter.area !== '1') {
+      where.region_name = filter.area;
+    }
+    if (filter?.factory && filter.factory !== '1') {
+      where.plant_name = filter.factory;
+    }
+
+    const params = new HttpParams().set('where', JSON.stringify(where));
+    return this.http.get<{ count: number }>(`${this.apiUrl}/count`, { params }).pipe(
+      map(r => r.count)
+    );
+  }
+
+  /**
    * 根据ID获取员工
    */
   getEmployeeById(id: string): Observable<Employee> {

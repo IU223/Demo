@@ -17,6 +17,7 @@ import { NzRadioModule } from 'ng-zorro-antd/radio';
 
 import { EmployeeService } from '../../services/employee.service';
 import { Employee, EmployeeFilter, SelectOption, RoleOption } from '../../models/employee';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-report',
@@ -121,17 +122,34 @@ export class ReportComponent implements OnInit {
     });
   }
 
+  // private getDefaultEmployeeData(): any {
+  //   return {
+  //     employee_id: '',
+  //     password: '123456',
+  //     name: '',
+  //     name_a: '',
+  //     Sex: true,
+  //     dept_desc: null,
+  //     region_name: null,
+  //     plant_name: null,
+  //     role_id: null,
+  //     hire_date: new Date(),
+  //     resin_date: null,
+  //     status: true,
+  //     hasaccess: true
+  //   };
+  // }
   private getDefaultEmployeeData(): any {
     return {
-      employee_id: '',
+      employee_id: 'Z2604000',
       password: '123456',
-      name: '',
-      name_a: '',
+      name: '伟',
+      name_a: 'xuwei',
       Sex: true,
-      dept_desc: null,
-      region_name: null,
-      plant_name: null,
-      role_id: null,
+      dept_desc: '智慧制造应用系统发展二部',
+      region_name: '中山',
+      plant_name: 'zs3',
+      role_id: 1,
       hire_date: new Date(),
       resin_date: null,
       status: true,
@@ -199,12 +217,14 @@ export class ReportComponent implements OnInit {
       skip: (this.pageIndex - 1) * this.pageSize,
       limit: this.pageSize
     };
-
-    this.employeeService.getEmployees(filter).subscribe({
-      next: (response) => {
-        this.listOfData = response.data;
-        this.total = response.total;
-        console.log('加载员工数据成功:', this.total);
+    // 同时请求数据页和总数，确保分页 total 正确
+    forkJoin({
+      page: this.employeeService.getEmployees(filter),
+      total: this.employeeService.getEmployeesCount(filter)
+    }).subscribe({
+      next: ({ page, total }) => {
+        this.listOfData = page.data;
+        this.total = total ?? page.total ?? page.data.length;
         this.loading = false;
         this.refreshCheckedStatus();
       },
@@ -340,6 +360,55 @@ export class ReportComponent implements OnInit {
     }
     this.loadBatchToForm(this.currentBatchIndex);
     this.message.success('已删除当前记录');
+  }
+  /**
+   * ★ 计算可见页码（含省略号），类似 Ant Design Pagination 算法
+   */
+  getVisiblePages(): (number | string)[] {
+    const total = this.batchEmployees.length;
+    const current = this.currentBatchIndex + 1;
+
+    // 总页数 <= 7 时全部显示
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+
+    const pages: (number | string)[] = [];
+
+    if (current <= 4) {
+      // 靠近开头：显示前5页 + ... + 末页
+      for (let i = 1; i <= 5; i++) pages.push(i);
+      pages.push('...');
+      pages.push(total);
+    } else if (current >= total - 3) {
+      // 靠近末尾：首页 + ... + 后5页
+      pages.push(1);
+      pages.push('...');
+      for (let i = total - 4; i <= total; i++) pages.push(i);
+    } else {
+      // 居中：首页 + ... + 当前±1 + ... + 末页
+      pages.push(1);
+      pages.push('...');
+      pages.push(current - 1);
+      pages.push(current);
+      pages.push(current + 1);
+      pages.push('...');
+      pages.push(total);
+    }
+
+    return pages;
+  }
+
+  /**
+   * 跳转到指定批次页
+   */
+  goToPage(page: number | string): void {
+    if (typeof page === 'string') return;           // 省略号不可点
+    const index = (page as number) - 1;
+    if (index === this.currentBatchIndex) return;    // 当前页不重复加载
+    this.saveFormToBatch();
+    this.currentBatchIndex = index;
+    this.loadBatchToForm(index);
   }
 
   // =====================  提交 & 取消 =====================

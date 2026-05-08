@@ -116,3 +116,113 @@
     border-top: none;
   }
 }
+
+/* ========== 批量分页导航（美化版） ========== */
+.batch-nav-bar {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed #e8e8e8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.batch-pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
+/* 通用页码按钮 */
+.page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  min-width: 36px;
+  padding: 0 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background: #fff;
+  color: #595959;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+
+  &:hover:not(:disabled):not(.active) {
+    color: #1890ff;
+    border-color: #1890ff;
+    background: #f0f7ff;
+  }
+
+  &:active:not(:disabled):not(.active) {
+    transform: scale(0.96);
+  }
+
+  &:disabled {
+    color: #bfbfbf;
+    background: #f5f5f5;
+    border-color: #d9d9d9;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}
+
+/* 页码数字按钮 */
+.num-btn {
+  padding: 0;
+  font-weight: 500;
+
+  &.active {
+    background: #1890ff;
+    border-color: #1890ff;
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(24, 144, 255, 0.35);
+    cursor: default;
+  }
+}
+
+/* 上一页 / 下一页 */
+.nav-btn {
+  gap: 4px;
+  font-weight: 500;
+  padding: 0 14px;
+  background: #fafafa;
+}
+
+/* 省略号 */
+.page-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: #bfbfbf;
+  font-size: 16px;
+  letter-spacing: 2px;
+  cursor: default;
+}
+
+/* 删除本条 */
+.batch-delete {
+  .delete-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #ff4d4f;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px 12px;
+    border-radius: 4px;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #fff1f0;
+      color: #cf1322;
+    }
+  }
+}

@@ -215,21 +215,40 @@
 
       </form>
 
-      <!-- ★ 批量分页导航 -->
-      <div class="batch-pagination" *ngIf="!isEditMode">
-        <a class="page-link" [class.disabled]="currentBatchIndex === 0" (click)="onPrevEmployee()">上一页</a>
-        <span class="page-info">
-          <span class="current">{{ currentBatchIndex + 1 }}</span>/<span>{{ batchEmployees.length }}</span>
-        </span>
-        <a class="page-link" (click)="onNextEmployee()">下一页</a>
+      <!-- ★ 批量分页导航（美化版） -->
+      <div class="batch-nav-bar" *ngIf="!isEditMode">
+
+        <div class="batch-pagination">
+          <!-- 上一页 -->
+          <button class="page-btn nav-btn" [disabled]="currentBatchIndex === 0" (click)="onPrevEmployee()">
+            <span nz-icon nzType="left" nzTheme="outline"></span>
+            上一页
+          </button>
+
+          <!-- 页码按钮 -->
+          <ng-container *ngFor="let page of getVisiblePages()">
+            <span class="page-ellipsis" *ngIf="page === '...'">···</span>
+            <button class="page-btn num-btn" *ngIf="page !== '...'" [class.active]="page === currentBatchIndex + 1"
+              (click)="goToPage(page)">
+              {{ page }}
+            </button>
+          </ng-container>
+
+          <!-- 下一页 -->
+          <button class="page-btn nav-btn" (click)="onNextEmployee()">
+            下一页
+            <span nz-icon nzType="right" nzTheme="outline"></span>
+          </button>
+        </div>
+
+        <!-- 删除本条 -->
+        <div class="batch-delete" *ngIf="batchEmployees.length > 1">
+          <a class="delete-link" (click)="onDeleteCurrentEmployee()">
+            <span nz-icon nzType="delete" nzTheme="outline"></span> 删除本条
+          </a>
+        </div>
       </div>
 
-      <!-- 删除本条 -->
-      <div class="batch-delete" *ngIf="!isEditMode && batchEmployees.length > 1">
-        <a class="delete-link" (click)="onDeleteCurrentEmployee()">
-          <span nz-icon nzType="delete" nzTheme="outline"></span> 删除本条
-        </a>
-      </div>
     </div>
   </ng-container>
 
