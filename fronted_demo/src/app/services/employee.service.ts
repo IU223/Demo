@@ -37,21 +37,14 @@ export class EmployeeService {
     };
 
     // ========== ★ 新增：时间范围筛选 ==========
-    if (filter?.startDate || filter?.endDate) {
-      const hireDateCondition: any = {};
-
-      if (filter.startDate) {
-        // gte = greater than or equal（大于等于）
-        hireDateCondition.gte = this.formatDate(filter.startDate);
-      }
-      if (filter.endDate) {
-        // lte = less than or equal（小于等于），取当天 23:59:59
-        // 如果后端只比较日期字符串，直接用日期即可；
-        // 如果后端字段是 datetime，则追加时间部分确保包含当天
-        hireDateCondition.lte = this.formatDate(filter.endDate) + 'T23:59:59';
-      }
-
-      loopbackFilter.where.hire_date = hireDateCondition;
+    // 如果后端使用 between 接受 [start, end]，构造为 ["YYYY-MM-DD", "YYYY-MM-DDTHH:mm:ss"]
+    if (filter?.startDate && filter?.endDate) {
+      const start = this.formatDate(filter.startDate); // 仅日期部分
+      const end = this.formatDate(filter.endDate) + 'T23:59:59'; // 包含当天结束时间
+      // 注意字段名使用下划线与后端一致：hire_date
+      loopbackFilter.where.hire_date = {
+        between: [start, end]
+      };
     }
     // 搜索文本（工号、姓名、部门）
     if (filter?.searchText && filter.searchText.trim()) {
@@ -88,7 +81,11 @@ export class EmployeeService {
   getEmployeesCount(filter?: EmployeeFilter): Observable<number> {
     let where: any = {};
 
-    if (filter?.startDate || filter?.endDate) {
+    if (filter?.startDate && filter?.endDate) {
+      const start = this.formatDate(filter.startDate);
+      const end = this.formatDate(filter.endDate) + 'T23:59:59';
+      where.hire_date = { between: [start, end] };
+    } else if (filter?.startDate || filter?.endDate) {
       const hireDateCondition: any = {};
       if (filter.startDate) {
         hireDateCondition.gte = this.formatDate(filter.startDate);

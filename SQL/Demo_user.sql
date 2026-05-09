@@ -1,3 +1,15 @@
+--CREATE TABLE IF NOT EXISTS users (
+--    EMPNO        VARCHAR(20)   PRIMARY KEY,
+--    NAME         VARCHAR(50)   NOT NULL,
+--    NAME_A       VARCHAR(100),
+--    SITE         VARCHAR(10),
+--    PLANT        VARCHAR(10),
+--    DEPTCODE     VARCHAR(20),
+--    DEPTDESCR    VARCHAR(100),
+--    DEPTDESCR_A  VARCHAR(100)
+--);
+
+
 
 INSERT INTO  users   ( EMPNO ,  NAME,  NAME_A ,  SITE ,  PLANT ,  DEPTCODE ,  DEPTDESCR ,  DEPTDESCR_A ) VALUES ('10609028', '陳志強', 'ALEX CC CHEN', 'WHC', NULL, '23M100', '機構設計中心I', 'Mech. Design Center I');
 INSERT INTO  users  ( EMPNO ,  NAME,  NAME_A ,  SITE ,  PLANT ,  DEPTCODE ,  DEPTDESCR ,  DEPTDESCR_A ) VALUES ('10609097', '康志豪', 'ALLEN KANG', 'WHC', NULL, '2S0230', '軟體研發三部', 'S/W R&D Dept. III');
