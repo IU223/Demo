@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AsyncValidatorFn, AbstractControl } from '@angular/forms';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzInputModule } from 'ng-zorro-antd/input';
@@ -17,7 +17,8 @@ import { NzRadioModule } from 'ng-zorro-antd/radio';
 
 import { EmployeeService } from '../../services/employee.service';
 import { Employee, EmployeeFilter, SelectOption, RoleOption } from '../../models/employee';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-report',
@@ -76,6 +77,11 @@ export class ReportComponent implements OnInit {
   submitting = false;
   currentEmployeeId: string = '';
 
+  viewForm!: FormGroup;
+  isViewVisible = false;
+  viewEmployee: any = {};
+  viewSexText = '';
+  viewRoleLabel = '';
   // ===================== 对话框下拉选项（不含"全部"） =====================
   modalAreaOptions: SelectOption[] = [];
   modalFactoryOptions: SelectOption[] = [];
@@ -92,6 +98,7 @@ export class ReportComponent implements OnInit {
     private fb: FormBuilder
   ) {
     this.initForm();
+    this.initViewForm(); // ← 新增
   }
 
   ngOnInit(): void {
@@ -106,7 +113,11 @@ export class ReportComponent implements OnInit {
 
   private initForm(): void {
     this.employeeForm = this.fb.group({
-      employee_id: ['', [Validators.required, Validators.pattern(/^[A-Z0-9]+$/)]],
+      employee_id: ['', {
+        validators: [Validators.required, Validators.pattern(/^[A-Z0-9]+$/)],
+        asyncValidators: [this.employeeIdExistsValidator()],
+        updateOn: 'blur'
+      }],
       password: ['123456'],
       name: ['', [Validators.required, Validators.pattern(/^[\u4e00-\u9fff\u3400-\u4dbf]+$/)]],
       name_a: ['', [Validators.required, Validators.pattern(/^[a-zA-Z\s]+$/)]],
@@ -120,6 +131,36 @@ export class ReportComponent implements OnInit {
       status: [true],
       hasaccess: [true]
     });
+  }
+  /** 初始化只读表单（所有控件默认禁用） */
+  private initViewForm(): void {
+    this.viewForm = this.fb.group({
+      employee_id: [{ value: '', disabled: true }],
+      name: [{ value: '', disabled: true }],
+      name_a: [{ value: '', disabled: true }],
+      Sex: [{ value: true, disabled: true }],
+      dept_desc: [{ value: null, disabled: true }],
+      region_name: [{ value: null, disabled: true }],
+      plant_name: [{ value: null, disabled: true }],
+      role_id: [{ value: null, disabled: true }],
+      status: [{ value: true, disabled: true }],
+    });
+  }
+
+  /** 异步校验器：检测工号是否已存在（在 blur 时触发） */
+  private employeeIdExistsValidator(): AsyncValidatorFn {
+    return (control: AbstractControl) => {
+      const val = control.value;
+      if (!val) return of(null);
+      // 在编辑模式且未更改工号时视为有效
+      if (this.isEditMode && this.currentEmployeeId && val === this.currentEmployeeId) {
+        return of(null);
+      }
+      return this.employeeService.getEmployeeById(val).pipe(
+        map(() => ({ employeeExists: true })),
+        catchError(() => of(null))
+      );
+    };
   }
 
   // private getDefaultEmployeeData(): any {
@@ -414,6 +455,72 @@ export class ReportComponent implements OnInit {
   // =====================  提交 & 取消 =====================
 
   handleModalOk(): void {
+    // ======================== 编辑模式 ========================
+    if (this.isEditMode) {
+      // 标记所有字段以触发校验展示
+      this.markFormDirty();
+
+      // 检查启用状态的字段是否有效
+      const controls = this.employeeForm.controls;
+      let hasError = false;
+      Object.keys(controls).forEach(key => {
+        const ctrl = controls[key];
+        if (ctrl.enabled && ctrl.invalid) {
+          hasError = true;
+        }
+      });
+
+      if (hasError) {
+        this.message.error('请检查表单中的必填项和格式');
+        return;
+      }
+
+      // getRawValue 能获取包含 disabled 字段（employee_id）的完整数据
+      const formData = this.employeeForm.getRawValue();
+      const updateData: any = {
+        name: formData.name,
+        name_a: formData.name_a,
+        Sex: formData.Sex,
+        dept_desc: formData.dept_desc,
+        region_name: formData.region_name,
+        plant_name: formData.plant_name,
+        role_id: formData.role_id,
+        password: formData.password,
+        hire_date: formData.hire_date ? this.formatDate(formData.hire_date) : undefined,
+        resin_date: formData.resin_date ? this.formatDate(formData.resin_date) : undefined,
+        status: formData.status,
+        hasaccess: formData.hasaccess
+      };
+
+      // 移除 undefined 字段，避免覆盖后端已有数据
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
+
+      console.log('准备更新的员工数据:', this.currentEmployeeId, updateData);
+      this.submitting = true;
+
+      this.employeeService.updateEmployee(this.currentEmployeeId, updateData).subscribe({
+        next: () => {
+          this.message.success('员工信息修改成功！');
+          this.isModalVisible = false;
+          this.submitting = false;
+          // 恢复工号字段可编辑
+          this.employeeForm.get('employee_id')?.enable();
+          this.loadData();
+        },
+        error: (err) => {
+          this.message.error('修改失败：' + (err.error?.error?.message || '请稍后重试'));
+          this.submitting = false;
+        }
+      });
+
+      return; // ★ 编辑模式到此结束，不走下面的新增逻辑
+    }
+
+    // ======================== 新增模式（原有逻辑不变） ========================
     this.saveFormToBatch();
 
     // 逐条校验
@@ -431,7 +538,6 @@ export class ReportComponent implements OnInit {
     // 格式化日期
     const employees = this.batchEmployees.map(emp => ({
       ...emp,
-
       hire_date: emp.hire_date ? this.formatDate(emp.hire_date) : undefined,
       resin_date: emp.resin_date ? this.formatDate(emp.resin_date) : undefined,
     }));
@@ -467,6 +573,7 @@ export class ReportComponent implements OnInit {
     }
   }
 
+
   handleModalCancel(): void {
     this.isModalVisible = false;
   }
@@ -494,15 +601,118 @@ export class ReportComponent implements OnInit {
   onView(data: Employee): void {
     this.employeeService.getEmployeeById(data.employee_id).subscribe({
       next: (employee) => {
-        this.message.info(`查看员工: ${employee.name}`);
+        const emp: any = employee as any;
+        console.log('emp:', emp);
+
+        // ★ 关键修复：先加载地区 & 厂别选项，再填充表单
+        const areas$ = this.employeeService.getAreas();
+        const factories$ = emp.region_name
+          ? this.employeeService.getFactories(emp.region_name)
+          : of([] as SelectOption[]);
+
+        forkJoin({ areas: areas$, factories: factories$ }).subscribe({
+          next: ({ areas, factories }) => {
+            // 1. 填充下拉选项（不含"全部"）
+            this.modalAreaOptions = areas.filter(a => a.value !== '1');
+            this.modalFactoryOptions = factories.filter(f => f.value !== '1');
+
+            // 2. 性别文本
+            const sexVal = emp.Sex;
+            this.viewSexText = (sexVal === undefined || sexVal === null)
+              ? '' : (sexVal ? '男' : '女');
+
+            // 3. 角色标签
+            this.viewRoleLabel = '';
+            if (emp.role_id != null) {
+              const rid = typeof emp.role_id === 'number' ? emp.role_id : Number(emp.role_id);
+              const found = this.roleOptions.find(r => r.value === rid);
+              this.viewRoleLabel = found ? found.label : String(emp.role_id);
+            }
+
+            // 4. ★ 选项就绪后，再 patchValue
+            this.viewForm.patchValue({
+              employee_id: emp.employee_id ?? '',
+              name: emp.name ?? '',
+              name_a: emp.name_a ?? '',
+              Sex: emp.Sex ?? true,
+              dept_desc: emp.dept_desc ?? null,
+              region_name: emp.region_name ?? null,
+              plant_name: emp.plant_name ?? null,
+              role_id: emp.role_id ?? null,
+              status: emp.status ?? true,
+              hasaccess: emp.hasaccess ?? true
+            });
+
+            this.viewEmployee = emp;
+            this.isViewVisible = true;
+          },
+          error: () => this.message.error('加载选项数据失败')
+        });
+      },
+      error: () => this.message.error('获取员工详情失败')
+    });
+  }
+  handleViewCancel(): void {
+    this.isViewVisible = false;
+  }
+
+  onEdit(data: Employee): void {
+    this.isEditMode = true;
+    this.modalTitle = '编辑';
+    this.currentEmployeeId = data.employee_id;
+
+    // 先获取最新的完整员工数据
+    this.employeeService.getEmployeeById(data.employee_id).subscribe({
+      next: (employee) => {
+        const emp: any = employee as any;
+
+        // 加载弹框下拉选项（地区 & 厂别）
+        const areas$ = this.employeeService.getAreas();
+        const factories$ = emp.region_name
+          ? this.employeeService.getFactories(emp.region_name)
+          : of([] as SelectOption[]);
+
+        forkJoin({ areas: areas$, factories: factories$ }).subscribe({
+          next: ({ areas, factories }) => {
+            // 1. 填充弹框下拉选项（不含"全部"）
+            this.modalAreaOptions = areas.filter(a => a.value !== '1');
+            this.modalFactoryOptions = factories.filter(f => f.value !== '1');
+
+            // 2. 重置表单并填充数据
+            this.employeeForm.reset();
+            this.employeeForm.patchValue({
+              employee_id: emp.employee_id ?? '',
+              password: emp.password ?? '123456',
+              name: emp.name ?? '',
+              name_a: emp.name_a ?? '',
+              Sex: emp.Sex ?? true,
+              dept_desc: emp.dept_desc ?? null,
+              region_name: emp.region_name ?? null,
+              plant_name: emp.plant_name ?? null,
+              role_id: emp.role_id ?? null,
+              status: emp.status ?? true,
+            });
+
+            // 3. ★ 编辑模式下禁用工号字段（不可修改主键）
+            this.employeeForm.get('employee_id')?.disable();
+
+            // 4. 清除所有校验状态（避免残留红框）
+            Object.values(this.employeeForm.controls).forEach(control => {
+              control.markAsPristine();
+              control.markAsUntouched();
+              control.updateValueAndValidity({ onlySelf: true });
+            });
+
+            // 5. 打开弹框
+            this.isModalVisible = true;
+          },
+          error: () => this.message.error('加载选项数据失败')
+        });
       },
       error: () => this.message.error('获取员工详情失败')
     });
   }
 
-  onEdit(data: Employee): void {
-    this.message.info(`编辑员工: ${data.name}`);
-  }
 
   // ===================== 删除 =====================
 
