@@ -1,0 +1,395 @@
+/* ==================== 全局盒模型 ==================== */
+:host {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  /* ★ 防止溢出 */
+}
+
+/* ==================== 容器 ==================== */
+.welcome-container {
+  background: #fff;
+  width: 100%;
+  max-width: 100%;
+  /* ★ 不超过父容器 */
+  overflow: hidden;
+  /* ★ 防止子元素溢出 */
+  box-sizing: border-box;
+}
+
+/* ==================== 页面标题 ==================== */
+.page-header {
+  text-align: center;
+  padding: 10px 0 6px;
+  border-bottom: 1px solid #e8e8e8;
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.85);
+  }
+}
+
+/* ====================
+   ★ CSS Grid 仪表盘布局（核心修改）
+   - 左侧统计卡片：120px（缩小）
+   - 中间图表区：弹性 1fr
+   - 右侧面板：200px（缩小）
+   ==================== */
+// 找到 .dashboard-grid，替换整段：
+
+.dashboard-grid {
+  display: grid;
+  /* ★ 改为 4 列：底部地图可跨 2 列 */
+  grid-template-columns: 110px 300px 1fr 250px;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "stats  center center right"
+    "map    map    dept   right";
+  border: 1px solid #e8e8e8;
+  border-top: none;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+
+/* ==================== 1. 统计卡片（缩小字号和间距） ==================== */
+.stats-section {
+  grid-area: stats;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e8e8e8;
+  min-width: 0;
+  /* ★ 防止 grid 子项溢出 */
+}
+
+.stat-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 10px 10px;
+
+  &:first-child {
+    border-bottom: 1px solid #e8e8e8;
+  }
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.stat-number {
+  font-size: 26px;
+  /* ★ 从34缩小到26 */
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.85);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.row-label {
+  color: #999;
+}
+
+.row-value,
+.row-arrow {
+  font-weight: 500;
+}
+
+.val-down {
+  color: #52c41a;
+}
+
+.val-up {
+  color: #ff4d4f;
+}
+
+/* ==================== 2. 中间图表区 ==================== */
+.chart-section {
+  grid-area: center;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e8e8e8;
+  min-width: 0;
+  /* ★ 防止溢出 */
+  overflow: hidden;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  flex-wrap: nowrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  label {
+    font-size: 11px;
+    color: #999;
+  }
+}
+
+.date-range-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ★ 趋势图：高度从280缩小到220 */
+.trend-chart {
+  height: 220px;
+  padding: 4px 8px;
+  min-width: 0;
+}
+
+/* ==================== 3. 右侧面板（缩小） ==================== */
+.right-panel {
+  grid-area: right;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+  margin: 0 0 8px;
+  white-space: nowrap;
+}
+
+/* ----- 厂别排行 ----- */
+.ranking-block {
+  flex: 1;
+  padding: 10px 10px;
+  border-bottom: 1px solid #e8e8e8;
+  overflow-y: auto;
+}
+
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.rank-name {
+  width: 36px;
+  /* ★ 从50缩小到36 */
+  font-size: 11px;
+  color: #333;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: #f5f5f5;
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.rank-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.rank-count {
+  width: 40px;
+  /* ★ 从50缩小到40 */
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+  color: #333;
+  flex-shrink: 0;
+}
+
+.view-more-wrap {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.view-more-link {
+  display: inline-block;
+  padding: 2px 12px;
+  border: 1px solid #1890ff;
+  border-radius: 10px;
+  color: #1890ff;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #e6f7ff;
+  }
+}
+
+/* ----- 性别比 ----- */
+.gender-block {
+  padding: 10px 10px;
+}
+
+/* ★ 性别图高度从190缩小到150 */
+.gender-chart {
+  height: 150px;
+}
+
+/* ==================== 4. 地区地图 ==================== */
+.map-section {
+  grid-area: map;
+  padding: 10px 12px;
+  border-top: 1px solid #e8e8e8;
+  border-right: 1px solid #e8e8e8;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ★ 地图高度从260缩小到200 */
+.map-chart {
+  height: 200px;
+}
+
+/* ==================== 5. 部门分布 ==================== */
+.dept-section {
+  grid-area: dept;
+  padding: 10px 12px;
+  border-top: 1px solid #e8e8e8;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ★ 部门图高度从260缩小到200 */
+.dept-chart {
+  height: 200px;
+}
+
+/* ==================== 页脚 ==================== */
+.page-footer {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #999;
+  border-top: 1px solid #e8e8e8;
+}
+
+/* ==================== 响应式处理 ==================== */
+@media (max-width: 1400px) {
+  .dashboard-grid {
+    grid-template-columns: 110px 1fr 180px;
+  }
+
+  .stat-number {
+    font-size: 22px;
+  }
+
+  .rank-name {
+    width: 30px;
+  }
+
+  .trend-chart {
+    height: 200px;
+  }
+
+  .map-chart,
+  .dept-chart {
+    height: 180px;
+  }
+
+  .gender-chart {
+    height: 130px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dashboard-grid {
+    grid-template-columns: 100px 1fr 160px;
+  }
+
+  .stat-number {
+    font-size: 20px;
+  }
+
+  .filter-bar {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+      "stats"
+      "center"
+      "right"
+      "map"
+      "dept";
+  }
+
+  .stats-section {
+    flex-direction: row;
+    border-right: none;
+    border-bottom: 1px solid #e8e8e8;
+  }
+
+  .stat-card:first-child {
+    border-bottom: none;
+    border-right: 1px solid #e8e8e8;
+  }
+
+  .chart-section {
+    border-right: none;
+  }
+
+  .right-panel {
+    border-top: 1px solid #e8e8e8;
+  }
+
+  .map-section {
+    border-right: none;
+  }
+}

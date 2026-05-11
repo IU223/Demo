@@ -69,11 +69,15 @@ nz-header {
   box-shadow: 0 1px 4px rgba(0, 21, 41, .08);
 }
 
+// 找到以下两处，修改对应的值：
+
 nz-content {
-  margin: 24px;
+  margin: 0;
+  /* 原来是 margin: 24px; */
 }
 
 .inner-content {
-  padding: 24px;
+  padding: 8px;
+  /* 原来是 padding: 24px; */
   background: #fff;
 }
