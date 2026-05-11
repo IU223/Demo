@@ -366,12 +366,12 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // ==================== 世界地图 ====================
 
   private loadWorldMap(): void {
-    // ★ 改为世界地图 GeoJSON
-    const mapUrl = 'https://cdn.jsdelivr.net/npm/echarts@5/map/json/world.json';
+    // ★ 优先使用本地 assets，不再依赖外部 CDN
+    const localUrl = 'assets/map/world.json';
 
-    fetch(mapUrl)
+    fetch(localUrl)
       .then(res => {
-        if (!res.ok) throw new Error('Map fetch failed');
+        if (!res.ok) throw new Error(`Local map load failed: ${res.status}`);
         return res.json();
       })
       .then(json => {
@@ -389,6 +389,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
   }
+
 
 
   private buildMapChart(): void {
