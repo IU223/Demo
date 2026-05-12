@@ -106,7 +106,20 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    this.initCharts();
+    setTimeout(() => {
+      this.initCharts();
+      // 数据可能已经在延迟期间加载完毕，需要立即渲染
+      if (this.allEmployees.length > 0) {
+        this.buildTrendChart();
+        this.buildDeptChart();
+        this.buildGenderChart();
+        if (this.mapReady) {
+          this.buildMapChart();
+        } else if (this.mapLoadFailed) {
+          this.buildMapFallbackChart();
+        }
+      }
+    }, 400);
   }
 
   ngOnDestroy(): void {
@@ -389,75 +402,281 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
   }
-
-
-
   private buildMapChart(): void {
     if (!this.mapReady || !this.mapEchart) return;
 
+    // 1. 按地区聚合人数
     const regionCount: Record<string, number> = {};
     this.allEmployees.forEach((emp: any) => {
       const r = emp.region_name || '未知';
       regionCount[r] = (regionCount[r] || 0) + 1;
     });
 
+    // 2. 构建散点数据（按人数降序）
     const scatterData = this.regionData
       .filter((r: any) => r.longitude != null && r.latitude != null)
       .map((r: any) => ({
         name: r.region_name,
         value: [r.longitude, r.latitude, regionCount[r.region_name] || 0]
-      }));
+      }))
+      .sort((a: any, b: any) => b.value[2] - a.value[2]);
+
+    // 3. ★ 拆分：前3名 vs 其余
+    const top3Data = scatterData.slice(0, 3);
+    const restData = scatterData.slice(3);
+
+    // 4. 为前3名计算标签位置 + 连线
+    const labelPositions = this.calculateLabelPositions(top3Data);
+    const linesData: any[] = [];
+    const labelPoints: any[] = [];
+
+    top3Data.forEach((point: any, index: number) => {
+      const labelPos = labelPositions[index];
+
+      linesData.push({
+        coords: [
+          [point.value[0], point.value[1]],
+          [labelPos.lon, labelPos.lat]
+        ]
+      });
+
+      labelPoints.push({
+        name: point.name,
+        value: [labelPos.lon, labelPos.lat, point.value[2]],
+        dataIndex: index
+      });
+    });
+
+    // 5. 颜色方案
+    const colors = ['#ff4d4f', '#ff7a45', '#ffa940', '#fadb14', '#52c41a', '#1890ff', '#722ed1'];
+    const getColor = (index: number): string => colors[Math.min(index, colors.length - 1)];
 
     this.mapEchart.setOption({
       tooltip: {
         trigger: 'item',
-        formatter: (params: any) => `${params.name}<br/>人数：${params.value?.[2] || 0}`
+        backgroundColor: 'rgba(0,0,0,0.75)',
+        borderColor: 'transparent',
+        textStyle: { color: '#ffffffff', fontSize: 13 },
+        formatter: (params: any) => {
+          if (params.seriesType === 'lines') return '';
+          if (params.seriesName === '标签') return '';  // 标签端点不重复显示
+          const count = params.value?.[2] ?? 0;
+          return `
+          <div style="padding:4px 8px;">
+            <div style="font-size:14px;font-weight:600;margin-bottom:4px;">📍 ${params.name}</div>
+            <div style="font-size:20px;font-weight:700;color:#faad14;">
+              ${count.toLocaleString()} <span style="font-size:12px;color:#ccc;">人</span>
+            </div>
+          </div>`;
+        }
       },
       geo: {
-        map: 'world',            // ★ 改为 'world'
+        map: 'world',
         roam: true,
-        zoom: 1.5,               // ★ 世界地图缩放比例
-        center: [105, 30],       // ★ 居中到亚洲区域（可根据数据调整）
-        silent: false,
+        zoom: 1.5,
+        center: [90, 20],
         label: { show: false },
         itemStyle: {
-          areaColor: '#dce9f7',
-          borderColor: '#a3c4e0',
+          areaColor: '#d6e4f0',
+          borderColor: '#a3bdd4',
           borderWidth: 0.5
         },
         emphasis: {
-          itemStyle: {
-            areaColor: '#b3d1ea'
-          },
-          label: { show: false }
+          itemStyle: { areaColor: '#b3d1ea' },
+          label: {
+            show: true,
+          }
         }
       },
-      series: [{
-        type: 'scatter',
-        coordinateSystem: 'geo',
-        data: scatterData,
-        symbolSize: (val: any) => {
-          const count = val[2] || 0;
-          return Math.max(8, Math.min(40, Math.sqrt(count) * 2));
+      series: [
+        // ★ 系列1：前3名散点（带颜色排名）
+        {
+          name: 'TOP3',
+          type: 'scatter',
+          coordinateSystem: 'geo',
+          data: top3Data,
+          symbolSize: 10,
+          itemStyle: {
+            color: (params: any) => getColor(params.dataIndex),
+            borderColor: '#fff',
+            borderWidth: 1.5,
+            shadowBlur: 6,
+            shadowColor: 'rgba(0,0,0,0.2)'
+          },
+          label: { show: false },
+          zlevel: 2
         },
-        itemStyle: {
-          color: '#ff4d4f',
-          shadowBlur: 10,
-          shadowColor: 'rgba(255, 77, 79, 0.4)'
+
+        // ★ 系列2：其余散点 — 默认不显示标签，hover 时显示
+        {
+          name: '其他地区',
+          type: 'scatter',
+          coordinateSystem: 'geo',
+          data: restData.map((d: any, i: number) => ({
+            ...d,
+            dataIndex: i + 3   // 保留全局索引用于取色
+          })),
+          symbolSize: 10,
+          itemStyle: {
+            color: (params: any) => {
+              const idx = params.data.dataIndex ?? (params.dataIndex + 3);
+              if (params.value[2] === 0) return '#bfbfbf';
+              return getColor(idx);
+            },
+            borderColor: '#fff',
+            borderWidth: 1.5,
+            shadowBlur: 6,
+            shadowColor: 'rgba(0,0,0,0.2)'
+          },
+          // ★ 默认不显示标签
+          label: { show: false },
+          // ★ 鼠标悬停时显示标签
+          emphasis: {
+            scale: true,
+            itemStyle: {
+              shadowBlur: 12,
+              shadowColor: 'rgba(0,0,0,0.4)',
+              borderWidth: 2
+            },
+            label: {
+              show: true,
+              position: 'right',
+              distance: 8,
+              formatter: (p: any) => {
+                const count = p.value[2];
+                return `${p.name}  ${count.toLocaleString()}人`;
+              },
+              fontSize: 13,
+              fontWeight: 700,
+              color: (params: any) => {
+                const idx = params.data.dataIndex ?? (params.dataIndex + 3);
+                if (params.value[2] === 0) return '#999';
+                return getColor(idx);
+              },
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              padding: [4, 8],
+              borderRadius: 4,
+              borderColor: '#ddd',
+              borderWidth: 1
+            }
+          },
+          zlevel: 2
         },
-        label: {
-          show: true,
-          position: 'right',
-          formatter: (p: any) => `${p.name} ${p.value[2]}人`,
-          fontSize: 11,
-          color: '#333',
-          backgroundColor: 'rgba(255,255,255,0.85)',
-          padding: [3, 6],
-          borderRadius: 3
+
+        // ★ 系列3：连线 — 仅前3名
+        {
+          name: '连线',
+          type: 'lines',
+          coordinateSystem: 'geo',
+          data: linesData,
+          lineStyle: {
+            color: '#aaa',
+            width: 1,
+            type: 'solid',
+            curveness: 0.2,
+            opacity: 0.4
+          },
+          zlevel: 1
+        },
+
+        // ★ 系列4：标签端点 — 仅前3名
+        {
+          name: '标签',
+          type: 'scatter',
+          coordinateSystem: 'geo',
+          data: labelPoints,
+          symbol: 'circle',
+          symbolSize: 4,
+          itemStyle: {
+            color: (params: any) => getColor(params.data.dataIndex),
+            borderColor: '#fff',
+            borderWidth: 1
+          },
+          label: {
+            show: true,
+            position: 'right',
+            distance: 5,
+            formatter: (p: any) => {
+              const count = p.value[2];
+              const idx = p.data.dataIndex;
+              return `{s${idx}|${p.name}  ${count.toLocaleString()}人}`;
+            },
+            rich: (() => {
+              const richStyles: Record<string, any> = {};
+              for (let i = 0; i < 3; i++) {
+                const color = getColor(i);
+                richStyles[`s${i}`] = {
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: color,
+                  padding: [4, 8],
+                  backgroundColor: 'rgba(255,255,255,0.92)',
+                  borderRadius: 4,
+                  borderColor: color,
+                  borderWidth: 1,
+                  lineHeight: 22
+                };
+              }
+              return richStyles;
+            })()
+          },
+          zlevel: 3
         }
-      }]
+      ]
     }, true);
   }
+
+
+
+  /**
+   * ★ 计算标签在右侧空白区域的位置
+   * 标签放在太平洋空白海域，垂直排列，避免与地图陆地重叠
+   */
+  private calculateLabelPositions(data: any[]): { lon: number; lat: number }[] {
+    const count = data.length;
+
+    // 标签列的经度位置（太平洋空白区域）
+    const baseLon = 160;
+
+    // 根据数据量动态计算垂直分布范围
+    const topLat = 50;                                   // 最高标签的纬度
+    const spacing = count > 1 ? Math.min(15, 70 / count) : 0;  // 标签间距（自动适应）
+
+    return data.map((_: any, index: number) => ({
+      lon: baseLon + (index % 2 === 0 ? 0 : 5),          // 奇偶交错，避免标签重叠
+      lat: topLat - index * spacing
+    }));
+  }
+  /**
+   * ★ 计算每个散点的标签偏移方向和距离，避免标签重叠
+   * 策略：按索引交替分配不同方向（右上、右下、左上、左下等）
+   */
+  private calculateLabelOffsets(data: any[]): { dx: number; dy: number }[] {
+    // 预定义偏移方向（经度偏移, 纬度偏移）
+    const directions = [
+      { dx: 15, dy: 8 },     // 右上
+      { dx: 18, dy: -5 },    // 右下
+      { dx: -18, dy: 10 },   // 左上
+      { dx: 20, dy: -12 },   // 右下远
+      { dx: -15, dy: -8 },   // 左下
+      { dx: 22, dy: 3 },     // 右平
+      { dx: -20, dy: -3 },   // 左平
+      { dx: 12, dy: 15 },    // 右上远
+      { dx: -12, dy: 15 },   // 左上远
+      { dx: 25, dy: -8 },    // 右下远
+    ];
+
+    return data.map((_: any, index: number) => {
+      const dir = directions[index % directions.length];
+      // 根据索引稍微调整距离，避免完全重叠
+      const scale = 1 + (index * 0.05);
+      return {
+        dx: dir.dx * scale,
+        dy: dir.dy * scale
+      };
+    });
+  }
+
 
 
   /** 地图加载失败时的备用柱状图 */
@@ -472,7 +691,26 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     const sorted = Object.entries(regionCount).sort((a, b) => b[1] - a[1]);
 
     this.mapEchart.setOption({
-      tooltip: { trigger: 'axis' },
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: 'rgba(0,0,0,0.75)',
+        borderColor: 'transparent',
+        textStyle: { color: '#fff', fontSize: 13 },
+        formatter: (params: any) => {
+          // ★ 过滤掉 geo 组件（国家区域）的 tooltip → 白色框消失
+          if (params.componentType === 'geo') return '';
+          if (params.seriesType === 'lines') return '';
+          if (params.seriesName === '标签') return '';
+          const count = params.value?.[2] ?? 0;
+          return `
+      <div style="padding:4px 8px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">📍 ${params.name}</div>
+        <div style="font-size:20px;font-weight:700;color:#faad14;">
+          ${count.toLocaleString()} <span style="font-size:12px;color:#ccc;">人</span>
+        </div>
+      </div>`;
+        }
+      },
       grid: { left: '3%', right: '10%', bottom: '3%', top: '10%', containLabel: true },
       xAxis: { type: 'value' },
       yAxis: {
@@ -553,7 +791,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
       legend: {
         orient: 'vertical',
-        right: '2%',
+        right: '-4%',
         top: 'center',
         icon: 'circle',
         itemWidth: 10,
@@ -566,7 +804,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
         textStyle: { fontSize: 12, lineHeight: 22 }
       },
       title: {
-        text: '总人',
+        text: '总人数',
         subtext: `${total}`,
         left: '30%',
         top: '35%',

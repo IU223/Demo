@@ -3,25 +3,34 @@
   display: block;
   width: 100%;
   overflow: hidden;
-  /* ★ 防止溢出 */
 }
 
 /* ==================== 容器 ==================== */
 .welcome-container {
-  background: #fff;
+  background: #f0f2f5;
+  /* ★ 改为浅灰背景，衬托白色卡片 */
   width: 100%;
   max-width: 100%;
-  /* ★ 不超过父容器 */
   overflow: hidden;
-  /* ★ 防止子元素溢出 */
   box-sizing: border-box;
+  padding: 12px;
+  /* ★ 新增内边距，防止阴影被裁切 */
 }
 
 /* ==================== 页面标题 ==================== */
 .page-header {
   text-align: center;
   padding: 10px 0 6px;
-  border-bottom: 1px solid #e8e8e8;
+  margin-bottom: 12px;
+  /* ★ 与下方网格拉开距离 */
+  background: #fff;
+  /* ★ 白色背景 */
+  border-radius: 6px;
+  /* ★ 圆角 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  /* ★ 阴影 */
+  border-bottom: none;
+  /* ★ 去掉原来的底部边线 */
 
   h2 {
     margin: 0;
@@ -31,23 +40,18 @@
   }
 }
 
-/* ====================
-   ★ CSS Grid 仪表盘布局（核心修改）
-   - 左侧统计卡片：120px（缩小）
-   - 中间图表区：弹性 1fr
-   - 右侧面板：200px（缩小）
-   ==================== */
-// 找到 .dashboard-grid，替换整段：
-
+/* ==================== 仪表盘网格 ==================== */
 .dashboard-grid {
   display: grid;
-  /* ★ 改为 4 列：底部地图可跨 2 列 */
   grid-template-columns: 110px 300px 1fr 250px;
   grid-template-rows: auto auto;
   grid-template-areas:
     "stats  center center right"
     "map    map    dept   right";
-  border: 1px solid #e8e8e8;
+  gap: 8px;
+  /* ★ 用 gap 代替边线分隔 */
+  border: none;
+  /* ★ 去掉外边框 */
   border-top: none;
   width: 100%;
   box-sizing: border-box;
@@ -55,15 +59,34 @@
   margin: 0 auto;
 }
 
+/* ==================== 通用卡片阴影样式 ==================== */
+.stats-section,
+.chart-section,
+.right-panel,
+.map-section,
+.dept-section {
+  background: #fff;
+  /* ★ 白色背景 */
+  border-radius: 6px;
+  /* ★ 圆角 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  /* ★ 阴影 */
+  transition: box-shadow 0.3s ease;
+  /* ★ 过渡动画 */
 
-/* ==================== 1. 统计卡片（缩小字号和间距） ==================== */
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    /* ★ 悬停加深阴影 */
+  }
+}
+
+/* ==================== 1. 统计卡片 ==================== */
 .stats-section {
   grid-area: stats;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #e8e8e8;
   min-width: 0;
-  /* ★ 防止 grid 子项溢出 */
+  /* ★ 去掉 border-right */
 }
 
 .stat-card {
@@ -86,7 +109,6 @@
 
 .stat-number {
   font-size: 26px;
-  /* ★ 从34缩小到26 */
   font-weight: 700;
   color: rgba(0, 0, 0, 0.85);
   line-height: 1.2;
@@ -123,10 +145,9 @@
   grid-area: center;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #e8e8e8;
   min-width: 0;
-  /* ★ 防止溢出 */
   overflow: hidden;
+  /* ★ 去掉 border-right */
 }
 
 .filter-bar {
@@ -155,14 +176,13 @@
   gap: 6px;
 }
 
-/* ★ 趋势图：高度从280缩小到220 */
 .trend-chart {
   height: 220px;
   padding: 4px 8px;
   min-width: 0;
 }
 
-/* ==================== 3. 右侧面板（缩小） ==================== */
+/* ==================== 3. 右侧面板 ==================== */
 .right-panel {
   grid-area: right;
   display: flex;
@@ -214,7 +234,6 @@
 
 .rank-name {
   width: 36px;
-  /* ★ 从50缩小到36 */
   font-size: 11px;
   color: #333;
   flex-shrink: 0;
@@ -240,7 +259,6 @@
 
 .rank-count {
   width: 40px;
-  /* ★ 从50缩小到40 */
   text-align: right;
   font-size: 11px;
   font-weight: 600;
@@ -273,7 +291,6 @@
   padding: 10px 10px;
 }
 
-/* ★ 性别图高度从190缩小到150 */
 .gender-chart {
   height: 150px;
 }
@@ -282,13 +299,11 @@
 .map-section {
   grid-area: map;
   padding: 10px 12px;
-  border-top: 1px solid #e8e8e8;
-  border-right: 1px solid #e8e8e8;
   min-width: 0;
   overflow: hidden;
+  /* ★ 去掉 border-top、border-right */
 }
 
-/* ★ 地图高度从260缩小到200 */
 .map-chart {
   height: 200px;
 }
@@ -297,12 +312,11 @@
 .dept-section {
   grid-area: dept;
   padding: 10px 12px;
-  border-top: 1px solid #e8e8e8;
   min-width: 0;
   overflow: hidden;
+  /* ★ 去掉 border-top */
 }
 
-/* ★ 部门图高度从260缩小到200 */
 .dept-chart {
   height: 200px;
 }
@@ -372,24 +386,15 @@
 
   .stats-section {
     flex-direction: row;
-    border-right: none;
-    border-bottom: 1px solid #e8e8e8;
+
+    .stat-card:first-child {
+      border-bottom: none;
+      border-right: 1px solid #e8e8e8;
+    }
   }
 
-  .stat-card:first-child {
-    border-bottom: none;
-    border-right: 1px solid #e8e8e8;
-  }
-
-  .chart-section {
-    border-right: none;
-  }
-
-  .right-panel {
-    border-top: 1px solid #e8e8e8;
-  }
-
+  .chart-section,
   .map-section {
-    border-right: none;
+    /* ★ 移动端无需右边框 */
   }
 }

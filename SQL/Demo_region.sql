@@ -7,4 +7,5 @@ INSERT INTO region (region_id, region_name, longitude, latitude) VALUES
     (6, 'WCD',   103.9500,   30.5500),
     (7, 'WMY',   100.3500,    5.3500),
     (8, 'WMX',  -106.4245,   31.6904),
-    (9, 'WVN',   105.9600,   20.5400);
+    (9, 'WVN',   105.9600,   20.5400),
+    (10, 'WTZ',   119,   32.4);
