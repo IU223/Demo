@@ -89,6 +89,8 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
   loading = false;
   mapReady = false;
   mapLoadFailed = false;
+  deptMap: Record<string, string> = {};
+  deptDescToCode: Record<string, string> = {};     // ★ 新增：描述 → 编码
 
   constructor(
     private employeeService: EmployeeService,
@@ -174,14 +176,18 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       activeCount: this.employeeService.getCountByStatus(true, where),
       resignCount: this.employeeService.getCountByStatus(false, where),
       allEmployees: this.employeeService.getAllForAnalysis(where),
-      regions: this.http.get<any[]>(`${environment.apiUrl}/regions`)
+      regions: this.http.get<any[]>(`${environment.apiUrl}/regions`),
+      departments: this.http.get<any[]>(`${environment.apiUrl}/departments`)   // ★ 新增
     }).subscribe({
-      next: ({ activeCount, resignCount, allEmployees, regions }) => {
+      next: ({ activeCount, resignCount, allEmployees, regions, departments }) => {
         this.activeCount = activeCount;
         this.resignCount = resignCount;
         this.totalCount = activeCount + resignCount;
         this.allEmployees = allEmployees;
         this.regionData = regions;
+        console.log(this.regionData);
+        // ★ 新增：建立部门映射
+        this.buildDeptMap(departments);
 
         this.calculateComparisons();
         this.buildTrendChart();
@@ -196,6 +202,8 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         this.loading = false;
+
+        // setTimeout(() => this.resizeAllCharts(), 100);
       },
       error: err => {
         console.error('加载仪表盘数据失败:', err);
@@ -204,6 +212,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
   }
+
 
   private buildWhereFilter(): any {
     const where: any = {};
@@ -417,6 +426,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       .filter((r: any) => r.longitude != null && r.latitude != null)
       .map((r: any) => ({
         name: r.region_name,
+        name_cn: r.region_name_cn,
         value: [r.longitude, r.latitude, regionCount[r.region_name] || 0]
       }))
       .sort((a: any, b: any) => b.value[2] - a.value[2]);
@@ -458,12 +468,13 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
         borderColor: 'transparent',
         textStyle: { color: '#ffffffff', fontSize: 13 },
         formatter: (params: any) => {
+          console.log("参数" + JSON.stringify(params));
           if (params.seriesType === 'lines') return '';
           if (params.seriesName === '标签') return '';  // 标签端点不重复显示
           const count = params.value?.[2] ?? 0;
           return `
           <div style="padding:4px 8px;">
-            <div style="font-size:14px;font-weight:600;margin-bottom:4px;">📍 ${params.name}</div>
+            <div style="font-size:14px;font-weight:600;margin-bottom:4px;">📍 ${params.name}:${params.data.name_cn}</div>
             <div style="font-size:20px;font-weight:700;color:#faad14;">
               ${count.toLocaleString()} <span style="font-size:12px;color:#ccc;">人</span>
             </div>
@@ -625,9 +636,6 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       ]
     }, true);
   }
-
-
-
   /**
    * ★ 计算标签在右侧空白区域的位置
    * 标签放在太平洋空白海域，垂直排列，避免与地图陆地重叠
@@ -737,25 +745,56 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private buildDeptChart(): void {
     if (!this.deptEchart) return;
 
+    // 1. 按 dept_desc 聚合（Employee 表存储的原始值）
     const map: Record<string, number> = {};
     this.allEmployees.forEach((emp: any) => {
-      const d = emp.dept_desc || '未知';
-      map[d] = (map[d] || 0) + 1;
+      const raw = emp.dept_desc || '未知';
+      map[raw] = (map[raw] || 0) + 1;
     });
 
     const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
-    const pieData = sorted.map(([name, value]) => ({ name, value }));
+
+    // 2. ★ 构建饼图数据：name 用 dept_code 显示，保留原始 desc 用于 tooltip
+    const pieData = sorted.map(([raw, value]) => {
+      const code = this.deptDescToCode[raw] || raw;       // 编码（标签显示）
+      const desc = this.deptMap[raw] || raw;               // 描述（tooltip 显示）
+      return {
+        name: code,          // ★ 饼图标签显示编码
+        value: value,
+        desc: desc           // ★ 自定义字段，tooltip 用
+      };
+    });
 
     this.deptEchart.setOption({
-      tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+      // ★ tooltip：鼠标悬停显示 dept_desc（描述）
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: 'rgba(0,0,0,0.75)',
+        borderColor: 'transparent',
+        textStyle: { color: '#fff', fontSize: 13 },
+        formatter: (params: any) => {
+          const desc = params.data.desc || params.name;
+          const count = params.value;
+          const percent = params.percent;
+          return `
+          <div style="padding:4px 8px;">
+            <div style="font-size:13px;color:#ccc;margin-bottom:4px;">${params.name}</div>
+            <div style="font-size:14px;font-weight:600;margin-bottom:2px;">${desc}</div>
+            <div style="font-size:18px;font-weight:700;color:#faad14;">
+              ${count.toLocaleString()} <span style="font-size:12px;color:#ccc;">人 (${percent}%)</span>
+            </div>
+          </div>`;
+        }
+      },
       series: [{
         type: 'pie',
         radius: ['0%', '65%'],
         center: ['50%', '52%'],
         data: pieData,
+        // ★ 标签显示编码 + 人数
         label: {
           show: true,
-          formatter: '{b}\n{c}',
+          formatter: '{b}\n{c}',       // {b} = name = dept_code
           fontSize: 10,
           color: '#555'
         },
@@ -769,6 +808,35 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       }]
     }, true);
   }
+
+  /**
+   * 建立部门映射表
+   * 同时支持 dept_code → dept_desc 和 dept_desc → dept_desc
+   */
+  private buildDeptMap(departments: any[]): void {
+    this.deptMap = {};
+    this.deptDescToCode = {};
+
+    departments.forEach((dept: any) => {
+      const code = dept.dept_code || '';
+      const desc = dept.dept_desc || '';
+
+      // 正向：code → desc（用于其他场景）
+      if (code && desc) {
+        this.deptMap[code] = desc;
+      }
+      if (desc) {
+        this.deptMap[desc] = desc;
+      }
+      if (desc && code) {
+        this.deptDescToCode[desc] = code;
+      }
+      if (code) {
+        this.deptDescToCode[code] = code;
+      }
+    });
+  }
+
 
   // ==================== 性别环形图 ====================
 
