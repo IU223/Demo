@@ -19,7 +19,7 @@ import {
 } from '@loopback/rest';
 import { Employee } from '../models';
 import { EmployeeRepository } from '../repositories';
-
+import { hashPassword } from '../services/hash.service';
 export class EmployeeControllerController {
   constructor(
     @repository(EmployeeRepository)
@@ -35,28 +35,21 @@ export class EmployeeControllerController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Employee, {
-            title: 'NewEmployee',
-          }),
+          schema: getModelSchemaRef(Employee, { title: 'NewEmployee' }),
         },
       },
     })
     employee: Employee,
   ): Promise<Employee> {
-    try {
-      console.log('========= POST /employees 请求体 =========');
-      console.log(JSON.stringify(employee, null, 2));
-      const result = await this.employeeRepository.create(employee);
-      console.log('========= 创建成功 =========');
-      return result;
-    } catch (err) {
-      console.error('========= POST /employees 报错 =========');
-      console.error('请求体:', JSON.stringify(employee, null, 2));
-      console.error('错误信息:', err.message);
-      console.error('错误详情:', JSON.stringify(err.details ?? err, null, 2));
-      console.error('完整堆栈:', err.stack);
-      throw err; // 继续抛出，让前端也能收到错误
+    // ★ 创建时自动哈希密码
+    if (employee.password) {
+      employee.password = await hashPassword(employee.password);
     }
+
+    console.log('========= POST /employees =========');
+    const result = await this.employeeRepository.create(employee);
+    console.log('========= 创建成功 =========');
+    return result;
   }
 
   @get('/employees/count')

@@ -8,11 +8,24 @@ import { registerLocaleData } from '@angular/common';
 import zh from '@angular/common/locales/zh';
 import { FormsModule } from '@angular/forms';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideHttpClient } from '@angular/common/http';
-import { NgxEchartsModule } from 'ngx-echarts';           // ★ 新增
+import { provideHttpClient, withInterceptors } from '@angular/common/http';  // ★ 改动
+import { NgxEchartsModule } from 'ngx-echarts';
 import * as echarts from 'echarts';
+
+import { jwtInterceptor } from './interceptors/jwt.interceptor';  // ★ 新增
+
 registerLocaleData(zh);
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(routes), provideNzIcons(), provideNzI18n(zh_CN), importProvidersFrom(FormsModule), provideAnimationsAsync(), provideHttpClient(), importProvidersFrom(NgxEchartsModule.forRoot({ echarts }))]
+  providers: [
+    provideRouter(routes),
+    provideNzIcons(),
+    provideNzI18n(zh_CN),
+    importProvidersFrom(FormsModule),
+    provideAnimationsAsync(),
+    provideHttpClient(
+      withInterceptors([jwtInterceptor])  // ★ 注册 JWT 拦截器
+    ),
+    importProvidersFrom(NgxEchartsModule.forRoot({ echarts })),
+  ],
 };
