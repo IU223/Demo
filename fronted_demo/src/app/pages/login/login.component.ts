@@ -10,6 +10,7 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzCardModule } from 'ng-zorro-antd/card';
+import { NzMessageService } from 'ng-zorro-antd/message';  // ★ 改用 NzMessage
 
 @Component({
   selector: 'app-login',
@@ -23,56 +24,59 @@ import { NzCardModule } from 'ng-zorro-antd/card';
     NzButtonModule,
     NzCheckboxModule,
     NzGridModule,
-    NzCardModule
+    NzCardModule,
   ],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
+  styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent implements OnInit {
   validateForm!: FormGroup;
-  passwordVisible = false; // 控制密码是否可见
-  isLoading = false;       // 控制按钮的加载状态
+  passwordVisible = false;
+  isLoading = false;
 
   constructor(
     private fb: NonNullableFormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private message: NzMessageService,  // ★ 注入消息服务
   ) { }
 
   ngOnInit(): void {
-    // 初始化表单并设置必填校验
+    // 如果已登录，直接跳转
+    if (this.authService.isTokenValid()) {
+      this.router.navigate(['/default/welcome']);
+      return;
+    }
+
     this.validateForm = this.fb.group({
       username: ['', [Validators.required]],
       password: ['', [Validators.required]],
-      remember: [true]
+      remember: [true],
     });
   }
 
   submitForm(): void {
-    // 检查表单是否有效
     if (this.validateForm.valid) {
       this.isLoading = true;
       const { username, password } = this.validateForm.value;
 
       this.authService.login({ username, password }).subscribe({
-        next: (res) => {
+        next: () => {
           this.isLoading = false;
-          console.log('登录成功，返回：', res);
-          if (res.token) {
-            localStorage.setItem('auth_token', res.token);
-          }
+          this.message.success('登录成功');
+          // ★ token 已在 AuthService.login() 的 tap 中自动存储
           this.router.navigate(['/default/welcome']);
         },
         error: (err) => {
           this.isLoading = false;
           console.error('登录失败：', err);
-          alert('登录失败，请检查用户名或密码');
-        }
+          // ★ 使用 NzMessage 替代 alert
+          const msg = err.error?.error?.message || '用户名或密码错误';
+          this.message.error(msg);
+        },
       });
-
     } else {
-      // 触发所有输入框的错误提示
-      Object.values(this.validateForm.controls).forEach(control => {
+      Object.values(this.validateForm.controls).forEach((control) => {
         if (control.invalid) {
           control.markAsDirty();
           control.updateValueAndValidity({ onlySelf: true });

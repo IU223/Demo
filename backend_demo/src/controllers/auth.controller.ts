@@ -1,6 +1,13 @@
-import { post, requestBody, response, ResponseObject } from '@loopback/rest';
+import { inject } from '@loopback/core';
+import {
+  post, requestBody, response, ResponseObject,
+  RestBindings, Request,
+} from '@loopback/rest';
 import { repository } from '@loopback/repository';
 import { EmployeeRepository } from '../repositories';
+import { comparePassword, hashPassword } from '../services/hash.service';
+import { generateToken, verifyToken } from '../services/jwt.service';
+
 const LOGIN_RESPONSE: ResponseObject = {
   description: 'Login response',
   content: {
@@ -16,12 +23,35 @@ const LOGIN_RESPONSE: ResponseObject = {
   },
 };
 
+// ★ 新增：修改密码响应
+const CHANGE_PASSWORD_RESPONSE: ResponseObject = {
+  description: 'Change password response',
+  content: {
+    'application/json': {
+      schema: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          message: { type: 'string' },
+        },
+      },
+    },
+  },
+};
+
 export class AuthController {
   constructor(
     @repository(EmployeeRepository)
     public employeeRepository: EmployeeRepository,
+    // ★ 新增：注入 HTTP Request 以读取 JWT
+    @inject(RestBindings.Http.REQUEST)
+    private request: Request,
   ) { }
 
+  /**
+   * POST /login
+   * 使用 bcrypt 比对密码，成功后签发 JWT
+   */
   @post('/login')
   @response(200, LOGIN_RESPONSE)
   async login(
@@ -45,20 +75,129 @@ export class AuthController {
   ) {
     const { username, password } = credentials;
 
-    // 使用 findOne 避免 findById 抛出异常
-    const employee = await this.employeeRepository.findOne({ where: { employee_id: username } });
-    // 简单明文密码比较（示例）。生产环境请改为哈希验证
-    if (employee?.password === password) {
-      const user = {
-        employee_id: employee.employee_id,
-        name: employee.name,
-      };
-      return {
-        token: 'demo-token',
-        user,
-      };
+    // 1. 查找用户
+    const employee = await this.employeeRepository.findOne({
+      where: { employee_id: username },
+    });
+
+    if (!employee || !employee.password) {
+      throw Object.assign(new Error('用户名或密码错误'), { statusCode: 401 });
     }
 
-    throw Object.assign(new Error('Unauthorized'), { statusCode: 401 });
+    // 2. bcrypt 比对密码
+    const isMatch = await comparePassword(password, employee.password);
+    if (!isMatch) {
+      throw Object.assign(new Error('用户名或密码错误'), { statusCode: 401 });
+    }
+
+    // 3. 签发 JWT
+    const token = generateToken({
+      employee_id: employee.employee_id,
+      name: employee.name,
+      role_id: employee.role_id,
+    });
+
+    return {
+      token,
+      user: {
+        employee_id: employee.employee_id,
+        name: employee.name,
+        role_id: employee.role_id,
+      },
+    };
+  }
+
+  // ===================== ★ 新增：修改密码 =====================
+
+  /**
+   * POST /change-password
+   * 需要 JWT 认证（拦截器已自动校验 token）
+   * 从 Authorization header 中解析当前用户，验证原密码后更新新密码
+   */
+  @post('/change-password')
+  @response(200, CHANGE_PASSWORD_RESPONSE)
+  async changePassword(
+    @requestBody({
+      description: 'Change password payload',
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              oldPassword: { type: 'string' },
+              newPassword: { type: 'string' },
+            },
+            required: ['oldPassword', 'newPassword'],
+          },
+        },
+      },
+    })
+    body: { oldPassword: string; newPassword: string },
+  ): Promise<{ success: boolean; message: string }> {
+
+    // 1. 从 JWT 中提取当前登录用户的 employee_id
+    const authHeader = this.request.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw Object.assign(new Error('未提供有效的认证令牌'), { statusCode: 401 });
+    }
+    const token = authHeader.slice(7);
+    const decoded = verifyToken(token);
+    const employeeId = decoded.employee_id;
+
+    console.log(`[change-password] 用户 ${employeeId} 请求修改密码`);
+
+    // 2. 查找用户
+    const employee = await this.employeeRepository.findById(employeeId);
+    if (!employee || !employee.password) {
+      throw Object.assign(new Error('用户不存在或密码未设置'), { statusCode: 400 });
+    }
+
+    // 3. 验证原密码
+    const isMatch = await comparePassword(body.oldPassword, employee.password);
+    if (!isMatch) {
+      throw Object.assign(new Error('原密码不正确'), { statusCode: 400 });
+    }
+
+    // 4. 校验新密码长度
+    if (!body.newPassword || body.newPassword.length < 6) {
+      throw Object.assign(new Error('新密码长度不能少于6位'), { statusCode: 400 });
+    }
+
+    // 5. 哈希新密码并更新
+    const hashedNewPassword = await hashPassword(body.newPassword);
+    await this.employeeRepository.updateById(employeeId, {
+      password: hashedNewPassword,
+    });
+
+    console.log(`[change-password] 用户 ${employeeId} 密码修改成功`);
+
+    return { success: true, message: '密码修改成功' };
+  }
+
+  /**
+   * POST /hash-password （工具端点）
+   */
+  @post('/hash-password')
+  @response(200, {
+    description: 'Hash a plain-text password (utility endpoint)',
+    content: { 'application/json': { schema: { type: 'object' } } },
+  })
+  async hashPwd(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: { password: { type: 'string' } },
+            required: ['password'],
+          },
+        },
+      },
+    })
+    body: { password: string },
+  ) {
+    const hashed = await hashPassword(body.password);
+    return { hashedPassword: hashed };
   }
 }

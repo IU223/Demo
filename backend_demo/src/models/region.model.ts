@@ -25,6 +25,11 @@ export class Region extends Entity {
   latitude?: number;
 
 
+  @property({
+    type: 'string',
+  })
+  region_name_cn?: string;
+
   constructor(data?: Partial<Region>) {
     super(data);
   }

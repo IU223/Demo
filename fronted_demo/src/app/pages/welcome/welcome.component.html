@@ -1,1 +1,126 @@
-<p>welcome works!</p>
+<div class="welcome-container">
+  <nz-spin [nzSpinning]="loading">
+
+    <!-- ==================== 页面标题 ==================== -->
+    <div class="page-header">
+      <h2>人员分析仪表图</h2>
+    </div>
+
+    <!-- ==================== 仪表盘网格 ==================== -->
+    <div class="dashboard-grid">
+
+      <!-- ========== 1. 左侧统计卡片 ========== -->
+      <div class="stats-section">
+        <div class="stat-card">
+          <span class="stat-label">在职人数</span>
+          <span class="stat-number">{{ activeCount }}</span>
+          <div class="stat-row">
+            <span class="row-label">同比</span>
+            <span class="row-value" [class.val-down]="yoyActive < 0" [class.val-up]="yoyActive >= 0">
+              {{ yoyActive }}%
+            </span>
+            <span class="row-arrow" [class.val-down]="yoyActive < 0" [class.val-up]="yoyActive >= 0">
+              {{ yoyActive < 0 ? '↓' : '↑' }} </span>
+          </div>
+          <div class="stat-row">
+            <span class="row-label">环比</span>
+            <span class="row-value" [class.val-down]="momActive < 0" [class.val-up]="momActive >= 0">
+              {{ momActive }}%
+            </span>
+            <span class="row-arrow" [class.val-down]="momActive < 0" [class.val-up]="momActive >= 0">
+              {{ momActive < 0 ? '↓' : '↑' }} </span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-label">离职人数</span>
+          <span class="stat-number resign-number">{{ resignCount }}</span>
+          <div class="stat-row">
+            <span class="row-label">同比</span>
+            <span class="row-value" [class.val-down]="yoyResign < 0" [class.val-up]="yoyResign >= 0">
+              {{ yoyResign }}%
+            </span>
+            <span class="row-arrow" [class.val-down]="yoyResign < 0" [class.val-up]="yoyResign >= 0">
+              {{ yoyResign < 0 ? '↓' : '↑' }} </span>
+          </div>
+          <div class="stat-row">
+            <span class="row-label">环比</span>
+            <span class="row-value" [class.val-down]="momResign < 0" [class.val-up]="momResign >= 0">
+              {{ momResign }}%
+            </span>
+            <span class="row-arrow" [class.val-down]="momResign < 0" [class.val-up]="momResign >= 0">
+              {{ momResign < 0 ? '↓' : '↑' }} </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== 2. 中间图表区 ========== -->
+      <div class="chart-section">
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>日期</label>
+            <div class="date-range-wrapper">
+              <nz-date-picker [(ngModel)]="startDate" nzPlaceHolder="请选择日期" [nzDisabledDate]="disabledStartDate"
+                nzFormat="yyyy-MM-dd" nzSize="small">
+              </nz-date-picker>
+              <nz-date-picker [(ngModel)]="endDate" nzPlaceHolder="请选择日期" [nzDisabledDate]="disabledEndDate"
+                nzFormat="yyyy-MM-dd" nzSize="small">
+              </nz-date-picker>
+            </div>
+          </div>
+          <div class="filter-group">
+            <label>厂区</label>
+            <nz-select [(ngModel)]="selectedFactory" nzPlaceHolder="请选择厂区" nzShowSearch nzAllowClear nzSize="small"
+              style="width: 120px;">
+              <nz-option *ngFor="let opt of factoryOptions" [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+            </nz-select>
+          </div>
+          <button nz-button nzType="primary" nzSize="small" (click)="onSearch()">查询</button>
+        </div>
+        <div #trendChartRef class="trend-chart"></div>
+      </div>
+
+      <!-- ========== 3. 右侧面板 ========== -->
+      <div class="right-panel">
+        <div class="ranking-block">
+          <h4 class="section-title">📈 厂别人数排行</h4>
+          <div class="rank-list">
+            <div class="rank-item" *ngFor="let item of displayedRanking; let i = index">
+              <span class="rank-badge" [style.background]="item.badgeColor">{{ i + 1 }}</span>
+              <span class="rank-name">{{ item.name }}</span>
+              <div class="rank-bar-wrap">
+                <div class="rank-bar" [style.width.%]="item.count / getMaxCount() * 100"
+                  [style.background]="item.barColor">
+                </div>
+              </div>
+              <span class="rank-count">{{ item.count }}</span>
+            </div>
+          </div>
+          <div class="view-more-wrap" *ngIf="factoryRanking.length > 10">
+            <a class="view-more-link" (click)="toggleShowAll()">
+              {{ showAllFactories ? '收起' : '查看更多' }}
+            </a>
+          </div>
+        </div>
+
+        <div class="gender-block">
+          <h4 class="section-title">% 性别比</h4>
+          <div #genderChartRef class="gender-chart"></div>
+        </div>
+      </div>
+
+      <!-- ========== 4. 地区人员分布 ========== -->
+      <div class="map-section">
+        <h4 class="section-title">地区人员分布</h4>
+        <div #mapChartRef class="map-chart"></div>
+      </div>
+
+      <!-- ========== 5. 部门分布 ========== -->
+      <div class="dept-section">
+        <h4 class="section-title">部门分布</h4>
+        <div #deptChartRef class="dept-chart"></div>
+      </div>
+    </div>
+
+  </nz-spin>
+</div>

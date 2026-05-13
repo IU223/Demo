@@ -226,3 +226,55 @@
     }
   }
 }
+
+/* ===================== 只读表单样式 ===================== */
+.modal-form-wrapper {
+
+  /* 禁用状态的 input 框：白底黑字，去除禁用鼠标样式 */
+  input[readonly],
+  input:disabled,
+  .ant-input-disabled,
+  .ant-input[disabled] {
+    color: rgba(0, 0, 0, 0.85) !important;
+    background-color: #fafafa !important;
+    cursor: default !important;
+    border-color: #d9d9d9 !important;
+  }
+
+  /* 禁用状态的 select */
+  .ant-select-disabled {
+    .ant-select-selector {
+      color: rgba(0, 0, 0, 0.85) !important;
+      background-color: #fafafa !important;
+      cursor: default !important;
+    }
+
+    .ant-select-arrow {
+      display: none; // 隐藏下拉箭头，强调不可操作
+    }
+  }
+
+  /* 禁用状态的 radio */
+  .ant-radio-disabled+span,
+  .ant-radio-wrapper-disabled {
+    color: rgba(0, 0, 0, 0.85) !important;
+    cursor: default !important;
+  }
+
+  /* 禁用状态的 switch */
+  .ant-switch-disabled {
+    opacity: 0.8 !important;
+    cursor: default !important;
+  }
+
+  /* 禁用状态的 date-picker */
+  .ant-picker-disabled {
+    color: rgba(0, 0, 0, 0.85) !important;
+    background-color: #fafafa !important;
+    cursor: default !important;
+
+    .ant-picker-suffix {
+      display: none;
+    }
+  }
+}

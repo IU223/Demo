@@ -1,23 +1,25 @@
-import {BootMixin} from '@loopback/boot';
-import {ApplicationConfig} from '@loopback/core';
+import { BootMixin } from '@loopback/boot';
+import { ApplicationConfig } from '@loopback/core';
 import {
   RestExplorerBindings,
   RestExplorerComponent,
 } from '@loopback/rest-explorer';
-import {RepositoryMixin} from '@loopback/repository';
-import {RestApplication} from '@loopback/rest';
-import {ServiceMixin} from '@loopback/service-proxy';
+import { RepositoryMixin } from '@loopback/repository';
+import { RestApplication } from '@loopback/rest';
+import { ServiceMixin } from '@loopback/service-proxy';
 import path from 'path';
-import {MySequence} from './sequence';
+import { MySequence } from './sequence';
+import { AuthInterceptor } from './interceptors/auth.interceptor';
 
-export {ApplicationConfig};
+export { ApplicationConfig };
 
 export class BackendDemoApplication extends BootMixin(
   ServiceMixin(RepositoryMixin(RestApplication)),
 ) {
   constructor(options: ApplicationConfig = {}) {
     super(options);
-
+    // ★ 注册全局 JWT 拦截器
+    this.interceptor(AuthInterceptor);
     // Set up the custom sequence
     this.sequence(MySequence);
 
@@ -40,5 +42,6 @@ export class BackendDemoApplication extends BootMixin(
         nested: true,
       },
     };
+
   }
 }

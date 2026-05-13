@@ -1,0 +1,400 @@
+/* ==================== 全局盒模型 ==================== */
+:host {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* ==================== 容器 ==================== */
+.welcome-container {
+  background: #f0f2f5;
+  /* ★ 改为浅灰背景，衬托白色卡片 */
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 12px;
+  /* ★ 新增内边距，防止阴影被裁切 */
+}
+
+/* ==================== 页面标题 ==================== */
+.page-header {
+  text-align: center;
+  padding: 10px 0 6px;
+  margin-bottom: 12px;
+  /* ★ 与下方网格拉开距离 */
+  background: #fff;
+  /* ★ 白色背景 */
+  border-radius: 6px;
+  /* ★ 圆角 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  /* ★ 阴影 */
+  border-bottom: none;
+  /* ★ 去掉原来的底部边线 */
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.85);
+  }
+}
+
+/* ==================== 仪表盘网格 ==================== */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 110px 300px 1fr 250px;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "stats  center center right"
+    "map    map    dept   right";
+  gap: 8px;
+  /* ★ 用 gap 代替边线分隔 */
+  border: none;
+  /* ★ 去掉外边框 */
+  border-top: none;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+/* ==================== 通用卡片阴影样式 ==================== */
+.stats-section,
+.chart-section,
+.right-panel,
+.map-section,
+.dept-section {
+  background: #fff;
+  /* ★ 白色背景 */
+  border-radius: 6px;
+  /* ★ 圆角 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  /* ★ 阴影 */
+  transition: box-shadow 0.3s ease;
+  /* ★ 过渡动画 */
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    /* ★ 悬停加深阴影 */
+  }
+}
+
+/* ==================== 1. 统计卡片 ==================== */
+.stats-section {
+  grid-area: stats;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  /* ★ 去掉 border-right */
+}
+
+.stat-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 10px 10px;
+
+  &:first-child {
+    border-bottom: 1px solid #e8e8e8;
+  }
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.stat-number {
+  font-size: 26px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.85);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.row-label {
+  color: #999;
+}
+
+.row-value,
+.row-arrow {
+  font-weight: 500;
+}
+
+.val-down {
+  color: #52c41a;
+}
+
+.val-up {
+  color: #ff4d4f;
+}
+
+/* ==================== 2. 中间图表区 ==================== */
+.chart-section {
+  grid-area: center;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  /* ★ 去掉 border-right */
+}
+
+.filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  flex-wrap: nowrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  label {
+    font-size: 11px;
+    color: #999;
+  }
+}
+
+.date-range-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trend-chart {
+  height: 220px;
+  padding: 4px 8px;
+  min-width: 0;
+}
+
+/* ==================== 3. 右侧面板 ==================== */
+.right-panel {
+  grid-area: right;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+  margin: 0 0 8px;
+  white-space: nowrap;
+}
+
+/* ----- 厂别排行 ----- */
+.ranking-block {
+  flex: 1;
+  padding: 10px 10px;
+  border-bottom: 1px solid #e8e8e8;
+  overflow-y: auto;
+}
+
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.rank-name {
+  width: 36px;
+  font-size: 11px;
+  color: #333;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: #f5f5f5;
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.rank-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.rank-count {
+  width: 40px;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+  color: #333;
+  flex-shrink: 0;
+}
+
+.view-more-wrap {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.view-more-link {
+  display: inline-block;
+  padding: 2px 12px;
+  border: 1px solid #1890ff;
+  border-radius: 10px;
+  color: #1890ff;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #e6f7ff;
+  }
+}
+
+/* ----- 性别比 ----- */
+.gender-block {
+  padding: 10px 10px;
+}
+
+.gender-chart {
+  height: 150px;
+}
+
+/* ==================== 4. 地区地图 ==================== */
+.map-section {
+  grid-area: map;
+  padding: 10px 12px;
+  min-width: 0;
+  overflow: hidden;
+  /* ★ 去掉 border-top、border-right */
+}
+
+.map-chart {
+  height: 200px;
+}
+
+/* ==================== 5. 部门分布 ==================== */
+.dept-section {
+  grid-area: dept;
+  padding: 10px 12px;
+  min-width: 0;
+  overflow: hidden;
+  /* ★ 去掉 border-top */
+}
+
+.dept-chart {
+  height: 200px;
+}
+
+/* ==================== 页脚 ==================== */
+.page-footer {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #999;
+  border-top: 1px solid #e8e8e8;
+}
+
+/* ==================== 响应式处理 ==================== */
+@media (max-width: 1400px) {
+  .dashboard-grid {
+    grid-template-columns: 110px 1fr 180px;
+  }
+
+  .stat-number {
+    font-size: 22px;
+  }
+
+  .rank-name {
+    width: 30px;
+  }
+
+  .trend-chart {
+    height: 200px;
+  }
+
+  .map-chart,
+  .dept-chart {
+    height: 180px;
+  }
+
+  .gender-chart {
+    height: 130px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dashboard-grid {
+    grid-template-columns: 100px 1fr 160px;
+  }
+
+  .stat-number {
+    font-size: 20px;
+  }
+
+  .filter-bar {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+      "stats"
+      "center"
+      "right"
+      "map"
+      "dept";
+  }
+
+  .stats-section {
+    flex-direction: row;
+
+    .stat-card:first-child {
+      border-bottom: none;
+      border-right: 1px solid #e8e8e8;
+    }
+  }
+
+  .chart-section,
+  .map-section {
+    /* ★ 移动端无需右边框 */
+  }
+}

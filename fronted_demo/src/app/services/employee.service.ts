@@ -225,4 +225,27 @@ export class EmployeeService {
       })
     );
   }
+  // ===================== 分析页专用 =====================
+
+  /** 按状态统计人数（在职/离职） */
+  getCountByStatus(status: boolean, extraWhere?: any): Observable<number> {
+    const where = { status, ...(extraWhere || {}) };
+    const params = new HttpParams().set('where', JSON.stringify(where));
+    return this.http.get<{ count: number }>(`${this.apiUrl}/count`, { params }).pipe(
+      map(r => r.count)
+    );
+  }
+
+  /** 获取全部员工（前端聚合分析用，不分页） */
+  getAllForAnalysis(extraWhere?: any): Observable<Employee[]> {
+    const filter = {
+      where: extraWhere || {},
+      limit: 100000
+    };
+    const params = new HttpParams().set('filter', JSON.stringify(filter));
+    return this.http.get<any>(this.apiUrl, { params }).pipe(
+      map(resp => Array.isArray(resp) ? resp : (resp?.data || []))
+    );
+  }
+
 }
