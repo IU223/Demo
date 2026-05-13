@@ -67,17 +67,197 @@ nz-header {
   padding: 0;
   background: #fff;
   box-shadow: 0 1px 4px rgba(0, 21, 41, .08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-
-// 找到以下两处，修改对应的值：
 
 nz-content {
   margin: 0;
-  /* 原来是 margin: 24px; */
 }
 
 .inner-content {
   padding: 8px;
-  /* 原来是 padding: 24px; */
   background: #fff;
+}
+
+/* ===================== 右侧用户头像区域 ===================== */
+
+.header-right {
+  display: flex;
+  align-items: center;
+  padding-right: 24px;
+}
+
+.user-dropdown {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 0 8px;
+  height: 64px;
+  transition: background 0.3s ease;
+  border-radius: 4px;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.025);
+  }
+}
+
+.user-avatar {
+  margin-right: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.user-name {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.65);
+  margin-right: 4px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.45);
+  transition: transform 0.3s;
+}
+
+/* 下拉菜单样式 */
+.user-menu {
+  min-width: 160px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.65);
+    transition: all 0.2s;
+
+    &:hover {
+      color: #1890ff;
+    }
+
+    [nz-icon] {
+      font-size: 16px;
+    }
+  }
+}
+
+/* ===================== 弹框通用样式 ===================== */
+
+.custom-modal-title {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* 弹框表单包装器 */
+.modal-form-wrapper {
+
+  /* 禁用状态的 input 框 */
+  input[readonly],
+  input:disabled,
+  .ant-input-disabled,
+  .ant-input[disabled] {
+    color: rgba(0, 0, 0, 0.85) !important;
+    background-color: #fafafa !important;
+    cursor: default !important;
+    border-color: #d9d9d9 !important;
+  }
+
+  /* 禁用状态的 select */
+  .ant-select-disabled {
+    .ant-select-selector {
+      color: rgba(0, 0, 0, 0.85) !important;
+      background-color: #fafafa !important;
+      cursor: default !important;
+    }
+
+    .ant-select-arrow {
+      display: none;
+    }
+  }
+
+  /* 禁用状态的 radio */
+  .ant-radio-disabled+span,
+  .ant-radio-wrapper-disabled {
+    color: rgba(0, 0, 0, 0.85) !important;
+    cursor: default !important;
+  }
+}
+
+/* ===================== ★ 修改密码弹框专用样式 ===================== */
+
+/* 密码可见性切换图标 */
+.password-toggle-icon {
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 16px;
+  transition: color 0.3s;
+
+  &:hover {
+    color: #1890ff;
+  }
+}
+
+/* 密码安全提示区域 */
+.password-tips {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #f6f8fa;
+  border-radius: 6px;
+  border: 1px solid #e8ecf0;
+
+  .tips-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.65);
+    margin-bottom: 8px;
+
+    [nz-icon] {
+      color: #1890ff;
+      font-size: 15px;
+    }
+  }
+
+  .tips-list {
+    margin: 0;
+    padding-left: 20px;
+
+    li {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.45);
+      line-height: 22px;
+      list-style-type: disc;
+
+      &::marker {
+        color: #d9d9d9;
+      }
+    }
+  }
+}
+
+/* 密码表单中 input-group 的后缀图标区域微调 */
+.password-form-wrapper {
+  ::ng-deep .ant-input-group {
+    .ant-input-affix-wrapper {
+      border-radius: 6px;
+    }
+  }
 }

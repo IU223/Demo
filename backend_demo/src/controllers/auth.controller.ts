@@ -1,8 +1,12 @@
-import { post, requestBody, response, ResponseObject } from '@loopback/rest';
+import { inject } from '@loopback/core';
+import {
+  post, requestBody, response, ResponseObject,
+  RestBindings, Request,
+} from '@loopback/rest';
 import { repository } from '@loopback/repository';
 import { EmployeeRepository } from '../repositories';
 import { comparePassword, hashPassword } from '../services/hash.service';
-import { generateToken } from '../services/jwt.service';
+import { generateToken, verifyToken } from '../services/jwt.service';
 
 const LOGIN_RESPONSE: ResponseObject = {
   description: 'Login response',
@@ -19,10 +23,29 @@ const LOGIN_RESPONSE: ResponseObject = {
   },
 };
 
+// ★ 新增：修改密码响应
+const CHANGE_PASSWORD_RESPONSE: ResponseObject = {
+  description: 'Change password response',
+  content: {
+    'application/json': {
+      schema: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          message: { type: 'string' },
+        },
+      },
+    },
+  },
+};
+
 export class AuthController {
   constructor(
     @repository(EmployeeRepository)
     public employeeRepository: EmployeeRepository,
+    // ★ 新增：注入 HTTP Request 以读取 JWT
+    @inject(RestBindings.Http.REQUEST)
+    private request: Request,
   ) { }
 
   /**
@@ -84,9 +107,76 @@ export class AuthController {
     };
   }
 
+  // ===================== ★ 新增：修改密码 =====================
+
   /**
-   * POST /register  （可选：注册/重置密码时使用）
-   * 仅作演示，生产环境需加权限控制
+   * POST /change-password
+   * 需要 JWT 认证（拦截器已自动校验 token）
+   * 从 Authorization header 中解析当前用户，验证原密码后更新新密码
+   */
+  @post('/change-password')
+  @response(200, CHANGE_PASSWORD_RESPONSE)
+  async changePassword(
+    @requestBody({
+      description: 'Change password payload',
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              oldPassword: { type: 'string' },
+              newPassword: { type: 'string' },
+            },
+            required: ['oldPassword', 'newPassword'],
+          },
+        },
+      },
+    })
+    body: { oldPassword: string; newPassword: string },
+  ): Promise<{ success: boolean; message: string }> {
+
+    // 1. 从 JWT 中提取当前登录用户的 employee_id
+    const authHeader = this.request.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw Object.assign(new Error('未提供有效的认证令牌'), { statusCode: 401 });
+    }
+    const token = authHeader.slice(7);
+    const decoded = verifyToken(token);
+    const employeeId = decoded.employee_id;
+
+    console.log(`[change-password] 用户 ${employeeId} 请求修改密码`);
+
+    // 2. 查找用户
+    const employee = await this.employeeRepository.findById(employeeId);
+    if (!employee || !employee.password) {
+      throw Object.assign(new Error('用户不存在或密码未设置'), { statusCode: 400 });
+    }
+
+    // 3. 验证原密码
+    const isMatch = await comparePassword(body.oldPassword, employee.password);
+    if (!isMatch) {
+      throw Object.assign(new Error('原密码不正确'), { statusCode: 400 });
+    }
+
+    // 4. 校验新密码长度
+    if (!body.newPassword || body.newPassword.length < 6) {
+      throw Object.assign(new Error('新密码长度不能少于6位'), { statusCode: 400 });
+    }
+
+    // 5. 哈希新密码并更新
+    const hashedNewPassword = await hashPassword(body.newPassword);
+    await this.employeeRepository.updateById(employeeId, {
+      password: hashedNewPassword,
+    });
+
+    console.log(`[change-password] 用户 ${employeeId} 密码修改成功`);
+
+    return { success: true, message: '密码修改成功' };
+  }
+
+  /**
+   * POST /hash-password （工具端点）
    */
   @post('/hash-password')
   @response(200, {

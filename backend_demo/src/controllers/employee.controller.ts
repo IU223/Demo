@@ -1,25 +1,15 @@
 import {
-  Count,
-  CountSchema,
-  Filter,
-  FilterExcludingWhere,
-  repository,
-  Where,
+  Count, CountSchema, Filter, FilterExcludingWhere,
+  repository, Where,
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  post, param, get, getModelSchemaRef, patch, put, del,
+  requestBody, response,
 } from '@loopback/rest';
 import { Employee } from '../models';
 import { EmployeeRepository } from '../repositories';
 import { hashPassword } from '../services/hash.service';
+
 export class EmployeeControllerController {
   constructor(
     @repository(EmployeeRepository)
@@ -78,9 +68,6 @@ export class EmployeeControllerController {
   async find(
     @param.filter(Employee) filter?: Filter<Employee>,
   ): Promise<Employee[]> {
-    // ★ 加上这行，查看后端实际收到的 filter
-    console.log('========= 后端收到的 filter =========');
-    console.log(JSON.stringify(filter, null, 2));
     return this.employeeRepository.find(filter);
   }
 
@@ -100,6 +87,10 @@ export class EmployeeControllerController {
     employee: Employee,
     @param.where(Employee) where?: Where<Employee>,
   ): Promise<Count> {
+    // ★ 批量更新也要哈希
+    if (employee.password) {
+      employee.password = await hashPassword(employee.password);
+    }
     return this.employeeRepository.updateAll(employee, where);
   }
 
@@ -114,15 +105,14 @@ export class EmployeeControllerController {
   })
   async findById(
     @param.path.string('id') id: string,
-    @param.filter(Employee, { exclude: 'where' }) filter?: FilterExcludingWhere<Employee>
+    @param.filter(Employee, { exclude: 'where' })
+    filter?: FilterExcludingWhere<Employee>,
   ): Promise<Employee> {
     return this.employeeRepository.findById(id, filter);
   }
 
   @patch('/employees/{id}')
-  @response(204, {
-    description: 'Employee PATCH success',
-  })
+  @response(204, { description: 'Employee PATCH success' })
   async updateById(
     @param.path.string('id') id: string,
     @requestBody({
@@ -134,26 +124,28 @@ export class EmployeeControllerController {
     })
     employee: Employee,
   ): Promise<void> {
+    // ★ 单条更新时如果传了 password 则哈希
+    if (employee.password) {
+      employee.password = await hashPassword(employee.password);
+    }
     await this.employeeRepository.updateById(id, employee);
   }
 
   @put('/employees/{id}')
-  @response(204, {
-    description: 'Employee PUT success',
-  })
+  @response(204, { description: 'Employee PUT success' })
   async replaceById(
     @param.path.string('id') id: string,
     @requestBody() employee: Employee,
   ): Promise<void> {
+    if (employee.password) {
+      employee.password = await hashPassword(employee.password);
+    }
     await this.employeeRepository.replaceById(id, employee);
   }
 
   @del('/employees/{id}')
-  @response(204, {
-    description: 'Employee DELETE success',
-  })
+  @response(204, { description: 'Employee DELETE success' })
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     await this.employeeRepository.deleteById(id);
   }
-
 }

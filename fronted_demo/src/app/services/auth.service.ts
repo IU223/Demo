@@ -22,8 +22,14 @@ export interface TokenPayload {
   employee_id: string;
   name?: string;
   role_id?: number;
-  iat: number;    // 签发时间（秒级时间戳）
-  exp: number;    // 过期时间（秒级时间戳）
+  iat: number;
+  exp: number;
+}
+
+// ★ 新增：修改密码请求
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -33,7 +39,7 @@ export class AuthService {
   constructor(private http: HttpClient) { }
 
   /**
-   * 登录：调用后端 /login，成功后自动存储 token 和用户信息
+   * 登录
    */
   login(payload: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.baseUrl}/login`, payload).pipe(
@@ -49,27 +55,30 @@ export class AuthService {
   }
 
   /**
-   * 登出：清除本地存储
+   * ★ 修改密码
+   */
+  changePassword(payload: ChangePasswordRequest): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.baseUrl}/change-password`,
+      payload
+    );
+  }
+
+  /**
+   * 登出
    */
   logout(): void {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_info');
   }
 
-  /**
-   * 获取当前存储的 token
-   */
   getToken(): string | null {
     return localStorage.getItem('auth_token');
   }
 
-  /**
-   * 解析 JWT payload（不做签名验证，仅解码）
-   */
   decodeToken(): TokenPayload | null {
     const token = this.getToken();
     if (!token) return null;
-
     try {
       const payloadBase64 = token.split('.')[1];
       const payloadJson = atob(payloadBase64);
@@ -79,20 +88,13 @@ export class AuthService {
     }
   }
 
-  /**
-   * 判断 token 是否未过期
-   */
   isTokenValid(): boolean {
     const payload = this.decodeToken();
     if (!payload) return false;
-
-    const now = Math.floor(Date.now() / 1000); // 当前秒级时间戳
+    const now = Math.floor(Date.now() / 1000);
     return payload.exp > now;
   }
 
-  /**
-   * 获取当前用户信息
-   */
   getCurrentUser(): LoginResponse['user'] | null {
     const raw = localStorage.getItem('user_info');
     return raw ? JSON.parse(raw) : null;
