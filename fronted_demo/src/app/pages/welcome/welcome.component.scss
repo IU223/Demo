@@ -159,6 +159,12 @@
   flex-wrap: nowrap;
 }
 
+.filter-buttons {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
 .filter-group {
   display: flex;
   flex-direction: column;
@@ -233,14 +239,17 @@
 }
 
 .rank-name {
-  width: 36px;
+  // width: 36px;                    // ★ 删除固定宽度
+  min-width: 70px; // ★ 最小宽度，保证对齐
+  max-width: 110px; // ★ 最大宽度，防止过长挤压进度条
   font-size: 11px;
   color: #333;
   flex-shrink: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  // overflow: hidden;               // ★ 删除
+  // text-overflow: ellipsis;        // ★ 删除
   white-space: nowrap;
 }
+
 
 .rank-bar-wrap {
   flex: 1;

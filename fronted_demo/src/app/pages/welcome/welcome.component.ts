@@ -90,14 +90,14 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
   mapReady = false;
   mapLoadFailed = false;
   deptMap: Record<string, string> = {};
-  deptDescToCode: Record<string, string> = {};     // ★ 新增：描述 → 编码
+  deptDescToCode: Record<string, string> = {};
   // ===================== 部门饼图自定义 Tooltip =====================
   // 部门饼图自定义 Tooltip
   deptTooltipVisible = false;
   deptTooltipTitle = '';
   deptTooltipDetails: { code: string; desc: string; count: number }[] = [];
-  deptTooltipTop = 0;       // ★ 新增
-  deptTooltipLeft = 0;      // ★ 新增
+  deptTooltipTop = 0;
+  deptTooltipLeft = 0;
 
 
   constructor(
@@ -242,7 +242,12 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
   onSearch(): void {
     this.loadDashboardData();
   }
-
+  onReset(): void {
+    this.startDate = null;
+    this.endDate = null;
+    this.selectedFactory = '';
+    this.loadDashboardData();
+  }
   // ==================== 同比 / 环比计算 ====================
 
   private calculateComparisons(): void {
