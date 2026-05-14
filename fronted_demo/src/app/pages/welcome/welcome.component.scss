@@ -398,3 +398,68 @@
     /* ★ 移动端无需右边框 */
   }
 }
+
+.dept-tooltip-overlay {
+  position: fixed;
+  z-index: 2147483647;
+  // ★ 去掉 top/left/transform，改由 TS 动态设置
+  background: rgba(0, 0, 0, 0.88);
+  color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  max-height: 50vh;
+  overflow-y: auto;
+  min-width: 280px;
+  max-width: 420px;
+  pointer-events: none;
+
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .tooltip-header {
+    position: sticky;
+    top: 0;
+    background: rgba(0, 0, 0, 0.95);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px 8px 0 0;
+  }
+
+  .tooltip-body {
+    padding: 8px 16px 12px;
+  }
+
+  .tooltip-detail-item {
+    padding: 3px 0;
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: nowrap;
+
+    .detail-code {
+      color: #faad14;
+      font-weight: 600;
+    }
+
+    b {
+      color: #fff;
+      margin-left: 2px;
+    }
+  }
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 2px;
+  }
+}

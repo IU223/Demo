@@ -155,7 +155,7 @@ export class EmployeeService {
     const where = JSON.stringify({ employee_id: { inq: ids } });
     const params = new HttpParams().set('where', where);
     // LoopBack 的 updateAll 返回 Count 类型 {count: number}
-    return this.http.patch<{ count: number }>(`${this.apiUrl}`, { status: false }, { params });
+    return this.http.patch<{ count: number }>(`${this.apiUrl}`, { status: false, resin_date: new Date() }, { params });
   }
 
   /**

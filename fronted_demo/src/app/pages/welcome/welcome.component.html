@@ -124,3 +124,13 @@
 
   </nz-spin>
 </div>
+<!-- ★ 自定义部门饼图 Tooltip 浮层（脱离所有布局容器） -->
+<div class="dept-tooltip-overlay" [class.visible]="deptTooltipVisible" [style.top.px]="deptTooltipTop"
+  [style.left.px]="deptTooltipLeft">
+  <div class="tooltip-header">{{ deptTooltipTitle }}</div>
+  <div class="tooltip-body">
+    <div class="tooltip-detail-item" *ngFor="let d of deptTooltipDetails">
+      <span class="detail-code">{{ d.code }}</span>：{{ d.desc }}：<b>{{ d.count }}</b>人
+    </div>
+  </div>
+</div>

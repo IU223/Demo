@@ -163,40 +163,24 @@ export class ReportComponent implements OnInit {
     };
   }
 
-  // private getDefaultEmployeeData(): any {
-  //   return {
-  //     employee_id: '',
-  //     password: '123456',
-  //     name: '',
-  //     name_a: '',
-  //     Sex: true,
-  //     dept_desc: null,
-  //     region_name: null,
-  //     plant_name: null,
-  //     role_id: null,
-  //     hire_date: new Date(),
-  //     resin_date: null,
-  //     status: true,
-  //     hasaccess: true
-  //   };
-  // }
   private getDefaultEmployeeData(): any {
     return {
-      employee_id: 'Z2604000',
+      employee_id: '',
       password: '123456',
-      name: '伟',
-      name_a: 'xuwei',
+      name: '',
+      name_a: '',
       Sex: true,
-      dept_desc: '智慧制造应用系统发展二部',
-      region_name: '中山',
-      plant_name: 'zs3',
-      role_id: 1,
+      dept_desc: null,
+      region_name: null,
+      plant_name: null,
+      role_id: null,
       hire_date: new Date(),
       resin_date: null,
       status: true,
       hasaccess: true
     };
   }
+
   // =====================下拉列表加载 =====================
   loadAreas(): void {
     this.employeeService.getAreas().subscribe({
@@ -489,7 +473,7 @@ export class ReportComponent implements OnInit {
         hire_date: formData.hire_date ? this.formatDate(formData.hire_date) : undefined,
         resin_date: formData.resin_date ? this.formatDate(formData.resin_date) : undefined,
         status: formData.status,
-        hasaccess: formData.hasaccess
+        //hasaccess: formData.hasaccess
       };
 
       // 移除 undefined 字段，避免覆盖后端已有数据
@@ -517,7 +501,7 @@ export class ReportComponent implements OnInit {
         }
       });
 
-      return; // ★ 编辑模式到此结束，不走下面的新增逻辑
+      return;
     }
 
     // ======================== 新增模式（原有逻辑不变） ========================

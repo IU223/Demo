@@ -1,6 +1,6 @@
 import {
   Component, OnInit, AfterViewInit, OnDestroy,
-  ViewChild, ElementRef, HostListener
+  ViewChild, ElementRef, HostListener, NgZone
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -91,11 +91,20 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
   mapLoadFailed = false;
   deptMap: Record<string, string> = {};
   deptDescToCode: Record<string, string> = {};     // ★ 新增：描述 → 编码
+  // ===================== 部门饼图自定义 Tooltip =====================
+  // 部门饼图自定义 Tooltip
+  deptTooltipVisible = false;
+  deptTooltipTitle = '';
+  deptTooltipDetails: { code: string; desc: string; count: number }[] = [];
+  deptTooltipTop = 0;       // ★ 新增
+  deptTooltipLeft = 0;      // ★ 新增
+
 
   constructor(
     private employeeService: EmployeeService,
     private http: HttpClient,
-    private message: NzMessageService
+    private message: NzMessageService,
+    private ngZone: NgZone
   ) { }
 
   // ==================== 生命周期 ====================
@@ -742,59 +751,59 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ==================== 部门饼图 ====================
 
+  // ==================== 部门饼图（按编码前3位归类） ====================
+
   private buildDeptChart(): void {
     if (!this.deptEchart) return;
 
-    // 1. 按 dept_desc 聚合（Employee 表存储的原始值）
-    const map: Record<string, number> = {};
+    // ── 1. 按 dept_desc 统计每个部门的人数 ──
+    const deptCountMap: Record<string, number> = {};
     this.allEmployees.forEach((emp: any) => {
       const raw = emp.dept_desc || '未知';
-      map[raw] = (map[raw] || 0) + 1;
+      deptCountMap[raw] = (deptCountMap[raw] || 0) + 1;
     });
 
-    const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+    // ── 2. 按 dept_code 前3位归类 ──
+    const groupMap: Record<string, {
+      total: number;
+      details: { code: string; desc: string; count: number }[];
+    }> = {};
 
-    // 2. ★ 构建饼图数据：name 用 dept_code 显示，保留原始 desc 用于 tooltip
-    const pieData = sorted.map(([raw, value]) => {
-      const code = this.deptDescToCode[raw] || raw;       // 编码（标签显示）
-      const desc = this.deptMap[raw] || raw;               // 描述（tooltip 显示）
+    Object.entries(deptCountMap).forEach(([desc, count]) => {
+      const code = this.deptDescToCode[desc] || desc;
+      const prefix = code.length >= 3 ? code.substring(0, 3) : code;
+
+      if (!groupMap[prefix]) {
+        groupMap[prefix] = { total: 0, details: [] };
+      }
+      groupMap[prefix].total += count;
+      groupMap[prefix].details.push({ code, desc, count });
+    });
+
+    // ── 3. 按总人数降序排序 ──
+    const sorted = Object.entries(groupMap).sort((a, b) => b[1].total - a[1].total);
+
+    // ── 4. 构建饼图数据 ──
+    const pieData = sorted.map(([prefix, group]) => {
+      group.details.sort((a, b) => b.count - a.count);
       return {
-        name: code,          // ★ 饼图标签显示编码
-        value: value,
-        desc: desc           // ★ 自定义字段，tooltip 用
+        name: prefix,
+        value: group.total,
+        details: group.details
       };
     });
 
+    // ── 5. 渲染（★ 禁用内置 tooltip，改用自定义浮层） ──
     this.deptEchart.setOption({
-      // ★ tooltip：鼠标悬停显示 dept_desc（描述）
-      tooltip: {
-        trigger: 'item',
-        backgroundColor: 'rgba(0,0,0,0.75)',
-        borderColor: 'transparent',
-        textStyle: { color: '#fff', fontSize: 13 },
-        formatter: (params: any) => {
-          const desc = params.data.desc || params.name;
-          const count = params.value;
-          const percent = params.percent;
-          return `
-          <div style="padding:4px 8px;">
-            <div style="font-size:13px;color:#ccc;margin-bottom:4px;">${params.name}</div>
-            <div style="font-size:14px;font-weight:600;margin-bottom:2px;">${desc}</div>
-            <div style="font-size:18px;font-weight:700;color:#faad14;">
-              ${count.toLocaleString()} <span style="font-size:12px;color:#ccc;">人 (${percent}%)</span>
-            </div>
-          </div>`;
-        }
-      },
+      tooltip: { show: false },          // ★ 禁用内置 tooltip
       series: [{
         type: 'pie',
         radius: ['0%', '65%'],
         center: ['50%', '52%'],
         data: pieData,
-        // ★ 标签显示编码 + 人数
         label: {
           show: true,
-          formatter: '{b}\n{c}',       // {b} = name = dept_code
+          formatter: '{b}\n{c}',
           fontSize: 10,
           color: '#555'
         },
@@ -807,7 +816,76 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }]
     }, true);
+
+    // ── 6. ★ 绑定自定义 Tooltip 事件 ──
+    this.bindDeptChartEvents();
   }
+
+  /**
+   * ★ 绑定饼图鼠标事件 → 驱动自定义 Tooltip 浮层
+   */
+  private bindDeptChartEvents(): void {
+    if (!this.deptEchart) return;
+
+    this.deptEchart.off('mouseover');
+    this.deptEchart.off('mouseout');
+    this.deptEchart.off('mousemove');      // ★ 新增
+
+    // 鼠标移入扇区 → 显示浮层
+    this.deptEchart.on('mouseover', (params: any) => {
+      if (params.componentType !== 'series') return;
+
+      this.ngZone.run(() => {
+        const details = params.data?.details || [];
+        this.deptTooltipTitle = `${params.name} — 共 ${params.value} 人（${params.percent}%）`;
+        this.deptTooltipDetails = details;
+        this.deptTooltipVisible = true;
+      });
+    });
+
+    // ★ 鼠标移动 → 跟随鼠标位置（带边界检测）
+    this.deptEchart.getZr().on('mousemove', (params: any) => {
+      if (!this.deptTooltipVisible) return;
+
+      this.ngZone.run(() => {
+        const mouseX = params.event?.clientX ?? params.offsetX ?? 0;
+        const mouseY = params.event?.clientY ?? params.offsetY ?? 0;
+
+        const tooltipWidth = 350;     // 预估宽度
+        const tooltipHeight = 300;    // 预估高度
+        const offset = 15;            // 鼠标与浮层间距
+
+        // ★ 边界检测：防止超出视口
+        let x = mouseX + offset;
+        let y = mouseY + offset;
+
+        // 右侧超出 → 显示在鼠标左侧
+        if (x + tooltipWidth > window.innerWidth) {
+          x = mouseX - tooltipWidth - offset;
+        }
+        // 底部超出 → 显示在鼠标上方
+        if (y + tooltipHeight > window.innerHeight) {
+          y = mouseY - tooltipHeight - offset;
+        }
+        // 左侧/顶部不超出
+        x = Math.max(10, x);
+        y = Math.max(10, y);
+
+        this.deptTooltipTop = y;
+        this.deptTooltipLeft = x;
+      });
+    });
+
+    // 鼠标移出扇区 → 隐藏浮层
+    this.deptEchart.on('mouseout', () => {
+      this.ngZone.run(() => {
+        this.deptTooltipVisible = false;
+      });
+    });
+  }
+
+
+
 
   /**
    * 建立部门映射表
