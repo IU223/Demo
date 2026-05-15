@@ -59,18 +59,21 @@
 
   <!-- 表格区域 -->
   <div class="table-wrapper">
-    <!-- 新增：如图1所示的表格工具栏 -->
-    <div class="table-actions">
-      <!-- ★ 新增 *ngIf="canReportCreate" -->
-      <button nz-button nzType="primary" (click)="onAdd()" *ngIf="canReportCreate">
-        <span nz-icon nzType="plus"></span>新建
-      </button>
-      <!-- ★ 新增 *ngIf="canReportDelete" -->
-      <button nz-button nzType="default" (click)="onDelete()" [disabled]="setOfCheckedId.size === 0"
-        *ngIf="canReportDelete">
-        <span nz-icon nzType="delete"></span>删除
-      </button>
+    <div class="table-toolbar">
+      <!-- 新增：如图1所示的表格工具栏 -->
+      <div class="table-actions">
+        <!-- ★ 新增 *ngIf="canReportCreate" -->
+        <button nz-button nzType="primary" (click)="onAdd()" *ngIf="canReportCreate">
+          <span nz-icon nzType="plus"></span>新建
+        </button>
+        <!-- ★ 新增 *ngIf="canReportDelete" -->
+        <button nz-button nzType="default" (click)="onDelete()" [disabled]="setOfCheckedId.size === 0"
+          *ngIf="canReportDelete">
+          <span nz-icon nzType="delete"></span>删除
+        </button>
+      </div>
     </div>
+
 
     <nz-table #employeeTable [nzData]="listOfData" [nzLoading]="loading" [nzTotal]="total" [nzPageSize]="pageSize"
       [nzPageIndex]="pageIndex" [nzFrontPagination]="false" (nzPageIndexChange)="onPageIndexChange($event)"
