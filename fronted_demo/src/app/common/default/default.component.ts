@@ -23,6 +23,7 @@ import { AuthService } from '../../services/auth.service';
 import { EmployeeService } from '../../services/employee.service';
 import { SelectOption, RoleOption } from '../../models/employee';
 import { forkJoin, of } from 'rxjs';
+import { PermissionService, Permission } from '../../services/permission.service';
 
 @Component({
   selector: 'app-default',
@@ -77,6 +78,10 @@ export class DefaultComponent implements OnInit {
   oldPwdVisible = false;
   newPwdVisible = false;
   confirmPwdVisible = false;
+  // 侧边栏菜单权限控制
+  showHomeMenu = true;
+  showReportMenu = true;
+  showPermMenu = true;
 
   constructor(
     private authService: AuthService,
@@ -84,14 +89,35 @@ export class DefaultComponent implements OnInit {
     private router: Router,
     private fb: FormBuilder,
     private message: NzMessageService,
+    private permService: PermissionService,  // ★ 新增
   ) {
     this.initProfileForm();
-    this.initPasswordForm();  // ★ 初始化密码表单
+    this.initPasswordForm();
   }
+
 
   ngOnInit(): void {
     this.loadUserInfo();
+    this.loadMenuPermissions();  // ★ 新增
   }
+
+  // ★ 新增方法
+  private loadMenuPermissions(): void {
+    this.permService.getCurrentUserPermissions().subscribe({
+      next: (role) => {
+        if (role) {
+          this.showHomeMenu = this.permService.hasPermission(role.home_page_auth ?? 0, Permission.READ);
+          this.showReportMenu = this.permService.hasPermission(role.report_page_auth ?? 0, Permission.READ);
+          this.showPermMenu = this.permService.hasPermission(role.auth_page_auth ?? 0, Permission.READ);
+        }
+      },
+      error: () => {
+        // 加载失败时默认全部显示，不影响使用
+        console.warn('菜单权限加载失败，默认显示全部菜单');
+      }
+    });
+  }
+
 
   // ===================== 初始化 =====================
 
@@ -109,7 +135,7 @@ export class DefaultComponent implements OnInit {
     });
   }
 
-  /** ★ 初始化修改密码表单 */
+  /** 初始化修改密码表单 */
   private initPasswordForm(): void {
     this.passwordForm = this.fb.group({
       oldPassword: ['', [Validators.required]],

@@ -18,8 +18,6 @@ export class BackendDemoApplication extends BootMixin(
 ) {
   constructor(options: ApplicationConfig = {}) {
     super(options);
-    // ★ 注册全局 JWT 拦截器
-    this.interceptor(AuthInterceptor);
     // Set up the custom sequence
     this.sequence(MySequence);
 

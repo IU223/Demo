@@ -10,7 +10,7 @@ import {
 import { RestBindings, Request } from '@loopback/rest';
 import { verifyToken } from '../services/jwt.service';
 
-@bind(asGlobalInterceptor('auth'))
+//@bind(asGlobalInterceptor('auth'))
 export class AuthInterceptor implements Provider<Interceptor> {
   value(): Interceptor {
     return this.intercept.bind(this);

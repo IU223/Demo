@@ -1,0 +1,161 @@
+<div class="permissions-container">
+
+  <!-- 权限加载中 -->
+  <div *ngIf="!permLoaded" class="loading-state">
+    <span nz-icon nzType="loading" nzTheme="outline" style="font-size: 24px;"></span>
+    <p>加载中...</p>
+  </div>
+
+  <!-- 无查看权限提示 -->
+  <!-- <nz-alert *ngIf="permLoaded && !canRead"
+    nzType="warning"
+    nzMessage="您没有权限页面的查看权限，请联系管理员。"
+    nzShowIcon [nzClosable]="false">
+  </nz-alert> -->
+
+  <!-- 主体内容（需有 R 权限） -->
+  <ng-container *ngIf="permLoaded && canRead">
+
+    <!-- ==================== 工具栏 ==================== -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <label class="toolbar-label">当前角色：</label>
+        <nz-select [(ngModel)]="selectedRoleId" (ngModelChange)="onRoleChange($event)" style="width: 200px;"
+          nzPlaceHolder="请选择角色" nzShowSearch>
+          <nz-option *ngFor="let role of roleList" [nzValue]="role.role_id" [nzLabel]="role.role_name">
+          </nz-option>
+        </nz-select>
+      </div>
+      <div class="toolbar-right">
+        <button nz-button nzType="primary" (click)="onAddRole()" [disabled]="!canCreate" nz-tooltip
+          [nzTooltipTitle]="!canCreate ? '无新增权限' : ''">
+          <span nz-icon nzType="plus"></span>新增角色
+        </button>
+        <button nz-button nzType="default" nzDanger (click)="onDeleteRole()" [disabled]="!canDelete || !selectedRole"
+          nz-tooltip [nzTooltipTitle]="!canDelete ? '无删除权限' : ''">
+          <span nz-icon nzType="delete"></span>删除角色
+        </button>
+      </div>
+    </div>
+
+    <nz-divider></nz-divider>
+
+    <!-- ==================== 角色权限配置卡片 ==================== -->
+    <nz-card nzTitle="角色权限配置" [nzExtra]="extraTpl" *ngIf="selectedRole">
+
+      <!-- 角色基本信息 -->
+      <div class="role-info">
+        <div class="info-row">
+          <label>角色名称：</label>
+          <input nz-input [(ngModel)]="editRoleName" [disabled]="!canUpdate" style="width: 200px;" />
+        </div>
+        <div class="info-row">
+          <label>角色描述：</label>
+          <input nz-input [(ngModel)]="editDescription" [disabled]="!canUpdate" style="width: 300px;"
+            placeholder="选填，描述该角色用途" />
+        </div>
+      </div>
+
+      <!-- 权限配置表格 -->
+      <nz-table #permTable [nzData]="pagePermissions" [nzFrontPagination]="false" nzBordered nzSize="middle"
+        [nzShowPagination]="false">
+        <thead>
+          <tr>
+            <th nzWidth="200px">页面</th>
+            <th nzWidth="120px" nzAlign="center">查看 (R)</th>
+            <th nzWidth="120px" nzAlign="center">新增 (C)</th>
+            <th nzWidth="120px" nzAlign="center">删除 (D)</th>
+            <th nzWidth="120px" nzAlign="center">修改 (U)</th>
+            <th nzAlign="center">权限值</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of permTable.data">
+            <td><strong>{{ row.label }}</strong></td>
+            <td nzAlign="center">
+              <label nz-checkbox [(ngModel)]="row.read" [nzDisabled]="!canUpdate"></label>
+            </td>
+            <td nzAlign="center">
+              <label nz-checkbox [(ngModel)]="row.create" [nzDisabled]="!canUpdate"></label>
+            </td>
+            <td nzAlign="center">
+              <label nz-checkbox [(ngModel)]="row.delete" [nzDisabled]="!canUpdate"></label>
+            </td>
+            <td nzAlign="center">
+              <label nz-checkbox [(ngModel)]="row.update" [nzDisabled]="!canUpdate"></label>
+            </td>
+            <td nzAlign="center">
+              <nz-tag [nzColor]="encodeRowToValue(row) === 15 ? 'green' : 'default'">
+                {{ encodeRowToValue(row) }}
+              </nz-tag>
+            </td>
+          </tr>
+        </tbody>
+      </nz-table>
+
+      <!-- 保存按钮（卡片右上角） -->
+      <ng-template #extraTpl>
+        <button nz-button nzType="primary" (click)="onSaveRole()" [nzLoading]="saving" [disabled]="!canUpdate">
+          <span nz-icon nzType="save"></span>保存修改
+        </button>
+      </ng-template>
+    </nz-card>
+
+    <!-- ==================== 空状态 ==================== -->
+    <div class="empty-state" *ngIf="!selectedRole && !loading">
+      <span nz-icon nzType="inbox" nzTheme="outline" style="font-size: 48px; color: #d9d9d9;"></span>
+      <p>暂无角色数据，请先新增角色</p>
+    </div>
+
+  </ng-container>
+</div>
+
+<!-- ===================== 新增角色对话框 ===================== -->
+<nz-modal [(nzVisible)]="isAddModalVisible" nzTitle="新增角色" [nzWidth]="600" [nzMaskClosable]="false"
+  (nzOnCancel)="handleAddCancel()" [nzFooter]="addFooterTpl">
+
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="addRoleForm" nzLayout="horizontal">
+      <nz-form-item>
+        <nz-form-label [nzSpan]="6" nzRequired>角色名称</nz-form-label>
+        <nz-form-control [nzSpan]="16" nzErrorTip="请输入角色名称">
+          <input nz-input formControlName="role_name" placeholder="请输入角色名称" />
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label [nzSpan]="6">角色描述</nz-form-label>
+        <nz-form-control [nzSpan]="16">
+          <input nz-input formControlName="description" placeholder="可选，描述该角色的用途" />
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+
+    <!-- 权限勾选表格（在 form 外部，使用 ngModel） -->
+    <nz-table #addPermTable [nzData]="addPagePerms" [nzFrontPagination]="false" nzBordered nzSize="small"
+      [nzShowPagination]="false" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th>页面</th>
+          <th nzAlign="center">查看 (R)</th>
+          <th nzAlign="center">新增 (C)</th>
+          <th nzAlign="center">删除 (D)</th>
+          <th nzAlign="center">修改 (U)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of addPermTable.data">
+          <td>{{ row.label }}</td>
+          <td nzAlign="center"><label nz-checkbox [(ngModel)]="row.read"></label></td>
+          <td nzAlign="center"><label nz-checkbox [(ngModel)]="row.create"></label></td>
+          <td nzAlign="center"><label nz-checkbox [(ngModel)]="row.delete"></label></td>
+          <td nzAlign="center"><label nz-checkbox [(ngModel)]="row.update"></label></td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </ng-container>
+
+  <ng-template #addFooterTpl>
+    <button nz-button nzType="primary" (click)="handleAddOk()" [nzLoading]="addSubmitting">确定</button>
+    <button nz-button nzType="default" (click)="handleAddCancel()">取消</button>
+  </ng-template>
+</nz-modal>

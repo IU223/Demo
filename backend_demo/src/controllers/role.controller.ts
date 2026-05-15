@@ -1,56 +1,54 @@
 import {
-  Count,
-  CountSchema,
-  Filter,
-  FilterExcludingWhere,
-  repository,
-  Where,
+  Count, CountSchema, Filter, FilterExcludingWhere,
+  repository, Where,
 } from '@loopback/repository';
 import {
-  post,
-  param,
-  get,
-  getModelSchemaRef,
-  patch,
-  put,
-  del,
-  requestBody,
-  response,
+  post, param, get, getModelSchemaRef, patch, put, del,
+  requestBody, response,
 } from '@loopback/rest';
-import {Role} from '../models';
-import {RoleRepository} from '../repositories';
+import { Role } from '../models';
+import { RoleRepository, EmployeeRepository } from '../repositories'; // ★ 新增 EmployeeRepository
 
 export class RoleController {
   constructor(
     @repository(RoleRepository)
-    public roleRepository : RoleRepository,
-  ) {}
+    public roleRepository: RoleRepository,
+    // ★ 新增：注入 EmployeeRepository 用于删除前绑定检查
+    @repository(EmployeeRepository)
+    public employeeRepository: EmployeeRepository,
+  ) { }
 
+  // ★ 修改：创建时自动分配 role_id（若未提供）
   @post('/roles')
   @response(200, {
     description: 'Role model instance',
-    content: {'application/json': {schema: getModelSchemaRef(Role)}},
+    content: { 'application/json': { schema: getModelSchemaRef(Role) } },
   })
   async create(
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Role, {
-            title: 'NewRole',
-            
-          }),
+          schema: getModelSchemaRef(Role, { title: 'NewRole' }),
         },
       },
     })
     role: Role,
   ): Promise<Role> {
+    // ★ 自动分配 role_id
+    if (role.role_id == null) {
+      const maxRoles = await this.roleRepository.find({
+        order: ['role_id DESC'],
+        limit: 1,
+      });
+      role.role_id = maxRoles.length > 0 ? (maxRoles[0].role_id ?? 0) + 1 : 1;
+    }
     return this.roleRepository.create(role);
   }
 
   @get('/roles/count')
   @response(200, {
     description: 'Role model count',
-    content: {'application/json': {schema: CountSchema}},
+    content: { 'application/json': { schema: CountSchema } },
   })
   async count(
     @param.where(Role) where?: Where<Role>,
@@ -65,7 +63,7 @@ export class RoleController {
       'application/json': {
         schema: {
           type: 'array',
-          items: getModelSchemaRef(Role, {includeRelations: true}),
+          items: getModelSchemaRef(Role, { includeRelations: true }),
         },
       },
     },
@@ -79,13 +77,13 @@ export class RoleController {
   @patch('/roles')
   @response(200, {
     description: 'Role PATCH success count',
-    content: {'application/json': {schema: CountSchema}},
+    content: { 'application/json': { schema: CountSchema } },
   })
   async updateAll(
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Role, {partial: true}),
+          schema: getModelSchemaRef(Role, { partial: true }),
         },
       },
     })
@@ -100,13 +98,13 @@ export class RoleController {
     description: 'Role model instance',
     content: {
       'application/json': {
-        schema: getModelSchemaRef(Role, {includeRelations: true}),
+        schema: getModelSchemaRef(Role, { includeRelations: true }),
       },
     },
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Role, {exclude: 'where'}) filter?: FilterExcludingWhere<Role>
+    @param.filter(Role, { exclude: 'where' }) filter?: FilterExcludingWhere<Role>,
   ): Promise<Role> {
     return this.roleRepository.findById(id, filter);
   }
@@ -120,7 +118,7 @@ export class RoleController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Role, {partial: true}),
+          schema: getModelSchemaRef(Role, { partial: true }),
         },
       },
     })
@@ -140,11 +138,19 @@ export class RoleController {
     await this.roleRepository.replaceById(id, role);
   }
 
+  // ★ 修改：删除前检查是否有员工绑定该角色
   @del('/roles/{id}')
   @response(204, {
     description: 'Role DELETE success',
   })
   async deleteById(@param.path.number('id') id: number): Promise<void> {
+    const empCount = await this.employeeRepository.count({ role_id: id });
+    if (empCount.count > 0) {
+      throw Object.assign(
+        new Error(`不可删除，已有 ${empCount.count} 位用户绑定该角色，请先解绑再删除`),
+        { statusCode: 400 },
+      );
+    }
     await this.roleRepository.deleteById(id);
   }
 }

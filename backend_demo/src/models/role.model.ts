@@ -30,6 +30,10 @@ export class Role extends Entity {
   })
   auth_page_auth?: number;
 
+  @property({
+    type: 'string',
+  })
+  description?: string;
 
   constructor(data?: Partial<Role>) {
     super(data);
