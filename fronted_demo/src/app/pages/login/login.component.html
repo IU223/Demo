@@ -18,7 +18,6 @@
             <input [type]="passwordVisible ? 'text' : 'password'" nz-input formControlName="password"
               placeholder="请输入密码" />
           </nz-input-group>
-          <!-- 定义一个叫 suffixTemplate 的模板 -->
         </nz-form-control>
       </nz-form-item>
 
@@ -30,7 +29,7 @@
           </label>
         </div>
         <div nz-col [nzSpan]="12" class="text-right">
-          <a class="login-form-forgot">忘记密码？</a>
+          <a class="login-form-forgot" (click)="onForgotPassword()">忘记密码？</a>
         </div>
       </div>
 
@@ -41,3 +40,97 @@
     </form>
   </nz-card>
 </div>
+
+<!-- ===================== 忘记密码对话框 ===================== -->
+<nz-modal [(nzVisible)]="forgotPwdVisible" [nzTitle]="forgotPwdTitleTpl" [nzFooter]="forgotPwdFooterTpl" [nzWidth]="460"
+  [nzMaskClosable]="false" [nzClosable]="true" (nzOnCancel)="handleForgotPwdCancel()">
+
+  <!-- 标题 -->
+  <ng-template #forgotPwdTitleTpl>
+    <div class="custom-modal-title">
+      <span nz-icon nzType="lock" nzTheme="outline" style="margin-right: 8px;"></span>
+      忘记密码
+    </div>
+  </ng-template>
+
+  <!-- 内容区 -->
+  <ng-container *nzModalContent>
+    <div class="modal-form-wrapper password-form-wrapper">
+      <form nz-form [formGroup]="forgotPwdForm" nzLayout="horizontal">
+
+        <!-- 用户名（工号） -->
+        <nz-form-item>
+          <nz-form-label [nzSpan]="7" nzRequired>工号</nz-form-label>
+          <nz-form-control [nzSpan]="15" nzErrorTip="请输入工号">
+            <nz-input-group nzPrefixIcon="user">
+              <input nz-input formControlName="username" placeholder="请输入工号" />
+            </nz-input-group>
+          </nz-form-control>
+        </nz-form-item>
+
+        <!-- 新密码 -->
+        <nz-form-item>
+          <nz-form-label [nzSpan]="7" nzRequired>新密码</nz-form-label>
+          <nz-form-control [nzSpan]="15" [nzErrorTip]="forgotNewPwdErrorTpl">
+            <nz-input-group [nzSuffix]="forgotNewPwdSuffix">
+              <input nz-input [type]="forgotNewPwdVisible ? 'text' : 'password'" formControlName="newPassword"
+                placeholder="请输入新密码（至少6位）" autocomplete="new-password" />
+            </nz-input-group>
+            <ng-template #forgotNewPwdSuffix>
+              <span nz-icon [nzType]="forgotNewPwdVisible ? 'eye' : 'eye-invisible'"
+                (click)="forgotNewPwdVisible = !forgotNewPwdVisible" class="password-toggle-icon">
+              </span>
+            </ng-template>
+            <ng-template #forgotNewPwdErrorTpl let-control>
+              <ng-container *ngIf="control.hasError('required')">请输入新密码</ng-container>
+              <ng-container *ngIf="control.hasError('minlength')">密码长度不能少于6位</ng-container>
+            </ng-template>
+          </nz-form-control>
+        </nz-form-item>
+
+        <!-- 确认新密码 -->
+        <nz-form-item>
+          <nz-form-label [nzSpan]="7" nzRequired>确认密码</nz-form-label>
+          <nz-form-control [nzSpan]="15" [nzErrorTip]="forgotConfirmPwdErrorTpl">
+            <nz-input-group [nzSuffix]="forgotConfirmPwdSuffix">
+              <input nz-input [type]="forgotConfirmPwdVisible ? 'text' : 'password'" formControlName="confirmPassword"
+                placeholder="请再次输入新密码" autocomplete="new-password" />
+            </nz-input-group>
+            <ng-template #forgotConfirmPwdSuffix>
+              <span nz-icon [nzType]="forgotConfirmPwdVisible ? 'eye' : 'eye-invisible'"
+                (click)="forgotConfirmPwdVisible = !forgotConfirmPwdVisible" class="password-toggle-icon">
+              </span>
+            </ng-template>
+            <ng-template #forgotConfirmPwdErrorTpl let-control>
+              <ng-container *ngIf="control.hasError('required')">请再次输入新密码</ng-container>
+              <ng-container *ngIf="control.hasError('mismatch')">两次输入的密码不一致</ng-container>
+            </ng-template>
+          </nz-form-control>
+        </nz-form-item>
+
+      </form>
+
+      <!-- 密码安全提示 -->
+      <div class="password-tips">
+        <div class="tips-title">
+          <span nz-icon nzType="safety-certificate" nzTheme="outline"></span>
+          密码安全要求
+        </div>
+        <ul class="tips-list">
+          <li>密码长度至少 6 个字符</li>
+          <li>建议使用字母、数字和符号的组合</li>
+        </ul>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- 底部按钮 -->
+  <ng-template #forgotPwdFooterTpl>
+    <div class="modal-footer">
+      <button nz-button nzType="primary" (click)="handleForgotPwdOk()" [nzLoading]="forgotPwdSubmitting">
+        确认重置
+      </button>
+      <button nz-button nzType="default" (click)="handleForgotPwdCancel()">取消</button>
+    </div>
+  </ng-template>
+</nz-modal>

@@ -32,6 +32,12 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+// ★ 新增：忘记密码请求
+export interface ForgotPasswordRequest {
+  username: string;
+  newPassword: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private baseUrl = environment.apiUrl || 'http://localhost:3000';
@@ -60,6 +66,16 @@ export class AuthService {
   changePassword(payload: ChangePasswordRequest): Observable<{ success: boolean; message: string }> {
     return this.http.post<{ success: boolean; message: string }>(
       `${this.baseUrl}/change-password`,
+      payload
+    );
+  }
+
+  /**
+   * ★ 忘记密码（无需登录态）
+   */
+  forgotPassword(payload: ForgotPasswordRequest): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.baseUrl}/forgot-password`,
       payload
     );
   }

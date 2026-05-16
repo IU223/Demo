@@ -176,6 +176,60 @@ export class AuthController {
   }
 
   /**
+   * POST /forgot-password
+   * 公开端点（无需 JWT），用于忘记密码时重置密码
+   * 通过 username（工号）查找用户并更新新密码
+   */
+  @post('/forgot-password')
+  @response(200, CHANGE_PASSWORD_RESPONSE)
+  async forgotPassword(
+    @requestBody({
+      description: 'Forgot password payload',
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              username: { type: 'string' },
+              newPassword: { type: 'string' },
+            },
+            required: ['username', 'newPassword'],
+          },
+        },
+      },
+    })
+    body: { username: string; newPassword: string },
+  ): Promise<{ success: boolean; message: string }> {
+
+    console.log(`[forgot-password] 用户 ${body.username} 请求重置密码`);
+
+    // 1. 查找用户
+    const employee = await this.employeeRepository.findOne({
+      where: { employee_id: body.username },
+    });
+
+    if (!employee) {
+      throw Object.assign(new Error('该工号不存在'), { statusCode: 400 });
+    }
+
+    // 2. 校验新密码长度
+    if (!body.newPassword || body.newPassword.length < 6) {
+      throw Object.assign(new Error('新密码长度不能少于6位'), { statusCode: 400 });
+    }
+
+    // 3. 哈希新密码并更新
+    const hashedNewPassword = await hashPassword(body.newPassword);
+    await this.employeeRepository.updateById(body.username, {
+      password: hashedNewPassword,
+    });
+
+    console.log(`[forgot-password] 用户 ${body.username} 密码重置成功`);
+
+    return { success: true, message: '密码重置成功' };
+  }
+
+  /**
    * POST /hash-password （工具端点）
    */
   @post('/hash-password')

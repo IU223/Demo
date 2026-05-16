@@ -39,7 +39,7 @@ export class AuthInterceptor implements Provider<Interceptor> {
     console.log(`[AuthInterceptor] ${req.method} ${req.path}`);
 
     // 白名单路径
-    const publicPaths = ['/login', '/ping', '/explorer', '/hash-password', '/openapi.json'];
+    const publicPaths = ['/login', '/ping', '/explorer', '/hash-password', '/openapi.json', '/forgot-password'];
     const isPublic = publicPaths.some(p => req!.path.startsWith(p));
 
     // 静态首页也放行
