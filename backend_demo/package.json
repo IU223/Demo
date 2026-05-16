@@ -36,9 +36,6 @@
     "clean": "lb-clean dist *.tsbuildinfo .eslintcache",
     "rebuild": "npm run clean && npm run build"
   },
-  "overrides": {
-    "sqlite3": "^5.1.7"
-  },
   "repository": {
     "type": "git",
     "url": ""
@@ -61,7 +58,6 @@
     "bcryptjs": "^3.0.3",
     "jsonwebtoken": "^9.0.3",
     "loopback-connector-postgresql": "^7.2.3",
-    "loopback-connector-sqlite3": "^3.0.0",
     "tslib": "^2.0.0"
   },
   "devDependencies": {
