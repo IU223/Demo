@@ -66,7 +66,7 @@
             <th nzWidth="120px" nzAlign="center">新增 (C)</th>
             <th nzWidth="120px" nzAlign="center">删除 (D)</th>
             <th nzWidth="120px" nzAlign="center">修改 (U)</th>
-            <th nzAlign="center">权限值</th>
+            <!-- <th nzAlign="center">权限值</th> -->
           </tr>
         </thead>
         <tbody>
@@ -76,19 +76,19 @@
               <label nz-checkbox [(ngModel)]="row.read" [nzDisabled]="!canUpdate"></label>
             </td>
             <td nzAlign="center">
-              <label nz-checkbox [(ngModel)]="row.create" [nzDisabled]="!canUpdate"></label>
+              <label *ngIf="row.label !== '首页'" nz-checkbox [(ngModel)]="row.create" [nzDisabled]="!canUpdate"></label>
             </td>
             <td nzAlign="center">
-              <label nz-checkbox [(ngModel)]="row.delete" [nzDisabled]="!canUpdate"></label>
+              <label *ngIf="row.label !== '首页'" nz-checkbox [(ngModel)]="row.delete" [nzDisabled]="!canUpdate"></label>
             </td>
             <td nzAlign="center">
-              <label nz-checkbox [(ngModel)]="row.update" [nzDisabled]="!canUpdate"></label>
+              <label *ngIf="row.label !== '首页'" nz-checkbox [(ngModel)]="row.update" [nzDisabled]="!canUpdate"></label>
             </td>
-            <td nzAlign="center">
+            <!-- <td nzAlign="center">
               <nz-tag [nzColor]="encodeRowToValue(row) === 15 ? 'green' : 'default'">
                 {{ encodeRowToValue(row) }}
               </nz-tag>
-            </td>
+            </td> -->
           </tr>
         </tbody>
       </nz-table>
