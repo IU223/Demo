@@ -12,7 +12,7 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
-
+import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -27,6 +27,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
     NzGridModule,
     NzCardModule,
     NzModalModule,
+    CommonModule
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
