@@ -59,20 +59,21 @@
 
   <!-- 表格区域 -->
   <div class="table-wrapper">
-    <!-- 新增：如图1所示的表格工具栏 -->
     <div class="table-toolbar">
-      <div class="table-title"></div>
+      <!-- 新增：如图1所示的表格工具栏 -->
       <div class="table-actions">
-        <!-- 新建按钮 -->
-        <button nz-button nzType="primary" (click)="onAdd()">
+        <!-- ★ 新增 *ngIf="canReportCreate" -->
+        <button nz-button nzType="primary" (click)="onAdd()" *ngIf="canReportCreate">
           <span nz-icon nzType="plus"></span>新建
         </button>
-        <!-- 删除按钮 -->
-        <button nz-button nzType="default" (click)="onDelete()" [disabled]="setOfCheckedId.size === 0">
+        <!-- ★ 新增 *ngIf="canReportDelete" -->
+        <button nz-button nzType="default" (click)="onDelete()" [disabled]="setOfCheckedId.size === 0"
+          *ngIf="canReportDelete">
           <span nz-icon nzType="delete"></span>删除
         </button>
       </div>
     </div>
+
 
     <nz-table #employeeTable [nzData]="listOfData" [nzLoading]="loading" [nzTotal]="total" [nzPageSize]="pageSize"
       [nzPageIndex]="pageIndex" [nzFrontPagination]="false" (nzPageIndexChange)="onPageIndexChange($event)"
@@ -114,8 +115,11 @@
           </td>
           <td nzAlign="center">
             <a (click)="onView(data)" class="action-link">查看</a>
-            <nz-divider nzType="vertical"></nz-divider>
-            <a (click)="onEdit(data)" class="action-link">编辑</a>
+            <!-- ★ 新增 *ngIf="canReportUpdate" -->
+            <ng-container *ngIf="canReportUpdate">
+              <nz-divider nzType="vertical"></nz-divider>
+              <a (click)="onEdit(data)" class="action-link">编辑</a>
+            </ng-container>
           </td>
         </tr>
       </tbody>

@@ -10,25 +10,30 @@
     </div>
 
     <ul nz-menu nzTheme="dark" nzMode="inline" [nzInlineCollapsed]="isCollapsed">
-      <li nz-menu-item [nzSelected]="activeMenu === 'home'" (click)="selectMenu('home')">
+      <!-- ★ 新增 *ngIf -->
+      <li nz-menu-item *ngIf="showHomeMenu" [nzSelected]="activeMenu === 'home'" (click)="selectMenu('home')">
         <a routerLink="/default/welcome">
           <span nz-icon nzType="home"></span>
           <span>首页</span>
         </a>
       </li>
-      <li nz-menu-item [nzSelected]="activeMenu === 'reports'" (click)="selectMenu('reports')">
+      <!-- ★ 新增 *ngIf -->
+      <li nz-menu-item *ngIf="showReportMenu" [nzSelected]="activeMenu === 'reports'" (click)="selectMenu('reports')">
         <a routerLink="/default/report">
           <span nz-icon nzType="table"></span>
           <span>报表</span>
         </a>
       </li>
-      <li nz-menu-item [nzSelected]="activeMenu === 'permissions'" (click)="selectMenu('permissions')">
+      <!-- ★ 新增 *ngIf -->
+      <li nz-menu-item *ngIf="showPermMenu" [nzSelected]="activeMenu === 'permissions'"
+        (click)="selectMenu('permissions')">
         <a routerLink="/default/permissions">
           <span nz-icon nzType="apartment"></span>
           <span>权限</span>
         </a>
       </li>
     </ul>
+
   </nz-sider>
 
   <!-- 右侧主体内容 -->

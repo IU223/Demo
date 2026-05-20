@@ -26,10 +26,20 @@ export class Role extends Entity {
 
   @property({
     type: 'number',
-    // default: 1,
   })
   auth_page_auth?: number;
 
+  @property({
+    type: 'string',
+  })
+  description?: string;
+
+  // ★ Task 2 新增：超级管理员标记
+  @property({
+    type: 'boolean',
+    default: false,
+  })
+  is_super_admin?: boolean;
 
   constructor(data?: Partial<Role>) {
     super(data);

@@ -10,6 +10,16 @@ import {
 import { RestBindings, Request } from '@loopback/rest';
 import { verifyToken } from '../services/jwt.service';
 
+/**
+ * ★ Task 4: 用户信息接口，用于在请求上下文中传递当前用户
+ */
+export interface CurrentUserProfile {
+  employee_id: string;
+  name?: string;
+  role_id?: number;
+  is_super_admin?: boolean;
+}
+
 @bind(asGlobalInterceptor('auth'))
 export class AuthInterceptor implements Provider<Interceptor> {
   value(): Interceptor {
@@ -39,7 +49,7 @@ export class AuthInterceptor implements Provider<Interceptor> {
     console.log(`[AuthInterceptor] ${req.method} ${req.path}`);
 
     // 白名单路径
-    const publicPaths = ['/login', '/ping', '/explorer', '/hash-password', '/openapi.json'];
+    const publicPaths = ['/login', '/ping', '/explorer', '/hash-password', '/openapi.json', '/forgot-password'];
     const isPublic = publicPaths.some(p => req!.path.startsWith(p));
 
     // 静态首页也放行
@@ -59,6 +69,15 @@ export class AuthInterceptor implements Provider<Interceptor> {
       try {
         const decoded = verifyToken(token);
         console.log('[AuthInterceptor] JWT 验证通过, 用户:', decoded.employee_id);
+
+        // ★ Task 4 新增：将解码后的用户信息挂载到 request 对象上
+        (req as any).currentUser = {
+          employee_id: decoded.employee_id,
+          name: decoded.name,
+          role_id: decoded.role_id,
+          is_super_admin: decoded.is_super_admin ?? false,
+        } as CurrentUserProfile;
+
       } catch (err) {
         throw Object.assign(new Error('令牌无效或已过期'), {
           statusCode: 401,

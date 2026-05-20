@@ -19,7 +19,7 @@ import { EmployeeService } from '../../services/employee.service';
 import { Employee, EmployeeFilter, SelectOption, RoleOption } from '../../models/employee';
 import { forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-
+import { PermissionService, Permission } from '../../services/permission.service';
 @Component({
   selector: 'app-report',
   standalone: true,
@@ -90,12 +90,16 @@ export class ReportComponent implements OnInit {
   // ===================== 批量新增 =====================
   batchEmployees: any[] = [];
   currentBatchIndex: number = 0;
-
+  // ★ 报表页按钮权限
+  canReportCreate = true;
+  canReportDelete = true;
+  canReportUpdate = true;
   constructor(
     private employeeService: EmployeeService,
     private message: NzMessageService,
     private modal: NzModalService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private permService: PermissionService,
   ) {
     this.initForm();
     this.initViewForm(); // ← 新增
@@ -107,6 +111,21 @@ export class ReportComponent implements OnInit {
     this.loadDepartments();
     this.loadRoles();
     this.loadData();
+    this.loadReportPermissions();  // ★ 新增
+  }
+
+  // ★ 新增方法
+  private loadReportPermissions(): void {
+    this.permService.getCurrentUserPermissions().subscribe({
+      next: (role) => {
+        if (role) {
+          const val = role.report_page_auth ?? 0;
+          this.canReportCreate = this.permService.hasPermission(val, Permission.CREATE);
+          this.canReportDelete = this.permService.hasPermission(val, Permission.DELETE);
+          this.canReportUpdate = this.permService.hasPermission(val, Permission.UPDATE);
+        }
+      }
+    });
   }
 
   // ===================== 表单初始化 =====================

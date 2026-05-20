@@ -14,6 +14,7 @@ export interface LoginResponse {
     employee_id: string;
     name?: string;
     role_id?: number;
+    is_super_admin?: boolean;   // ★ Task 8 新增
   };
 }
 
@@ -22,6 +23,7 @@ export interface TokenPayload {
   employee_id: string;
   name?: string;
   role_id?: number;
+  is_super_admin?: boolean;   // ★ Task 8 新增
   iat: number;
   exp: number;
 }
@@ -29,6 +31,12 @@ export interface TokenPayload {
 // ★ 新增：修改密码请求
 export interface ChangePasswordRequest {
   oldPassword: string;
+  newPassword: string;
+}
+
+// ★ 新增：忘记密码请求
+export interface ForgotPasswordRequest {
+  username: string;
   newPassword: string;
 }
 
@@ -60,6 +68,16 @@ export class AuthService {
   changePassword(payload: ChangePasswordRequest): Observable<{ success: boolean; message: string }> {
     return this.http.post<{ success: boolean; message: string }>(
       `${this.baseUrl}/change-password`,
+      payload
+    );
+  }
+
+  /**
+   * ★ 忘记密码（无需登录态）
+   */
+  forgotPassword(payload: ForgotPasswordRequest): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.baseUrl}/forgot-password`,
       payload
     );
   }
@@ -98,5 +116,11 @@ export class AuthService {
   getCurrentUser(): LoginResponse['user'] | null {
     const raw = localStorage.getItem('user_info');
     return raw ? JSON.parse(raw) : null;
+  }
+
+  // ★ Task 8 新增：快捷判断当前用户是否为超级管理员
+  isSuperAdmin(): boolean {
+    const user = this.getCurrentUser();
+    return user?.is_super_admin === true;
   }
 }

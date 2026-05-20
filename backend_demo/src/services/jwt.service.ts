@@ -8,6 +8,7 @@ export interface JwtPayload {
   employee_id: string;
   name?: string;
   role_id?: number;
+  is_super_admin?: boolean;   // ★ Task 3 新增
   [key: string]: unknown;
 }
 

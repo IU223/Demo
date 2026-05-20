@@ -34,10 +34,8 @@
     "prestart": "npm run rebuild",
     "start": "node -r source-map-support/register .",
     "clean": "lb-clean dist *.tsbuildinfo .eslintcache",
-    "rebuild": "npm run clean && npm run build"
-  },
-  "overrides": {
-    "sqlite3": "^5.1.7"
+    "rebuild": "npm run clean && npm run build",
+    "migrate:passwords": "npm run build && node ./dist/migrate-passwords"
   },
   "repository": {
     "type": "git",
@@ -61,7 +59,6 @@
     "bcryptjs": "^3.0.3",
     "jsonwebtoken": "^9.0.3",
     "loopback-connector-postgresql": "^7.2.3",
-    "loopback-connector-sqlite3": "^3.0.0",
     "tslib": "^2.0.0"
   },
   "devDependencies": {

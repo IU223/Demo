@@ -4,7 +4,7 @@ import {
   RestBindings, Request,
 } from '@loopback/rest';
 import { repository } from '@loopback/repository';
-import { EmployeeRepository } from '../repositories';
+import { EmployeeRepository, RoleRepository } from '../repositories';
 import { comparePassword, hashPassword } from '../services/hash.service';
 import { generateToken, verifyToken } from '../services/jwt.service';
 
@@ -43,7 +43,9 @@ export class AuthController {
   constructor(
     @repository(EmployeeRepository)
     public employeeRepository: EmployeeRepository,
-    // ★ 新增：注入 HTTP Request 以读取 JWT
+    // ★ Task 3 新增：注入 RoleRepository 以查询 is_super_admin
+    @repository(RoleRepository)
+    public roleRepository: RoleRepository,
     @inject(RestBindings.Http.REQUEST)
     private request: Request,
   ) { }
@@ -90,11 +92,23 @@ export class AuthController {
       throw Object.assign(new Error('用户名或密码错误'), { statusCode: 401 });
     }
 
-    // 3. 签发 JWT
+    // ★ 3. 查询角色获取 is_super_admin
+    let isSuperAdmin = false;
+    if (employee.role_id != null) {
+      try {
+        const role = await this.roleRepository.findById(employee.role_id);
+        isSuperAdmin = role?.is_super_admin ?? false;
+      } catch {
+        // 角色不存在，默认非超级管理员
+      }
+    }
+
+    // 4. 签发 JWT（包含 is_super_admin）
     const token = generateToken({
       employee_id: employee.employee_id,
       name: employee.name,
       role_id: employee.role_id,
+      is_super_admin: isSuperAdmin,
     });
 
     return {
@@ -103,6 +117,7 @@ export class AuthController {
         employee_id: employee.employee_id,
         name: employee.name,
         role_id: employee.role_id,
+        is_super_admin: isSuperAdmin,
       },
     };
   }
@@ -173,6 +188,60 @@ export class AuthController {
     console.log(`[change-password] 用户 ${employeeId} 密码修改成功`);
 
     return { success: true, message: '密码修改成功' };
+  }
+
+  /**
+   * POST /forgot-password
+   * 公开端点（无需 JWT），用于忘记密码时重置密码
+   * 通过 username（工号）查找用户并更新新密码
+   */
+  @post('/forgot-password')
+  @response(200, CHANGE_PASSWORD_RESPONSE)
+  async forgotPassword(
+    @requestBody({
+      description: 'Forgot password payload',
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              username: { type: 'string' },
+              newPassword: { type: 'string' },
+            },
+            required: ['username', 'newPassword'],
+          },
+        },
+      },
+    })
+    body: { username: string; newPassword: string },
+  ): Promise<{ success: boolean; message: string }> {
+
+    console.log(`[forgot-password] 用户 ${body.username} 请求重置密码`);
+
+    // 1. 查找用户
+    const employee = await this.employeeRepository.findOne({
+      where: { employee_id: body.username },
+    });
+
+    if (!employee) {
+      throw Object.assign(new Error('该工号不存在'), { statusCode: 400 });
+    }
+
+    // 2. 校验新密码长度
+    if (!body.newPassword || body.newPassword.length < 6) {
+      throw Object.assign(new Error('新密码长度不能少于6位'), { statusCode: 400 });
+    }
+
+    // 3. 哈希新密码并更新
+    const hashedNewPassword = await hashPassword(body.newPassword);
+    await this.employeeRepository.updateById(body.username, {
+      password: hashedNewPassword,
+    });
+
+    console.log(`[forgot-password] 用户 ${body.username} 密码重置成功`);
+
+    return { success: true, message: '密码重置成功' };
   }
 
   /**

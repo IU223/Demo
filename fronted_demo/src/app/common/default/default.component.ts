@@ -23,6 +23,7 @@ import { AuthService } from '../../services/auth.service';
 import { EmployeeService } from '../../services/employee.service';
 import { SelectOption, RoleOption } from '../../models/employee';
 import { forkJoin, of } from 'rxjs';
+import { PermissionService, Permission } from '../../services/permission.service';
 
 @Component({
   selector: 'app-default',
@@ -77,6 +78,10 @@ export class DefaultComponent implements OnInit {
   oldPwdVisible = false;
   newPwdVisible = false;
   confirmPwdVisible = false;
+  // 侧边栏菜单权限控制
+  showHomeMenu = true;
+  showReportMenu = true;
+  showPermMenu = true;
 
   constructor(
     private authService: AuthService,
@@ -84,14 +89,81 @@ export class DefaultComponent implements OnInit {
     private router: Router,
     private fb: FormBuilder,
     private message: NzMessageService,
+    private permService: PermissionService,  // ★ 新增
   ) {
     this.initProfileForm();
-    this.initPasswordForm();  // ★ 初始化密码表单
+    this.initPasswordForm();
   }
+
 
   ngOnInit(): void {
     this.loadUserInfo();
+    this.loadMenuPermissions();  // ★ 新增
   }
+
+  // ★ 新增方法
+  private loadMenuPermissions(): void {
+    // ★ 超级管理员直接放行
+    const user = this.authService.getCurrentUser();
+    if (user?.is_super_admin) {
+      this.showHomeMenu = true;
+      this.showReportMenu = true;
+      this.showPermMenu = true;
+      return;
+    }
+
+    this.permService.getCurrentUserPermissions().subscribe({
+      next: (role) => {
+        if (role) {
+          this.showHomeMenu = this.permService.hasPermission(role.home_page_auth ?? 0, Permission.READ);
+          this.showReportMenu = this.permService.hasPermission(role.report_page_auth ?? 0, Permission.READ);
+          this.showPermMenu = this.permService.hasPermission(role.auth_page_auth ?? 0, Permission.READ);
+        }
+
+        // ★ 加载完权限后，检查当前页面是否有权访问
+        this.checkCurrentRoutePermission();
+      },
+      error: () => {
+        console.warn('菜单权限加载失败，默认显示全部菜单');
+      }
+    });
+  }
+
+  /**
+   * ★ 新增：检查当前路由是否有权限，无权限则跳转到第一个有权限的页面
+   */
+  private checkCurrentRoutePermission(): void {
+    const currentUrl = this.router.url;
+
+    // 判断当前页面是否被禁止
+    const isOnHome = currentUrl.includes('/default/welcome');
+    const isOnReport = currentUrl.includes('/default/report');
+    const isOnPerm = currentUrl.includes('/default/permissions');
+
+    const currentPageForbidden =
+      (isOnHome && !this.showHomeMenu) ||
+      (isOnReport && !this.showReportMenu) ||
+      (isOnPerm && !this.showPermMenu);
+
+    if (currentPageForbidden) {
+      // 跳转到第一个有权限的页面
+      const target = this.getFirstAllowedRoute();
+      if (target) {
+        this.router.navigate([target]);
+      }
+    }
+  }
+
+  /**
+   * ★ 新增：获取第一个有权限的路由
+   */
+  private getFirstAllowedRoute(): string | null {
+    if (this.showHomeMenu) return '/default/welcome';
+    if (this.showReportMenu) return '/default/report';
+    if (this.showPermMenu) return '/default/permissions';
+    return null;  // 所有页面都没权限（极端情况）
+  }
+
 
   // ===================== 初始化 =====================
 
@@ -109,7 +181,7 @@ export class DefaultComponent implements OnInit {
     });
   }
 
-  /** ★ 初始化修改密码表单 */
+  /** 初始化修改密码表单 */
   private initPasswordForm(): void {
     this.passwordForm = this.fb.group({
       oldPassword: ['', [Validators.required]],

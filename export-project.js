@@ -16,7 +16,7 @@ const PROJECTS = [
 const EXCLUDE_DIRS = [
     'node_modules', '.git', 'dist', '.angular', '.vscode',
     '.idea', 'coverage', 'tmp', 'e2e', '.firebase',
-    '.sandbox', '__pycache__'
+    '.sandbox', '__pycache__', 'assets'
 ];
 
 /** 要排除的文件 */

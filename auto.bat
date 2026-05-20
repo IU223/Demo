@@ -111,30 +111,11 @@ if %errorlevel% equ 0 (
 :: ========== 用户选择 ==========
 echo %GRAY%─────────────────────────────────────────────%RESET%
 echo.
-echo   %WHITE%[1]%RESET% 用 VS Code 打开文件
-echo   %WHITE%[2]%RESET% 用默认程序打开文件
-echo   %WHITE%[3]%RESET% 打开文件所在目录
-echo   %WHITE%[0]%RESET% 退出
+@REM echo   %WHITE%[1]%RESET% 用 VS Code 打开文件
+@REM echo   %WHITE%[2]%RESET% 用默认程序打开文件
+@REM echo   %WHITE%[3]%RESET% 打开文件所在目录
+@REM echo   %WHITE%[0]%RESET% 退出
 echo.
-set /p "choice=%CYAN%请选择操作 (0-3): %RESET%"
-
-if "%choice%"=="1" (
-    echo.
-    echo %GREEN%正在用 VS Code 打开...%RESET%
-    code project-export.md 2>nul || (
-        echo %RED%未找到 VS Code，请检查是否已安装并加入 PATH%RESET%
-    )
-)
-if "%choice%"=="2" (
-    echo.
-    echo %GREEN%正在用默认程序打开...%RESET%
-    start "" "project-export.md"
-)
-if "%choice%"=="3" (
-    echo.
-    echo %GREEN%正在打开目录...%RESET%
-    explorer .
-)
 
 echo.
 echo %GRAY%感谢使用，再见！%RESET%
