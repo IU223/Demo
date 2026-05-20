@@ -18,6 +18,7 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 
 import { PermissionService, Permission } from '../../services/permission.service';
+import { AuthService } from '../../services/auth.service';              // ★ Task 9 新增
 import { RoleDetail, PageAuthField, PagePermRow } from '../../models/role';
 
 @Component({
@@ -53,6 +54,9 @@ export class PermissionsComponent implements OnInit {
   canDelete = false;
   canUpdate = false;
 
+  // ★ Task 9 新增：超级管理员标记
+  isSuperAdmin = false;
+
   // ==================== 新增角色弹框 ====================
   isAddModalVisible = false;
   addRoleForm!: FormGroup;
@@ -65,6 +69,7 @@ export class PermissionsComponent implements OnInit {
 
   constructor(
     private permService: PermissionService,
+    private authService: AuthService,   // ★ Task 9 新增
     private message: NzMessageService,
     private modal: NzModalService,
     private fb: FormBuilder,
@@ -73,7 +78,53 @@ export class PermissionsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadCurrentUserPermissions();
+    // ★ Task 9: 根据超级管理员身份分流加载逻辑
+    this.isSuperAdmin = this.authService.isSuperAdmin();
+    this.loadPermissionsAndData();
+  }
+
+  // ==================== ★ Task 9: 分流加载逻辑 ====================
+
+  private loadPermissionsAndData(): void {
+    if (this.isSuperAdmin) {
+      // ★ 超级管理员：拥有全部 CRUD 权限，加载所有角色
+      this.canRead = true;
+      this.canCreate = true;
+      this.canDelete = true;
+      this.canUpdate = true;
+      this.permLoaded = true;
+      this.loadRoles();
+    } else {
+      // ★ 普通用户：只能只读查看自己的角色
+      this.canRead = true;
+      this.canCreate = false;
+      this.canDelete = false;
+      this.canUpdate = false;
+      this.permLoaded = true;
+      this.loadMyRole();
+    }
+  }
+
+  // ★ Task 9 新增：普通用户加载自己的角色
+  private loadMyRole(): void {
+    this.loading = true;
+    this.permService.getMyRole().subscribe({
+      next: (role) => {
+        if (role) {
+          this.roleList = [role];
+          this.selectedRoleId = role.role_id ?? null;
+          this.selectedRole = role;
+          this.editRoleName = role.role_name || '';
+          this.editDescription = role.description || '';
+          this.pagePermissions = this.decodeRoleToRows(role);
+        }
+        this.loading = false;
+      },
+      error: () => {
+        this.message.error('加载角色信息失败');
+        this.loading = false;
+      }
+    });
   }
 
   // ==================== 初始化 ====================

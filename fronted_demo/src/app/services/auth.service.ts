@@ -14,6 +14,7 @@ export interface LoginResponse {
     employee_id: string;
     name?: string;
     role_id?: number;
+    is_super_admin?: boolean;   // ★ Task 8 新增
   };
 }
 
@@ -22,6 +23,7 @@ export interface TokenPayload {
   employee_id: string;
   name?: string;
   role_id?: number;
+  is_super_admin?: boolean;   // ★ Task 8 新增
   iat: number;
   exp: number;
 }
@@ -114,5 +116,11 @@ export class AuthService {
   getCurrentUser(): LoginResponse['user'] | null {
     const raw = localStorage.getItem('user_info');
     return raw ? JSON.parse(raw) : null;
+  }
+
+  // ★ Task 8 新增：快捷判断当前用户是否为超级管理员
+  isSuperAdmin(): boolean {
+    const user = this.getCurrentUser();
+    return user?.is_super_admin === true;
   }
 }

@@ -108,11 +108,11 @@ export class DefaultComponent implements OnInit {
         if (role) {
           this.showHomeMenu = this.permService.hasPermission(role.home_page_auth ?? 0, Permission.READ);
           this.showReportMenu = this.permService.hasPermission(role.report_page_auth ?? 0, Permission.READ);
-          this.showPermMenu = this.permService.hasPermission(role.auth_page_auth ?? 0, Permission.READ);
+          // ★ Task 10: 所有用户均可查看权限页面（查看自己的角色权限）
+          this.showPermMenu = true;
         }
       },
       error: () => {
-        // 加载失败时默认全部显示，不影响使用
         console.warn('菜单权限加载失败，默认显示全部菜单');
       }
     });

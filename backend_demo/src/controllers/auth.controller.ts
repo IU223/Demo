@@ -4,7 +4,7 @@ import {
   RestBindings, Request,
 } from '@loopback/rest';
 import { repository } from '@loopback/repository';
-import { EmployeeRepository } from '../repositories';
+import { EmployeeRepository, RoleRepository } from '../repositories';
 import { comparePassword, hashPassword } from '../services/hash.service';
 import { generateToken, verifyToken } from '../services/jwt.service';
 
@@ -43,7 +43,9 @@ export class AuthController {
   constructor(
     @repository(EmployeeRepository)
     public employeeRepository: EmployeeRepository,
-    // ★ 新增：注入 HTTP Request 以读取 JWT
+    // ★ Task 3 新增：注入 RoleRepository 以查询 is_super_admin
+    @repository(RoleRepository)
+    public roleRepository: RoleRepository,
     @inject(RestBindings.Http.REQUEST)
     private request: Request,
   ) { }
@@ -90,11 +92,23 @@ export class AuthController {
       throw Object.assign(new Error('用户名或密码错误'), { statusCode: 401 });
     }
 
-    // 3. 签发 JWT
+    // ★ 3. 查询角色获取 is_super_admin
+    let isSuperAdmin = false;
+    if (employee.role_id != null) {
+      try {
+        const role = await this.roleRepository.findById(employee.role_id);
+        isSuperAdmin = role?.is_super_admin ?? false;
+      } catch {
+        // 角色不存在，默认非超级管理员
+      }
+    }
+
+    // 4. 签发 JWT（包含 is_super_admin）
     const token = generateToken({
       employee_id: employee.employee_id,
       name: employee.name,
       role_id: employee.role_id,
+      is_super_admin: isSuperAdmin,
     });
 
     return {
@@ -103,6 +117,7 @@ export class AuthController {
         employee_id: employee.employee_id,
         name: employee.name,
         role_id: employee.role_id,
+        is_super_admin: isSuperAdmin,
       },
     };
   }

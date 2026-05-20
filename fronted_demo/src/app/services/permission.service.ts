@@ -57,6 +57,15 @@ export class PermissionService {
     return this.http.get<RoleDetail>(`${this.apiUrl}/${user.role_id}`);
   }
 
+  // ★ Task 8 新增：获取当前用户自己的角色详情
+  getMyRole(): Observable<RoleDetail | null> {
+    const user = this.authService.getCurrentUser();
+    if (!user || user.role_id == null) {
+      return of(null);
+    }
+    return this.http.get<RoleDetail>(`${this.apiUrl}/${user.role_id}`);
+  }
+
   /** 快速判断当前用户对某页面是否有某权限 */
   checkPagePermission(role: RoleDetail, page: PageAuthField, perm: number): boolean {
     const val: number = role[page] ?? 0;

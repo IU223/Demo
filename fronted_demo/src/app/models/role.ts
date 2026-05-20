@@ -6,6 +6,7 @@ export interface RoleDetail {
   home_page_auth: number;
   report_page_auth: number;
   auth_page_auth: number;
+  is_super_admin?: boolean;   // ★ Task 8 新增
   created_at?: string;
   updated_at?: string;
 }
