@@ -3,6 +3,7 @@ import { NonNullableFormBuilder, FormGroup, Validators, ReactiveFormsModule } fr
 import { HttpClientModule } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { PermissionService, Permission } from '../../services/permission.service';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -48,13 +49,15 @@ export class LoginComponent implements OnInit {
     private fb: NonNullableFormBuilder,
     private authService: AuthService,
     private router: Router,
+    private permService: PermissionService,  // ★ 新增
     private message: NzMessageService,
   ) { }
 
   ngOnInit(): void {
     // 如果已登录，直接跳转
     if (this.authService.isTokenValid()) {
-      this.router.navigate(['/default/welcome']);
+      // ★ 也改为动态跳转
+      this.navigateToFirstAllowedPage();
       return;
     }
 
@@ -80,7 +83,8 @@ export class LoginComponent implements OnInit {
         next: () => {
           this.isLoading = false;
           this.message.success('登录成功');
-          this.router.navigate(['/default/welcome']);
+          // ★ 改为动态跳转
+          this.navigateToFirstAllowedPage();
         },
         error: (err) => {
           this.isLoading = false;
@@ -97,6 +101,42 @@ export class LoginComponent implements OnInit {
         }
       });
     }
+  }
+
+  /**
+   * ★ 新增：登录成功后，根据权限跳转到第一个有权限的页面
+   */
+  private navigateToFirstAllowedPage(): void {
+    // 超级管理员直接去首页
+    if (this.authService.isSuperAdmin()) {
+      this.router.navigate(['/default/welcome']);
+      return;
+    }
+
+    // 普通用户：查询角色权限后决定跳转目标
+    this.permService.getCurrentUserPermissions().subscribe({
+      next: (role) => {
+        if (role) {
+          if (this.permService.hasPermission(role.home_page_auth ?? 0, Permission.READ)) {
+            this.router.navigate(['/default/welcome']);
+          } else if (this.permService.hasPermission(role.report_page_auth ?? 0, Permission.READ)) {
+            this.router.navigate(['/default/report']);
+          } else if (this.permService.hasPermission(role.auth_page_auth ?? 0, Permission.READ)) {
+            this.router.navigate(['/default/permissions']);
+          } else {
+            // 所有页面都没权限
+            this.router.navigate(['/default/welcome']);
+          }
+        } else {
+          // 没有角色信息，默认跳首页
+          this.router.navigate(['/default/welcome']);
+        }
+      },
+      error: () => {
+        // 查询失败，默认跳首页
+        this.router.navigate(['/default/welcome']);
+      }
+    });
   }
 
   // ===================== 忘记密码 =====================

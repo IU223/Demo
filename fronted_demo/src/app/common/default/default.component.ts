@@ -103,19 +103,65 @@ export class DefaultComponent implements OnInit {
 
   // ★ 新增方法
   private loadMenuPermissions(): void {
+    // ★ 超级管理员直接放行
+    const user = this.authService.getCurrentUser();
+    if (user?.is_super_admin) {
+      this.showHomeMenu = true;
+      this.showReportMenu = true;
+      this.showPermMenu = true;
+      return;
+    }
+
     this.permService.getCurrentUserPermissions().subscribe({
       next: (role) => {
         if (role) {
           this.showHomeMenu = this.permService.hasPermission(role.home_page_auth ?? 0, Permission.READ);
           this.showReportMenu = this.permService.hasPermission(role.report_page_auth ?? 0, Permission.READ);
-          // ★ Task 10: 所有用户均可查看权限页面（查看自己的角色权限）
-          this.showPermMenu = true;
+          this.showPermMenu = this.permService.hasPermission(role.auth_page_auth ?? 0, Permission.READ);
         }
+
+        // ★ 加载完权限后，检查当前页面是否有权访问
+        this.checkCurrentRoutePermission();
       },
       error: () => {
         console.warn('菜单权限加载失败，默认显示全部菜单');
       }
     });
+  }
+
+  /**
+   * ★ 新增：检查当前路由是否有权限，无权限则跳转到第一个有权限的页面
+   */
+  private checkCurrentRoutePermission(): void {
+    const currentUrl = this.router.url;
+
+    // 判断当前页面是否被禁止
+    const isOnHome = currentUrl.includes('/default/welcome');
+    const isOnReport = currentUrl.includes('/default/report');
+    const isOnPerm = currentUrl.includes('/default/permissions');
+
+    const currentPageForbidden =
+      (isOnHome && !this.showHomeMenu) ||
+      (isOnReport && !this.showReportMenu) ||
+      (isOnPerm && !this.showPermMenu);
+
+    if (currentPageForbidden) {
+      // 跳转到第一个有权限的页面
+      const target = this.getFirstAllowedRoute();
+      if (target) {
+        this.router.navigate([target]);
+      }
+    }
+  }
+
+  /**
+   * ★ 新增：获取第一个有权限的路由
+   */
+  private getFirstAllowedRoute(): string | null {
+    if (this.showHomeMenu) return '/default/welcome';
+    if (this.showReportMenu) return '/default/report';
+    if (this.showPermMenu) return '/default/permissions';
+    return null;  // 所有页面都没权限（极端情况）
   }
 
 
