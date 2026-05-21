@@ -525,7 +525,19 @@ export class ReportComponent implements OnInit {
 
     // ======================== 新增模式（原有逻辑不变） ========================
     this.saveFormToBatch();
-
+    const idSet = new Set<string>();
+    for (let i = 0; i < this.batchEmployees.length; i++) {
+      const empId = this.batchEmployees[i].employee_id;
+      if (!empId) continue;
+      if (idSet.has(empId)) {
+        this.currentBatchIndex = i;
+        this.loadBatchToForm(i);
+        this.markFormDirty();
+        this.message.error(`第 ${i + 1} 条记录的工号「${empId}」与前面的记录重复，请修改`);
+        return;
+      }
+      idSet.add(empId);
+    }
     // 逐条校验
     for (let i = 0; i < this.batchEmployees.length; i++) {
       const emp = this.batchEmployees[i];
