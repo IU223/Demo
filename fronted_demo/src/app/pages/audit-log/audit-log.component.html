@@ -1,11 +1,100 @@
 <div class="audit-log-container">
 
+  <!-- ===================== 筛选栏 ===================== -->
+  <div class="filter-section">
+    <div class="filter-row">
+
+      <!-- 时间范围 -->
+      <div class="filter-item">
+        <label>时间范围</label>
+        <nz-range-picker
+          [(ngModel)]="filterDateRange"
+          nzFormat="yyyy-MM-dd"
+          [nzPlaceHolder]="['开始日期', '结束日期']"
+          style="width: 260px;"
+        ></nz-range-picker>
+      </div>
+
+      <!-- 操作人 -->
+      <div class="filter-item">
+        <label>操作人</label>
+        <input
+          nz-input
+          [(ngModel)]="filterOperator"
+          placeholder="工号或姓名"
+          style="width: 140px;"
+          (keyup.enter)="onSearch()"
+        />
+      </div>
+
+      <!-- 操作类型 -->
+      <div class="filter-item">
+        <label>操作类型</label>
+        <nz-select
+          [(ngModel)]="filterAction"
+          nzPlaceHolder="全部"
+          nzAllowClear
+          style="width: 130px;"
+        >
+          <nz-option
+            *ngFor="let opt of actionOptions"
+            [nzLabel]="opt.label"
+            [nzValue]="opt.value"
+          ></nz-option>
+        </nz-select>
+      </div>
+
+      <!-- 资源类型 -->
+      <div class="filter-item">
+        <label>资源类型</label>
+        <nz-select
+          [(ngModel)]="filterResourceType"
+          nzPlaceHolder="全部"
+          nzAllowClear
+          style="width: 120px;"
+        >
+          <nz-option
+            *ngFor="let opt of resourceTypeOptions"
+            [nzLabel]="opt.label"
+            [nzValue]="opt.value"
+          ></nz-option>
+        </nz-select>
+      </div>
+
+      <!-- 关键词搜索 -->
+      <div class="filter-item">
+        <label>关键词</label>
+        <nz-input-group [nzSuffix]="searchSuffix" style="width: 180px;">
+          <input
+            nz-input
+            [(ngModel)]="filterKeyword"
+            placeholder="资源ID / 路径"
+            (keyup.enter)="onSearch()"
+          />
+        </nz-input-group>
+        <ng-template #searchSuffix>
+          <span nz-icon nzType="search" style="cursor: pointer;" (click)="onSearch()"></span>
+        </ng-template>
+      </div>
+
+      <!-- 搜索 & 重置 -->
+      <div class="filter-item filter-buttons">
+        <button nz-button nzType="primary" (click)="onSearch()">
+          <span nz-icon nzType="search"></span>搜索
+        </button>
+        <button nz-button nzType="default" (click)="onReset()">重置</button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ===================== 表格区域 ===================== -->
   <div class="table-wrapper">
     <div class="table-toolbar">
       <div class="table-title">
         <span nz-icon nzType="file-search" nzTheme="outline" style="margin-right: 8px;"></span>
         操作日志
+        <span class="total-badge" *ngIf="total > 0">共 {{ total }} 条</span>
       </div>
     </div>
 
@@ -34,14 +123,12 @@
           <th nzWidth="70px" nzAlign="center">状态</th>
           <th>请求路径</th>
           <th nzWidth="120px">IP</th>
+          <th nzWidth="70px" nzAlign="center">操作</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let data of logTable.data">
-          <!-- 时间 -->
           <td>{{ formatTime(data.created_at) }}</td>
-
-          <!-- 操作人 -->
           <td>
             <span [nz-tooltip]="data.operator_name || ''">
               {{ data.operator_id }}
@@ -50,45 +137,163 @@
               ({{ data.operator_name }})
             </span>
           </td>
-
-          <!-- 操作类型 -->
           <td nzAlign="center">
             <nz-tag [nzColor]="getActionColor(data.action)">
               {{ getActionLabel(data.action) }}
             </nz-tag>
           </td>
-
-          <!-- 资源类型 -->
           <td nzAlign="center">{{ data.resource_type }}</td>
-
-          <!-- 资源ID -->
           <td>
             <span class="resource-id" [nz-tooltip]="data.resource_id || '-'">
               {{ data.resource_id || '-' }}
             </span>
           </td>
-
-          <!-- 状态码 -->
           <td nzAlign="center">
             <nz-tag *ngIf="data.status_code" [nzColor]="isSuccess(data.status_code) ? 'green' : 'red'">
               {{ data.status_code }}
             </nz-tag>
             <span *ngIf="!data.status_code">-</span>
           </td>
-
-          <!-- 请求路径 -->
           <td>
             <span class="request-path">
               <nz-tag [nzColor]="'default'" style="font-size: 11px;">{{ data.request_method }}</nz-tag>
               {{ data.request_path }}
             </span>
           </td>
-
-          <!-- IP -->
           <td>{{ data.ip_address || '-' }}</td>
+          <td nzAlign="center">
+            <a class="detail-link" (click)="onViewDetail(data)">详情</a>
+          </td>
         </tr>
       </tbody>
     </nz-table>
   </div>
 
 </div>
+
+<!-- ===================== 日志详情弹框 ===================== -->
+<nz-modal
+  [(nzVisible)]="isDetailVisible"
+  [nzTitle]="detailTitleTpl"
+  [nzFooter]="detailFooterTpl"
+  [nzWidth]="680"
+  [nzMaskClosable]="true"
+  [nzClosable]="true"
+  (nzOnCancel)="handleDetailClose()"
+>
+  <ng-template #detailTitleTpl>
+    <div class="detail-modal-title">
+      <span nz-icon nzType="file-text" nzTheme="outline" style="margin-right: 8px;"></span>
+      操作日志详情
+    </div>
+  </ng-template>
+
+  <ng-container *nzModalContent>
+    <div class="detail-content" *ngIf="detailLog">
+
+      <nz-descriptions nzBordered nzSize="small" [nzColumn]="2">
+        <nz-descriptions-item nzTitle="操作人" [nzSpan]="1">
+          {{ detailLog.operator_id }}
+          <span *ngIf="detailLog.operator_name" class="meta-sub">({{ detailLog.operator_name }})</span>
+        </nz-descriptions-item>
+        <nz-descriptions-item nzTitle="操作时间" [nzSpan]="1">
+          {{ formatTime(detailLog.created_at) }}
+        </nz-descriptions-item>
+        <nz-descriptions-item nzTitle="操作类型" [nzSpan]="1">
+          <nz-tag [nzColor]="getActionColor(detailLog.action)">
+            {{ getActionLabel(detailLog.action) }}
+          </nz-tag>
+        </nz-descriptions-item>
+        <nz-descriptions-item nzTitle="资源类型" [nzSpan]="1">
+          {{ detailLog.resource_type }}
+        </nz-descriptions-item>
+        <nz-descriptions-item nzTitle="资源 ID" [nzSpan]="1">
+          <span class="mono-text">{{ detailLog.resource_id || '-' }}</span>
+        </nz-descriptions-item>
+        <nz-descriptions-item nzTitle="状态码" [nzSpan]="1">
+          <nz-tag *ngIf="detailLog.status_code" [nzColor]="isSuccess(detailLog.status_code) ? 'green' : 'red'">
+            {{ detailLog.status_code }}
+          </nz-tag>
+          <span *ngIf="!detailLog.status_code">-</span>
+        </nz-descriptions-item>
+        <nz-descriptions-item nzTitle="请求路径" [nzSpan]="2">
+          <span class="mono-text">{{ detailLog.request_method }} {{ detailLog.request_path }}</span>
+        </nz-descriptions-item>
+        <nz-descriptions-item nzTitle="IP 地址" [nzSpan]="1">
+          {{ detailLog.ip_address || '-' }}
+        </nz-descriptions-item>
+        <nz-descriptions-item nzTitle="错误信息" [nzSpan]="1" *ngIf="detailLog.error_message">
+          <span class="error-text">{{ detailLog.error_message }}</span>
+        </nz-descriptions-item>
+      </nz-descriptions>
+
+      <!-- 变更对比（UPDATE / DELETE） -->
+      <ng-container *ngIf="showDiffSection">
+        <nz-divider nzText="变更对比" nzOrientation="left"></nz-divider>
+        <nz-table
+          #diffTable
+          [nzData]="diffRows"
+          [nzFrontPagination]="false"
+          [nzShowPagination]="false"
+          nzBordered
+          nzSize="small"
+          *ngIf="diffRows.length > 0"
+        >
+          <thead>
+            <tr>
+              <th nzWidth="160px">字段</th>
+              <th>变更前</th>
+              <th>变更后</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of diffTable.data" [class.diff-changed]="row.changed">
+              <td><strong>{{ row.field }}</strong></td>
+              <td>
+                <span class="diff-old" [class.diff-highlight-old]="row.changed">{{ row.oldVal }}</span>
+              </td>
+              <td>
+                <span class="diff-new" [class.diff-highlight-new]="row.changed">{{ row.newVal }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </nz-table>
+        <nz-empty *ngIf="diffRows.length === 0" nzNotFoundContent="无变更数据"></nz-empty>
+      </ng-container>
+
+      <!-- 新值展示（CREATE / LOGIN 等） -->
+      <ng-container *ngIf="showNewValueSection">
+        <nz-divider nzText="操作数据" nzOrientation="left"></nz-divider>
+        <nz-table
+          #newValTable
+          [nzData]="getNewValueEntries()"
+          [nzFrontPagination]="false"
+          [nzShowPagination]="false"
+          nzBordered
+          nzSize="small"
+          *ngIf="getNewValueEntries().length > 0"
+        >
+          <thead>
+            <tr>
+              <th nzWidth="160px">字段</th>
+              <th>值</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entry of newValTable.data">
+              <td><strong>{{ entry.key }}</strong></td>
+              <td><span class="mono-text">{{ entry.value }}</span></td>
+            </tr>
+          </tbody>
+        </nz-table>
+      </ng-container>
+
+    </div>
+  </ng-container>
+
+  <ng-template #detailFooterTpl>
+    <div class="detail-footer">
+      <button nz-button nzType="primary" (click)="handleDetailClose()">关闭</button>
+    </div>
+  </ng-template>
+</nz-modal>
