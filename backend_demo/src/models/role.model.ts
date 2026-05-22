@@ -28,6 +28,10 @@ export class Role extends Entity {
     type: 'number',
   })
   auth_page_auth?: number;
+  @property({
+    type: 'number',
+  })
+  log_page_auth?: number;
 
   @property({
     type: 'string',

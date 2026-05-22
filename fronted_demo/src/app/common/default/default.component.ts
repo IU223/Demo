@@ -82,6 +82,7 @@ export class DefaultComponent implements OnInit {
   showHomeMenu = true;
   showReportMenu = true;
   showPermMenu = true;
+  showAuditLogMenu = false;
 
   constructor(
     private authService: AuthService,
@@ -109,6 +110,7 @@ export class DefaultComponent implements OnInit {
       this.showHomeMenu = true;
       this.showReportMenu = true;
       this.showPermMenu = true;
+      this.showAuditLogMenu = true;
       return;
     }
 
@@ -139,11 +141,13 @@ export class DefaultComponent implements OnInit {
     const isOnHome = currentUrl.includes('/default/welcome');
     const isOnReport = currentUrl.includes('/default/report');
     const isOnPerm = currentUrl.includes('/default/permissions');
+    const isOnAuditLog = currentUrl.includes('/default/audit-log');
 
     const currentPageForbidden =
       (isOnHome && !this.showHomeMenu) ||
       (isOnReport && !this.showReportMenu) ||
-      (isOnPerm && !this.showPermMenu);
+      (isOnPerm && !this.showPermMenu) ||
+      (isOnAuditLog && !this.showAuditLogMenu);
 
     if (currentPageForbidden) {
       // 跳转到第一个有权限的页面
@@ -161,6 +165,7 @@ export class DefaultComponent implements OnInit {
     if (this.showHomeMenu) return '/default/welcome';
     if (this.showReportMenu) return '/default/report';
     if (this.showPermMenu) return '/default/permissions';
+    if (this.showAuditLogMenu) return '/default/audit-log';
     return null;  // 所有页面都没权限（极端情况）
   }
 

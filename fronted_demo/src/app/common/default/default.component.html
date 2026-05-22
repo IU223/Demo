@@ -32,6 +32,13 @@
           <span>权限</span>
         </a>
       </li>
+      <li nz-menu-item *ngIf="showAuditLogMenu" [nzSelected]="activeMenu === 'audit-log'"
+        (click)="selectMenu('audit-log')">
+        <a routerLink="/default/audit-log">
+          <span nz-icon nzType="file-search"></span>
+          <span>操作日志</span>
+        </a>
+      </li>
     </ul>
 
   </nz-sider>

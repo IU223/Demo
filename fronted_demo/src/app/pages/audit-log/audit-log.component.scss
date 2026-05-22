@@ -1,0 +1,65 @@
+.audit-log-container {
+  padding: 16px;
+  background: #fff;
+  min-height: calc(100vh - 64px);
+}
+
+// ==================== 表格区域 ====================
+.table-wrapper {
+  background: #fff;
+  border-radius: 4px;
+  border: 1px solid #f0f0f0;
+
+  .table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e8e8e8;
+
+    .table-title {
+      display: flex;
+      align-items: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.85);
+    }
+
+    .table-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+  }
+
+  ::ng-deep .ant-table-bordered .ant-table-container {
+    border-top: none;
+  }
+}
+
+// ==================== 表格内容样式 ====================
+.operator-name {
+  color: #999;
+  font-size: 12px;
+  margin-left: 2px;
+}
+
+.resource-id {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+  color: #595959;
+  max-width: 130px;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.request-path {
+  font-size: 12px;
+  color: #595959;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

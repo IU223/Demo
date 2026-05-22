@@ -1,0 +1,94 @@
+<div class="audit-log-container">
+
+  <!-- ===================== 表格区域 ===================== -->
+  <div class="table-wrapper">
+    <div class="table-toolbar">
+      <div class="table-title">
+        <span nz-icon nzType="file-search" nzTheme="outline" style="margin-right: 8px;"></span>
+        操作日志
+      </div>
+    </div>
+
+    <nz-table
+      #logTable
+      [nzData]="listOfData"
+      [nzLoading]="loading"
+      [nzTotal]="total"
+      [nzPageSize]="pageSize"
+      [nzPageIndex]="pageIndex"
+      [nzFrontPagination]="false"
+      (nzPageIndexChange)="onPageIndexChange($event)"
+      (nzPageSizeChange)="onPageSizeChange($event)"
+      nzShowSizeChanger
+      [nzPageSizeOptions]="[10, 20, 50, 100]"
+      nzBordered
+      nzSize="middle"
+    >
+      <thead>
+        <tr>
+          <th nzWidth="160px">时间</th>
+          <th nzWidth="120px">操作人</th>
+          <th nzWidth="100px" nzAlign="center">操作类型</th>
+          <th nzWidth="90px" nzAlign="center">资源类型</th>
+          <th nzWidth="140px">资源ID</th>
+          <th nzWidth="70px" nzAlign="center">状态</th>
+          <th>请求路径</th>
+          <th nzWidth="120px">IP</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let data of logTable.data">
+          <!-- 时间 -->
+          <td>{{ formatTime(data.created_at) }}</td>
+
+          <!-- 操作人 -->
+          <td>
+            <span [nz-tooltip]="data.operator_name || ''">
+              {{ data.operator_id }}
+            </span>
+            <span *ngIf="data.operator_name" class="operator-name">
+              ({{ data.operator_name }})
+            </span>
+          </td>
+
+          <!-- 操作类型 -->
+          <td nzAlign="center">
+            <nz-tag [nzColor]="getActionColor(data.action)">
+              {{ getActionLabel(data.action) }}
+            </nz-tag>
+          </td>
+
+          <!-- 资源类型 -->
+          <td nzAlign="center">{{ data.resource_type }}</td>
+
+          <!-- 资源ID -->
+          <td>
+            <span class="resource-id" [nz-tooltip]="data.resource_id || '-'">
+              {{ data.resource_id || '-' }}
+            </span>
+          </td>
+
+          <!-- 状态码 -->
+          <td nzAlign="center">
+            <nz-tag *ngIf="data.status_code" [nzColor]="isSuccess(data.status_code) ? 'green' : 'red'">
+              {{ data.status_code }}
+            </nz-tag>
+            <span *ngIf="!data.status_code">-</span>
+          </td>
+
+          <!-- 请求路径 -->
+          <td>
+            <span class="request-path">
+              <nz-tag [nzColor]="'default'" style="font-size: 11px;">{{ data.request_method }}</nz-tag>
+              {{ data.request_path }}
+            </span>
+          </td>
+
+          <!-- IP -->
+          <td>{{ data.ip_address || '-' }}</td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </div>
+
+</div>
