@@ -4,3 +4,4 @@ export * from './department.controller';
 export * from './plant.controller';
 export * from './region.controller';
 export * from './role.controller';
+export * from './audit-log.controller';
