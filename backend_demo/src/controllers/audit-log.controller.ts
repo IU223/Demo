@@ -35,17 +35,29 @@ export class AuditLogController {
   }
 
   /**
-   * 鉴权：仅超级管理员可访问
-   * P2 阶段可扩展为：超管 OR 拥有 log_page_auth READ 权限
+   * 根据用户身份自动注入 where 过滤条件
+   *   - 超级管理员：不做限制，可查看全部日志
+   *   - 普通用户：仅可查看 operator_id === 自己工号 的日志
    */
-  private assertCanRead(): void {
+  private applyUserFilter(where?: Where<AuditLog>): Where<AuditLog> {
     const user = this.getCurrentUser();
-    if (!user?.is_super_admin) {
-      throw Object.assign(
-        new Error('仅超级管理员可查看操作日志'),
-        {statusCode: 403},
-      );
+    if (!user) {
+      throw Object.assign(new Error('未登录'), {statusCode: 401});
     }
+
+    // 超级管理员 → 不做限制
+    if (user.is_super_admin) {
+      return where ?? {};
+    }
+
+    // 普通用户 → 强制追加 operator_id 过滤
+    const userWhere = {operator_id: user.employee_id};
+
+    if (where && Object.keys(where).length > 0) {
+      return {and: [userWhere, where]} as Where<AuditLog>;
+    }
+
+    return userWhere as Where<AuditLog>;
   }
 
   // ==================== GET 端点 ====================
@@ -58,8 +70,8 @@ export class AuditLogController {
   async count(
     @param.where(AuditLog) where?: Where<AuditLog>,
   ): Promise<Count> {
-    this.assertCanRead();
-    return this.auditLogRepository.count(where);
+    const filteredWhere = this.applyUserFilter(where);
+    return this.auditLogRepository.count(filteredWhere);
   }
 
   @get('/audit-logs')
@@ -77,11 +89,16 @@ export class AuditLogController {
   async find(
     @param.filter(AuditLog) filter?: Filter<AuditLog>,
   ): Promise<AuditLog[]> {
-    this.assertCanRead();
+    const filteredWhere = this.applyUserFilter(filter?.where);
 
-    // 默认按 created_at 倒序，如果调用方未指定 order
-    if (!filter?.order) {
-      filter = {...(filter || {}), order: ['created_at DESC']};
+    filter = {
+      ...(filter || {}),
+      where: filteredWhere,
+    };
+
+    // 默认按 created_at 倒序
+    if (!filter.order) {
+      filter.order = ['created_at DESC'];
     }
 
     return this.auditLogRepository.find(filter);
@@ -101,7 +118,20 @@ export class AuditLogController {
     @param.filter(AuditLog, {exclude: 'where'})
     filter?: FilterExcludingWhere<AuditLog>,
   ): Promise<AuditLog> {
-    this.assertCanRead();
-    return this.auditLogRepository.findById(id, filter);
+    const log = await this.auditLogRepository.findById(id, filter);
+
+    // 普通用户只能查看自己的日志详情
+    const user = this.getCurrentUser();
+    if (!user) {
+      throw Object.assign(new Error('未登录'), {statusCode: 401});
+    }
+    if (!user.is_super_admin && log.operator_id !== user.employee_id) {
+      throw Object.assign(
+        new Error('您只能查看自己的操作日志'),
+        {statusCode: 403},
+      );
+    }
+
+    return log;
   }
 }

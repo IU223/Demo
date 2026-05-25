@@ -15,10 +15,12 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
 
 import { forkJoin } from 'rxjs';
 
 import { AuditLogService } from '../../services/audit-log.service';
+import { AuthService } from '../../services/auth.service';
 import {
   AuditLog,
   ACTION_TAG_COLOR,
@@ -53,6 +55,7 @@ interface DiffRow {
     NzDatePickerModule,
     NzSelectModule,
     NzInputModule,
+    NzAlertModule,
   ],
   templateUrl: './audit-log.component.html',
   styleUrls: ['./audit-log.component.scss'],
@@ -79,6 +82,10 @@ export class AuditLogComponent implements OnInit {
   filterResourceType: string | null = null;
   filterKeyword = '';
 
+  // ===================== 用户身份标识 =====================
+  isSuperAdmin = false;
+  currentEmployeeId = '';
+
   // ===================== 详情弹框 =====================
   isDetailVisible = false;
   detailLog: AuditLog | null = null;
@@ -88,10 +95,16 @@ export class AuditLogComponent implements OnInit {
 
   constructor(
     private auditLogService: AuditLogService,
+    private authService: AuthService,
     private message: NzMessageService,
   ) {}
 
   ngOnInit(): void {
+    // 检测当前用户身份
+    this.isSuperAdmin = this.authService.isSuperAdmin();
+    const user = this.authService.getCurrentUser();
+    this.currentEmployeeId = user?.employee_id ?? '';
+
     this.loadData();
   }
 
@@ -141,8 +154,8 @@ export class AuditLogComponent implements OnInit {
       }
     }
 
-    // 2. 操作人（模糊搜索 operator_id 或 operator_name）
-    if (this.filterOperator && this.filterOperator.trim()) {
+    // 2. 操作人（仅超级管理员可使用）
+    if (this.isSuperAdmin && this.filterOperator && this.filterOperator.trim()) {
       const kw = this.filterOperator.trim();
       where.or = [
         { operator_id: { like: `%${kw}%` } },

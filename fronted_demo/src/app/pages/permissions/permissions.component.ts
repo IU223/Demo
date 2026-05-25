@@ -21,6 +21,9 @@ import { PermissionService, Permission } from '../../services/permission.service
 import { AuthService } from '../../services/auth.service';              // ★ Task 9 新增
 import { RoleDetail, PageAuthField, PagePermRow } from '../../models/role';
 
+/** ★ Step 9：仅需 READ 权限的页面（隐藏 C/D/U 复选框） */
+const READ_ONLY_PAGES: string[] = ['首页', '日志页面'];
+
 @Component({
   selector: 'app-permissions',
   standalone: true,
@@ -56,6 +59,9 @@ export class PermissionsComponent implements OnInit {
 
   // ★ Task 9 新增：超级管理员标记
   isSuperAdmin = false;
+
+  // ★ Step 9：仅需 READ 权限的页面列表（供模板使用）
+  readOnlyPages = READ_ONLY_PAGES;
 
   // ==================== 新增角色弹框 ====================
   isAddModalVisible = false;
@@ -142,6 +148,7 @@ export class PermissionsComponent implements OnInit {
       { label: '首页', field: 'home_page_auth', read: true, create: false, delete: false, update: false },
       { label: '报表页面', field: 'report_page_auth', read: true, create: false, delete: false, update: false },
       { label: '权限页面', field: 'auth_page_auth', read: false, create: false, delete: false, update: false },
+      { label: '日志页面', field: 'log_page_auth', read: false, create: false, delete: false, update: false },
     ];
   }
 
@@ -215,6 +222,7 @@ export class PermissionsComponent implements OnInit {
       { label: '首页', field: 'home_page_auth' },
       { label: '报表页面', field: 'report_page_auth' },
       { label: '权限页面', field: 'auth_page_auth' },
+      { label: '日志页面', field: 'log_page_auth' },
     ];
     return pages.map(p => {
       const val: number = role[p.field] ?? 0;
@@ -237,6 +245,11 @@ export class PermissionsComponent implements OnInit {
     if (row.delete) val |= Permission.DELETE;
     if (row.update) val |= Permission.UPDATE;
     return val;
+  }
+
+  /** ★ Step 9：判断某页面行是否为只读页面（仅需 READ 权限） */
+  isReadOnlyPage(label: string): boolean {
+    return this.readOnlyPages.includes(label);
   }
 
   // ==================== 保存修改 ====================

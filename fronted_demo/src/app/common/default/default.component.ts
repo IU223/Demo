@@ -120,6 +120,7 @@ export class DefaultComponent implements OnInit {
           this.showHomeMenu = this.permService.hasPermission(role.home_page_auth ?? 0, Permission.READ);
           this.showReportMenu = this.permService.hasPermission(role.report_page_auth ?? 0, Permission.READ);
           this.showPermMenu = this.permService.hasPermission(role.auth_page_auth ?? 0, Permission.READ);
+          this.showAuditLogMenu = this.permService.hasPermission(role.log_page_auth ?? 0, Permission.READ);
         }
 
         // ★ 加载完权限后，检查当前页面是否有权访问

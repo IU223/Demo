@@ -83,13 +83,13 @@
               <label nz-checkbox [(ngModel)]="row.read" [nzDisabled]="!canUpdate"></label>
             </td>
             <td nzAlign="center">
-              <label *ngIf="row.label !== '首页'" nz-checkbox [(ngModel)]="row.create" [nzDisabled]="!canUpdate"></label>
+              <label *ngIf="!isReadOnlyPage(row.label)" nz-checkbox [(ngModel)]="row.create" [nzDisabled]="!canUpdate"></label>
             </td>
             <td nzAlign="center">
-              <label *ngIf="row.label !== '首页'" nz-checkbox [(ngModel)]="row.delete" [nzDisabled]="!canUpdate"></label>
+              <label *ngIf="!isReadOnlyPage(row.label)" nz-checkbox [(ngModel)]="row.delete" [nzDisabled]="!canUpdate"></label>
             </td>
             <td nzAlign="center">
-              <label *ngIf="row.label !== '首页'" nz-checkbox [(ngModel)]="row.update" [nzDisabled]="!canUpdate"></label>
+              <label *ngIf="!isReadOnlyPage(row.label)" nz-checkbox [(ngModel)]="row.update" [nzDisabled]="!canUpdate"></label>
             </td>
           </tr>
         </tbody>
@@ -147,9 +147,9 @@
         <tr *ngFor="let row of addPermTable.data">
           <td>{{ row.label }}</td>
           <td nzAlign="center"><label nz-checkbox [(ngModel)]="row.read"></label></td>
-          <td nzAlign="center"><label *ngIf="row.label !== '首页'" nz-checkbox [(ngModel)]="row.create"></label></td>
-          <td nzAlign="center"><label *ngIf="row.label !== '首页'" nz-checkbox [(ngModel)]="row.delete"></label></td>
-          <td nzAlign="center"><label *ngIf="row.label !== '首页'" nz-checkbox [(ngModel)]="row.update"></label></td>
+          <td nzAlign="center"><label *ngIf="!isReadOnlyPage(row.label)" nz-checkbox [(ngModel)]="row.create"></label></td>
+          <td nzAlign="center"><label *ngIf="!isReadOnlyPage(row.label)" nz-checkbox [(ngModel)]="row.delete"></label></td>
+          <td nzAlign="center"><label *ngIf="!isReadOnlyPage(row.label)" nz-checkbox [(ngModel)]="row.update"></label></td>
         </tr>
       </tbody>
     </nz-table>

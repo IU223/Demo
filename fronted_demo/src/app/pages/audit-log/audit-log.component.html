@@ -1,5 +1,15 @@
 <div class="audit-log-container">
 
+  <!-- ===================== 普通用户提示横幅 ===================== -->
+  <nz-alert
+    *ngIf="!isSuperAdmin"
+    nzType="info"
+    nzMessage="您当前仅可查看自己的操作日志"
+    nzShowIcon
+    [nzCloseable]="false"
+    style="margin-bottom: 12px;"
+  ></nz-alert>
+
   <!-- ===================== 筛选栏 ===================== -->
   <div class="filter-section">
     <div class="filter-row">
@@ -15,8 +25,8 @@
         ></nz-range-picker>
       </div>
 
-      <!-- 操作人 -->
-      <div class="filter-item">
+      <!-- 操作人：仅超级管理员可见 -->
+      <div class="filter-item" *ngIf="isSuperAdmin">
         <label>操作人</label>
         <input
           nz-input
@@ -93,7 +103,7 @@
     <div class="table-toolbar">
       <div class="table-title">
         <span nz-icon nzType="file-search" nzTheme="outline" style="margin-right: 8px;"></span>
-        操作日志
+        {{ isSuperAdmin ? '操作日志' : '我的操作日志' }}
         <span class="total-badge" *ngIf="total > 0">共 {{ total }} 条</span>
       </div>
     </div>
