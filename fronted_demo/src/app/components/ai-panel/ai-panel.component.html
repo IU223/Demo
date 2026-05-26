@@ -1,0 +1,35 @@
+<div class="ai-panel-container"
+     [class.visible]="isVisible"
+     role="complementary"
+     aria-label="AI 分析助手面板">
+
+  <div class="panel-header">
+    <div class="header-left">
+      <span class="header-icon">🤖</span>
+      <span class="header-title">AI 分析助手</span>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" (click)="clearChat()" title="清空对话" aria-label="清空对话">
+        <span nz-icon nzType="delete" nzTheme="outline"></span>
+      </button>
+      <button class="header-btn close-btn" (click)="closePanel()" title="关闭面板 (Esc)" aria-label="关闭 AI 面板">
+        <span nz-icon nzType="close" nzTheme="outline"></span>
+      </button>
+    </div>
+  </div>
+
+  <app-ai-chat-list
+    [messages]="messages"
+    [isWaiting]="isWaiting"
+  ></app-ai-chat-list>
+
+  <app-ai-input-bar
+    [disabled]="isWaiting"
+    (messageSent)="onMessageSent($event)"
+  ></app-ai-input-bar>
+</div>
+
+<div class="ai-panel-backdrop"
+     [class.visible]="isVisible"
+     (click)="closePanel()">
+</div>

@@ -1,4 +1,4 @@
-import {AiMessage} from './ai-provider.interface';
+import { AiMessage } from './ai-provider.interface';
 
 /**
  * AI 上下文构建器

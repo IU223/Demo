@@ -1,0 +1,25 @@
+<div class="input-bar-container">
+  <div class="input-wrapper" [class.focused]="false">
+    <textarea
+      class="chat-input"
+      [(ngModel)]="inputText"
+      (keydown)="onKeydown($event)"
+      (input)="adjustHeight($event)"
+      [disabled]="disabled"
+      placeholder="请输入您的问题..."
+      rows="1"
+      aria-label="AI 对话输入框"
+      [attr.aria-disabled]="disabled"
+    ></textarea>
+    <button
+      class="send-btn"
+      [class.active]="inputText.trim().length > 0 && !disabled"
+      [disabled]="!inputText.trim() || disabled"
+      (click)="send()"
+      aria-label="发送消息"
+    >
+      <span nz-icon nzType="send" nzTheme="outline"></span>
+    </button>
+  </div>
+  <div class="input-hint">Enter 发送 · Shift+Enter 换行</div>
+</div>

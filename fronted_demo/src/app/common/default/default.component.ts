@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 // NG-ZORRO 模块
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -24,6 +25,9 @@ import { EmployeeService } from '../../services/employee.service';
 import { SelectOption, RoleOption } from '../../models/employee';
 import { forkJoin, of } from 'rxjs';
 import { PermissionService, Permission } from '../../services/permission.service';
+// AI 面板
+import { AiPanelComponent } from '../../components/ai-panel/ai-panel.component';
+import { AiPanelService } from '../../services/ai-panel.service';
 
 @Component({
   selector: 'app-default',
@@ -46,11 +50,12 @@ import { PermissionService, Permission } from '../../services/permission.service
     NzSelectModule,
     NzRadioModule,
     NzButtonModule,
+    AiPanelComponent,
   ],
   templateUrl: './default.component.html',
   styleUrl: './default.component.scss'
 })
-export class DefaultComponent implements OnInit {
+export class DefaultComponent implements OnInit, OnDestroy {
   isCollapsed = false;
   activeMenu: string = 'home';
 
@@ -84,13 +89,18 @@ export class DefaultComponent implements OnInit {
   showPermMenu = true;
   showAuditLogMenu = false;
 
+  // AI 面板状态
+  isAiPanelOpen = false;
+  private aiPanelSub = new Subscription();
+
   constructor(
     private authService: AuthService,
     private employeeService: EmployeeService,
     private router: Router,
     private fb: FormBuilder,
     private message: NzMessageService,
-    private permService: PermissionService,  // ★ 新增
+    private permService: PermissionService,
+    private aiPanelService: AiPanelService,
   ) {
     this.initProfileForm();
     this.initPasswordForm();
@@ -99,7 +109,19 @@ export class DefaultComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUserInfo();
-    this.loadMenuPermissions();  // ★ 新增
+    this.loadMenuPermissions();
+
+    this.aiPanelSub = this.aiPanelService.isOpen$.subscribe(open => {
+      this.isAiPanelOpen = open;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.aiPanelSub.unsubscribe();
+  }
+
+  toggleAiPanel(): void {
+    this.aiPanelService.toggle();
   }
 
   // ★ 新增方法

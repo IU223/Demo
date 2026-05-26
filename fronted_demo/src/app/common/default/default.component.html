@@ -39,6 +39,11 @@
           <span>操作日志</span>
         </a>
       </li>
+      <li nz-menu-divider></li>
+      <li nz-menu-item [nzSelected]="isAiPanelOpen" (click)="toggleAiPanel()">
+        <span nz-icon nzType="message"></span>
+        <span>AI 助手</span>
+      </li>
     </ul>
 
   </nz-sider>
@@ -89,6 +94,21 @@
     </nz-content>
   </nz-layout>
 </nz-layout>
+
+<!-- AI 面板 -->
+<app-ai-panel></app-ai-panel>
+
+<!-- AI 浮动按钮 -->
+<div class="ai-fab"
+     *ngIf="!isAiPanelOpen"
+     (click)="toggleAiPanel()"
+     role="button"
+     tabindex="0"
+     aria-label="打开 AI 助手"
+     (keydown.enter)="toggleAiPanel()"
+     (keydown.space)="toggleAiPanel()">
+  🤖
+</div>
 
 <!-- ===================== 个人资料编辑对话框 ===================== -->
 <nz-modal [(nzVisible)]="isProfileVisible" [nzTitle]="profileTitleTpl" [nzFooter]="profileFooterTpl" [nzWidth]="520"

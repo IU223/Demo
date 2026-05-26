@@ -9,6 +9,36 @@
   min-height: 100vh;
 }
 
+/* ===================== AI 浮动按钮 ===================== */
+
+.ai-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1890ff 0%, #722ed1 100%);
+  color: #fff;
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(24, 144, 255, 0.4);
+  z-index: 998;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(24, 144, 255, 0.55);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
 .menu-sidebar {
   position: relative;
   z-index: 10;

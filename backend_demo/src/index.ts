@@ -1,4 +1,6 @@
-import {ApplicationConfig, BackendDemoApplication} from './application';
+import * as dotenv from 'dotenv';
+dotenv.config();
+import { ApplicationConfig, BackendDemoApplication } from './application';
 
 export * from './application';
 

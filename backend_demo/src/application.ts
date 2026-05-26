@@ -1,3 +1,4 @@
+
 import { BootMixin } from '@loopback/boot';
 import { ApplicationConfig } from '@loopback/core';
 import {
@@ -59,14 +60,15 @@ export class BackendDemoApplication extends BootMixin(
    *   services.AiContextBuilder → AiContextBuilder
    */
   private setupAiServices(): void {
-    const isMock = process.env.AI_MOCK === 'true';
+    // const isMock = process.env.AI_MOCK === 'true';
+    const isMock = false; // 开发阶段强制使用 MockProvider，避免误调用真实 API 产生费用
     const aiProvider = isMock
       ? new MockProvider()
       : new DeepSeekProvider(
-          process.env.AI_API_KEY || '',
-          process.env.AI_BASE_URL || undefined,
-          process.env.AI_MODEL || undefined,
-        );
+        process.env.AI_API_KEY || '',
+        process.env.AI_BASE_URL || undefined,
+        process.env.AI_MODEL || undefined,
+      );
 
     this.bind('services.AiProvider').to(aiProvider);
     this.bind('services.AiService').toClass(AiService);
@@ -76,7 +78,6 @@ export class BackendDemoApplication extends BootMixin(
     console.log(
       `[AI] Provider=${providerName} | Mock=${isMock} | Model=${process.env.AI_MODEL || 'default'}`,
     );
-
     if (!isMock && !process.env.AI_API_KEY) {
       console.warn(
         '[AI] ⚠️ 警告：AI_MOCK 未启用但 AI_API_KEY 未设置，AI 功能将无法正常工作',
