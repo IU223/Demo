@@ -14,12 +14,10 @@ import { AiInputBarComponent } from './ai-input-bar/ai-input-bar.component';
 /**
  * AI 面板容器组件
  *
- * 挂载在 DefaultComponent（主布局）上，使用 position: fixed 覆盖模式。
- *
- * 组件层级：
- *   AiPanelComponent (容器)
- *   ├── AiChatListComponent       @Input() messages, @Input() isWaiting
- *   └── AiInputBarComponent       @Output() messageSent
+ * Step 5 改动：
+ *   - onMessageSent() 从非流式切换为 SSE 流式
+ *   - 新增 currentStreamAbort / streamSub 用于流取消 & 清理
+ *   - clearChat() / ngOnDestroy() 增加流取消逻辑
  */
 @Component({
   selector: 'app-ai-panel',
@@ -41,6 +39,11 @@ export class AiPanelComponent implements OnInit, OnDestroy {
 
   private subscription = new Subscription();
 
+  /** 当前活跃的流取消函数 */
+  private currentStreamAbort: (() => void) | null = null;
+  /** 当前活跃的流订阅 */
+  private streamSub: Subscription | null = null;
+
   constructor(
     private aiPanelService: AiPanelService,
     private aiService: AiService,
@@ -57,6 +60,7 @@ export class AiPanelComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
+    this.abortCurrentStream();
   }
 
   @HostListener('document:keydown.escape')
@@ -70,54 +74,101 @@ export class AiPanelComponent implements OnInit, OnDestroy {
     this.aiPanelService.close();
   }
 
+  // ==================== 流式对话 ====================
+
   onMessageSent(text: string): void {
     if (this.isWaiting) return;
 
+    // 1. 添加用户消息
     const userMsg: ChatMessage = {
       role: 'user',
       content: text,
       created_at: new Date().toISOString(),
     };
-    this.messages = [...this.messages, userMsg];
 
+    // 2. 添加 AI 消息占位符（内容为空，流式逐步填充）
+    const aiMsg: ChatMessage = {
+      role: 'assistant',
+      content: '',
+      created_at: new Date().toISOString(),
+    };
+
+    this.messages = [...this.messages, userMsg, aiMsg];
     this.isWaiting = true;
 
-    this.aiService.chat({ message: text }).subscribe({
-      next: (res) => {
-        const aiMsg: ChatMessage = {
-          role: 'assistant',
-          content: res.content,
-          created_at: new Date().toISOString(),
-        };
-        this.messages = [...this.messages, aiMsg];
-        this.isWaiting = false;
+    // 3. 发起流式请求
+    const { stream$, abort } = this.aiService.chatStream({ message: text });
+    this.currentStreamAbort = abort;
+
+    this.streamSub = stream$.subscribe({
+      next: (chunk: string) => {
+        const msgs = [...this.messages];
+        const lastMsg = msgs[msgs.length - 1];
+        if (lastMsg?.role === 'assistant') {
+          lastMsg.content += chunk;
+          this.messages = msgs;
+        }
       },
-      error: (err) => {
+
+      error: (err: any) => {
         this.isWaiting = false;
-        const status = err.status || err.statusCode;
+        this.currentStreamAbort = null;
+        this.streamSub = null;
+
+        const status = err?.status;
         if (status === 401) return;
 
         let errorText = '⚠️ 抱歉，回复生成失败。';
         if (status === 503) {
           errorText = '⚠️ AI 服务繁忙，请稍后重试。';
-        } else if (status === 400) {
-          errorText = '⚠️ ' + (err.error?.error?.message || '请求参数有误');
         } else if (status === 0 || !navigator.onLine) {
           errorText = '⚠️ 网络连接已断开，请检查网络后重试。';
+        } else if (err?.message) {
+          errorText = `⚠️ ${err.message}`;
         }
 
-        const errorMsg: ChatMessage = {
-          role: 'assistant',
-          content: errorText,
-          created_at: new Date().toISOString(),
-        };
-        this.messages = [...this.messages, errorMsg];
+        const msgs = [...this.messages];
+        const lastMsg = msgs[msgs.length - 1];
+        if (lastMsg?.role === 'assistant' && !lastMsg.content) {
+          lastMsg.content = errorText;
+          this.messages = msgs;
+        } else {
+          const errorMsg: ChatMessage = {
+            role: 'assistant',
+            content: errorText,
+            created_at: new Date().toISOString(),
+          };
+          this.messages = [...this.messages, errorMsg];
+        }
+      },
+
+      complete: () => {
+        this.isWaiting = false;
+        this.currentStreamAbort = null;
+        this.streamSub = null;
       },
     });
   }
 
+  // ==================== 清空对话 ====================
+
   clearChat(): void {
+    this.abortCurrentStream();
+    this.isWaiting = false;
     this.messages = [];
     this.aiPanelService.clearContext();
+  }
+
+  // ==================== 私有工具方法 ====================
+
+  private abortCurrentStream(): void {
+    if (this.currentStreamAbort) {
+      this.currentStreamAbort();
+      this.currentStreamAbort = null;
+    }
+    if (this.streamSub) {
+      this.streamSub.unsubscribe();
+      this.streamSub = null;
+    }
   }
 }

@@ -60,8 +60,8 @@ export class BackendDemoApplication extends BootMixin(
    *   services.AiContextBuilder → AiContextBuilder
    */
   private setupAiServices(): void {
-    // const isMock = process.env.AI_MOCK === 'true';
-    const isMock = false; // 开发阶段强制使用 MockProvider，避免误调用真实 API 产生费用
+    const isMock = process.env.AI_MOCK === 'true';
+    // const isMock = false; // 开发阶段强制使用 MockProvider，避免误调用真实 API 产生费用
     const aiProvider = isMock
       ? new MockProvider()
       : new DeepSeekProvider(

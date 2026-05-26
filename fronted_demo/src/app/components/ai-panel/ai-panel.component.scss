@@ -13,35 +13,113 @@
   flex-direction: column;
   overflow: hidden;
 
-  &.visible { transform: translateX(0); }
+  &.visible {
+    transform: translateX(0);
+  }
 }
 
 .panel-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px; border-bottom: 1px solid #f0f0f0; background: #fff; flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fff;
+  flex-shrink: 0;
+  /* ★ 确保 header 不被压缩 */
 }
 
-.header-left { display: flex; align-items: center; gap: 8px; }
-.header-icon { font-size: 22px; line-height: 1; }
-.header-title { font-size: 15px; font-weight: 600; color: rgba(0, 0, 0, 0.85); }
-.header-actions { display: flex; align-items: center; gap: 2px; }
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.header-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
 
 .header-btn {
-  width: 32px; height: 32px; border: none; background: transparent; border-radius: 6px;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  color: rgba(0, 0, 0, 0.45); font-size: 16px; transition: all 0.2s;
-  &:hover { background: #f5f5f5; color: rgba(0, 0, 0, 0.85); }
-  &.close-btn:hover { background: #fff1f0; color: #ff4d4f; }
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 16px;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f5f5f5;
+    color: rgba(0, 0, 0, 0.85);
+  }
+
+  &.close-btn:hover {
+    background: #fff1f0;
+    color: #ff4d4f;
+  }
 }
 
-.ai-panel-backdrop { display: none; }
+/* ★ 修复核心：确保子组件在 flex 布局中正确分配空间 */
+::ng-deep app-ai-chat-list {
+  flex: 1;
+  min-height: 0;
+  /* ★ 关键：覆盖默认 min-height: auto */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+::ng-deep app-ai-input-bar {
+  flex-shrink: 0;
+  /* ★ 输入框不被压缩 */
+  display: block;
+}
+
+.ai-panel-backdrop {
+  display: none;
+}
 
 @media (max-width: 900px) {
-  .ai-panel-container { width: 100vw; top: 0; z-index: 1001; }
+  .ai-panel-container {
+    width: 100vw;
+    top: 0;
+    z-index: 1001;
+  }
+
   .ai-panel-backdrop {
-    display: block; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.45); z-index: 1000; opacity: 0; visibility: hidden;
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
     transition: opacity 0.3s, visibility 0.3s;
-    &.visible { opacity: 1; visibility: visible; }
+
+    &.visible {
+      opacity: 1;
+      visibility: visible;
+    }
   }
 }
