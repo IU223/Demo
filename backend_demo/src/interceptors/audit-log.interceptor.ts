@@ -41,6 +41,7 @@ const SKIP_PATHS = [
   '/ping',
   '/explorer',
   '/openapi.json',
+  '/ai',              // AI 端点有独立的 chat_messages 记录，不走审计日志
 ];
 
 /** 需要脱敏的字段名 */

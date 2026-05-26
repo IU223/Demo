@@ -10,6 +10,11 @@ import { ServiceMixin } from '@loopback/service-proxy';
 import path from 'path';
 import { MySequence } from './sequence';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
+// AI 服务
+import { MockProvider } from './services/mock.provider';
+import { DeepSeekProvider } from './services/deepseek.provider';
+import { AiService } from './services/ai.service';
+import { AiContextBuilder } from './services/ai-context-builder.service';
 
 export { ApplicationConfig };
 
@@ -41,5 +46,41 @@ export class BackendDemoApplication extends BootMixin(
       },
     };
 
+    // 注册 AI 服务
+    this.setupAiServices();
+  }
+
+  /**
+   * 注册 AI Provider、AiService、AiContextBuilder
+   *
+   * 绑定关系：
+   *   services.AiProvider      → MockProvider | DeepSeekProvider
+   *   services.AiService       → AiService（注入 AiProvider）
+   *   services.AiContextBuilder → AiContextBuilder
+   */
+  private setupAiServices(): void {
+    const isMock = process.env.AI_MOCK === 'true';
+    const aiProvider = isMock
+      ? new MockProvider()
+      : new DeepSeekProvider(
+          process.env.AI_API_KEY || '',
+          process.env.AI_BASE_URL || undefined,
+          process.env.AI_MODEL || undefined,
+        );
+
+    this.bind('services.AiProvider').to(aiProvider);
+    this.bind('services.AiService').toClass(AiService);
+    this.bind('services.AiContextBuilder').to(new AiContextBuilder());
+
+    const providerName = isMock ? 'MockProvider' : 'DeepSeekProvider';
+    console.log(
+      `[AI] Provider=${providerName} | Mock=${isMock} | Model=${process.env.AI_MODEL || 'default'}`,
+    );
+
+    if (!isMock && !process.env.AI_API_KEY) {
+      console.warn(
+        '[AI] ⚠️ 警告：AI_MOCK 未启用但 AI_API_KEY 未设置，AI 功能将无法正常工作',
+      );
+    }
   }
 }

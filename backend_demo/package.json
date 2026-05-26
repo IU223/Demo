@@ -12,7 +12,7 @@
     "node": "20 || 22 || 24"
   },
   "scripts": {
-    "build": "lb-tsc",
+    "build": "lb-tsc && node -e \"require('fs').copyFileSync('src/services/ai-mock-responses.json','dist/services/ai-mock-responses.json')\"",
     "build:watch": "lb-tsc --watch",
     "lint": "npm run eslint && npm run prettier:check",
     "lint:fix": "npm run eslint:fix && npm run prettier:fix",

@@ -1,2 +1,8 @@
 export * from './hash.service';
 export * from './jwt.service';
+// AI 功能服务
+export * from './ai-provider.interface';
+export * from './deepseek.provider';
+export * from './mock.provider';
+export * from './ai.service';
+export * from './ai-context-builder.service';
