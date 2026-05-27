@@ -1,0 +1,37 @@
+<div class="history-drawer">
+  <!-- 顶栏 -->
+  <div class="drawer-header">
+    <button class="back-btn" (click)="onBack()" aria-label="返回对话">
+      <span nz-icon nzType="left" nzTheme="outline"></span>
+      <span>对话历史</span>
+    </button>
+    <button class="new-chat-btn" nz-button nzType="primary" nzSize="small" (click)="onNewChat()">
+      <span nz-icon nzType="plus"></span>新对话
+    </button>
+  </div>
+
+  <!-- 列表 -->
+  <div class="drawer-body">
+    <nz-spin [nzSpinning]="loading" nzSize="small">
+      <!-- 空状态 -->
+      <nz-empty *ngIf="!loading && sessions.length === 0" nzNotFoundContent="暂无对话历史" [nzNotFoundImage]="'simple'"
+        style="padding: 40px 0;"></nz-empty>
+
+      <!-- 会话列表 -->
+      <div *ngFor="let session of sessions" class="session-item"
+        [class.active]="session.session_id === currentSessionId" (click)="onSelectSession(session)">
+        <div class="session-info">
+          <div class="session-title">{{ session.title || '未命名对话' }}</div>
+          <div class="session-time">{{ formatTime(session.updated_at) }}</div>
+        </div>
+
+        <!-- ★ 修复：删除按钮 -->
+        <button class="session-delete-btn" nz-popconfirm nzPopconfirmTitle="确定删除此对话？" nzOkText="删除" nzCancelText="取消"
+          nzPopconfirmPlacement="left" (nzOnConfirm)="onDeleteSession(session.session_id!)"
+          (click)="$event.stopPropagation()" aria-label="删除对话">
+          <span nz-icon nzType="delete" nzTheme="outline"></span>
+        </button>
+      </div>
+    </nz-spin>
+  </div>
+</div>

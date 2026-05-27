@@ -14,6 +14,7 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
 // AI 服务
 import { MockProvider } from './services/mock.provider';
 import { DeepSeekProvider } from './services/deepseek.provider';
+import { ZhipuProvider } from './services/zhipu.provider';
 import { AiService } from './services/ai.service';
 import { AiContextBuilder } from './services/ai-context-builder.service';
 
@@ -61,20 +62,34 @@ export class BackendDemoApplication extends BootMixin(
    */
   private setupAiServices(): void {
     const isMock = process.env.AI_MOCK === 'true';
-    // const isMock = false; // 开发阶段强制使用 MockProvider，避免误调用真实 API 产生费用
-    const aiProvider = isMock
-      ? new MockProvider()
-      : new DeepSeekProvider(
+    const aiProviderType = process.env.AI_PROVIDER || 'deepseek';
+
+    let aiProvider;
+    let providerName: string;
+
+    if (isMock) {
+      aiProvider = new MockProvider();
+      providerName = 'MockProvider';
+    } else if (aiProviderType === 'zhipu') {
+      aiProvider = new ZhipuProvider(
+        process.env.AI_API_KEY || '',
+        process.env.AI_BASE_URL || 'https://open.bigmodel.cn/api/paas/v4',
+        process.env.AI_MODEL || 'glm-4.7-flash',
+      );
+      providerName = 'ZhipuProvider';
+    } else {
+      aiProvider = new DeepSeekProvider(
         process.env.AI_API_KEY || '',
         process.env.AI_BASE_URL || undefined,
         process.env.AI_MODEL || undefined,
       );
+      providerName = 'DeepSeekProvider';
+    }
 
     this.bind('services.AiProvider').to(aiProvider);
     this.bind('services.AiService').toClass(AiService);
     this.bind('services.AiContextBuilder').to(new AiContextBuilder());
 
-    const providerName = isMock ? 'MockProvider' : 'DeepSeekProvider';
     console.log(
       `[AI] Provider=${providerName} | Mock=${isMock} | Model=${process.env.AI_MODEL || 'default'}`,
     );

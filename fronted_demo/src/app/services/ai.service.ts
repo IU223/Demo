@@ -1,16 +1,20 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, ReplaySubject } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment.development';
+import { ChatSession } from '../models/chat-session';
+import { ChatMessage } from '../models/chat-message';
 
 export interface AiChatRequest {
   message: string;
   context?: Record<string, any>;
+  session_id?: number;
 }
 
 export interface AiChatResponse {
   content: string;
+  session_id?: number;
   usage?: {
     input_tokens: number;
     output_tokens: number;
@@ -18,10 +22,10 @@ export interface AiChatResponse {
   };
 }
 
-/** Step 5: 流式返回值类型 */
 export interface ChatStreamHandle {
   stream$: Observable<string>;
   abort: () => void;
+  sessionId$: Observable<number>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -39,17 +43,10 @@ export class AiService {
 
   // ==================== SSE 流式对话 ====================
 
-  /**
-   * 流式对话 — 通过 fetch + ReadableStream 消费 SSE
-   *
-   * 1. 使用 AbortController 支持主动取消
-   * 2. 手动附加 JWT（fetch 不走 Angular HttpClient 拦截器）
-   * 3. 401 → 清除 token → 跳转登录页
-   * 4. AbortError 静默处理
-   */
   chatStream(body: AiChatRequest): ChatStreamHandle {
     const controller = new AbortController();
     const token = localStorage.getItem('auth_token');
+    const sessionIdSubject = new ReplaySubject<number>(1);
 
     const stream$ = new Observable<string>(observer => {
       fetch(`${this.apiUrl}/ai/chat/stream`, {
@@ -108,10 +105,7 @@ export class AiService {
 
                 const data = trimmed.slice(6).trim();
 
-                if (data === '[DONE]') {
-                  observer.complete();
-                  return;
-                }
+                if (data === '[DONE]') { observer.complete(); return; }
                 if (data === '[TIMEOUT]') {
                   observer.error({ message: 'AI 响应超时，请重试' });
                   return;
@@ -119,19 +113,16 @@ export class AiService {
 
                 try {
                   const parsed = JSON.parse(data);
-                  if (parsed.error) {
-                    observer.error({ message: parsed.error });
-                    return;
+                  if (parsed.meta?.session_id) {
+                    sessionIdSubject.next(parsed.meta.session_id);
+                    sessionIdSubject.complete();
+                    continue;
                   }
-                  if (parsed.content) {
-                    observer.next(parsed.content);
-                  }
-                } catch {
-                  // 跳过格式异常
-                }
+                  if (parsed.error) { observer.error({ message: parsed.error }); return; }
+                  if (parsed.content) { observer.next(parsed.content); }
+                } catch { /* */ }
               }
             }
-
             observer.complete();
           } catch (readErr: any) {
             if (readErr.name !== 'AbortError') {
@@ -140,10 +131,7 @@ export class AiService {
           }
         })
         .catch(err => {
-          if (err.name === 'AbortError') {
-            observer.complete();
-            return;
-          }
+          if (err.name === 'AbortError') { observer.complete(); return; }
           if (!navigator.onLine) {
             observer.error({ status: 0, message: '网络连接已断开，请检查网络后重试' });
           } else {
@@ -155,15 +143,25 @@ export class AiService {
     return {
       stream$,
       abort: () => controller.abort(),
+      sessionId$: sessionIdSubject.asObservable(),
     };
   }
 
-  // ==================== Step 6 实现 ====================
-  // getSessions / getSessionById / updateSessionTitle / deleteSession
+  // ==================== Step 6: 会话管理 API ====================
 
-  // ==================== Step 10 实现 ====================
-  // getTemplates()
+  getSessions(skip = 0, limit = 50): Observable<ChatSession[]> {
+    return this.http.get<ChatSession[]>(`${this.apiUrl}/ai/sessions?skip=${skip}&limit=${limit}`);
+  }
 
-  // ==================== Step 12 实现 ====================
-  // getInsights()
+  getSessionDetail(sessionId: number): Observable<{ session: ChatSession; messages: ChatMessage[] }> {
+    return this.http.get<{ session: ChatSession; messages: ChatMessage[] }>(`${this.apiUrl}/ai/sessions/${sessionId}`);
+  }
+
+  updateSessionTitle(sessionId: number, title: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/ai/sessions/${sessionId}`, { title });
+  }
+
+  deleteSession(sessionId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/ai/sessions/${sessionId}`);
+  }
 }
