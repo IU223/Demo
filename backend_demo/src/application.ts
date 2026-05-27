@@ -74,7 +74,7 @@ export class BackendDemoApplication extends BootMixin(
       aiProvider = new ZhipuProvider(
         process.env.AI_API_KEY || '',
         process.env.AI_BASE_URL || 'https://open.bigmodel.cn/api/paas/v4',
-        process.env.AI_MODEL || 'glm-4.7-flash',
+        process.env.AI_MODEL || 'glm-4.7',
       );
       providerName = 'ZhipuProvider';
     } else {

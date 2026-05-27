@@ -3,15 +3,15 @@ import {
   ViewChild, ElementRef, AfterViewChecked,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ChatMessage } from '../../../models/chat-message';
 
 /**
  * AI 消息列表子组件
  *
- * 职责：
- *   1. 渲染消息列表（用户消息在右，AI 消息在左）
- *   2. 自动滚动到最新消息
- *   3. 显示 AI 正在输入的 typing 动画
+ * Step 11 改动：
+ *   - 动态加载 marked + dompurify（不计入 initial bundle）
+ *   - AI 回复以 Markdown 渲染，含缓存优化
  */
 @Component({
   selector: 'app-ai-chat-list',
@@ -26,9 +26,19 @@ export class AiChatListComponent implements OnChanges, AfterViewChecked {
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
 
+  renderedMessages: SafeHtml[] = [];
+
   private shouldScroll = false;
+  private marked: any = null;
+  private DOMPurify: any = null;
+  private libsLoaded = false;
+  private libsLoading = false;
+  private renderCache = new Map<string, SafeHtml>();
+
+  constructor(private sanitizer: DomSanitizer) {}
 
   ngOnChanges(_changes: SimpleChanges): void {
+    this.updateRenderedMessages();
     this.shouldScroll = true;
   }
 
@@ -39,15 +49,93 @@ export class AiChatListComponent implements OnChanges, AfterViewChecked {
     }
   }
 
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  // ==================== Markdown 渲染 ====================
+
+  private updateRenderedMessages(): void {
+    if (!this.libsLoaded) {
+      if (!this.libsLoading) {
+        this.loadMarkdownLibs();
+      }
+      this.renderedMessages = this.messages.map(m =>
+        this.toSafeHtml(this.escapeHtml(m.content || '')),
+      );
+      return;
+    }
+    this.doRender();
+  }
+
+  private async loadMarkdownLibs(): Promise<void> {
+    this.libsLoading = true;
+    try {
+      const [markedMod, dpMod] = await Promise.all([
+        import('marked'),
+        import('dompurify'),
+      ]);
+      this.marked = markedMod.marked ?? markedMod['default'];
+      this.DOMPurify = dpMod['default'] ?? dpMod;
+      this.libsLoaded = true;
+      this.doRender();
+    } catch (err) {
+      console.warn('[Markdown] 加载渲染库失败，使用纯文本显示', err);
+      this.libsLoading = false;
+    }
+  }
+
+  private doRender(): void {
+    this.renderedMessages = this.messages.map((msg, i) => {
+      if (msg.role !== 'assistant' || !msg.content) {
+        return this.toSafeHtml('');
+      }
+
+      const isStreaming = this.isWaiting && i === this.messages.length - 1;
+
+      if (!isStreaming) {
+        const cached = this.renderCache.get(msg.content);
+        if (cached) return cached;
+      }
+
+      try {
+        const rawHtml = this.marked.parse(msg.content) as string;
+        const cleanHtml = this.DOMPurify.sanitize(rawHtml);
+        const safeHtml = this.toSafeHtml(cleanHtml);
+
+        if (!isStreaming) {
+          this.renderCache.set(msg.content, safeHtml);
+        }
+
+        return safeHtml;
+      } catch {
+        return this.toSafeHtml(this.escapeHtml(msg.content));
+      }
+    });
+  }
+
+  // ==================== 工具方法 ====================
+
+  private toSafeHtml(html: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  private escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/\n/g, '<br>');
+  }
+
   private scrollToBottom(): void {
     try {
       const el = this.scrollContainer?.nativeElement;
       if (el) {
         el.scrollTop = el.scrollHeight;
       }
-    } catch {
-      // ignore scroll errors
-    }
+    } catch { /* ignore */ }
   }
 
   formatTime(dateStr?: string): string {

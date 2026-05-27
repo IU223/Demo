@@ -23,6 +23,7 @@
   &:hover { background: #f5f5f5; color: rgba(0, 0, 0, 0.85); }
   &.close-btn:hover { background: #fff1f0; color: #ff4d4f; }
   &.active-btn { background: #e6f7ff; color: #1890ff; }
+  &.disabled-btn { opacity: 0.3; cursor: not-allowed; &:hover { background: transparent; color: rgba(0, 0, 0, 0.45); } }
 }
 
 ::ng-deep app-ai-chat-list {

@@ -19,7 +19,7 @@ import * as echarts from 'echarts';
 import { EmployeeService } from '../../services/employee.service';
 import { SelectOption } from '../../models/employee';
 import { environment } from '../../../environments/environment.development';
-
+import { AiContextService } from '../../services/ai-context.service';
 /** 排行榜徽章颜色 */
 const BADGE_COLORS = [
   '#ff4d4f', '#ff7a45', '#52c41a',
@@ -104,7 +104,8 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     private employeeService: EmployeeService,
     private http: HttpClient,
     private message: NzMessageService,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private aiContextService: AiContextService,
   ) { }
 
   // ==================== 生命周期 ====================
@@ -138,6 +139,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.mapEchart?.dispose();
     this.deptEchart?.dispose();
     this.genderEchart?.dispose();
+    this.aiContextService.clearContext();
   }
 
   @HostListener('window:resize')
@@ -212,6 +214,8 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
         this.loading = false;
 
+        this.registerDashboardContext();
+
         // setTimeout(() => this.resizeAllCharts(), 100);
       },
       error: err => {
@@ -237,6 +241,85 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       where.plant_name = this.selectedFactory;
     }
     return where;
+  }
+
+  // ==================== Step 8: AI 上下文注册 ====================
+
+  private registerDashboardContext(): void {
+    this.aiContextService.registerContext('stats', {
+      activeCount: this.activeCount,
+      resignCount: this.resignCount,
+      totalCount: this.totalCount,
+      yoyActive: this.yoyActive,
+      momActive: this.momActive,
+      yoyResign: this.yoyResign,
+      momResign: this.momResign,
+    });
+
+    const now = new Date();
+    const months: string[] = [];
+    const hireData: number[] = [];
+    const resignData: number[] = [];
+    const hires = this.groupByMonth('hire_date');
+    const resigns = this.groupByMonth('resin_date');
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = this.monthKey(d.getFullYear(), d.getMonth() + 1);
+      months.push(`${d.getMonth() + 1}月`);
+      hireData.push(hires[key] || 0);
+      resignData.push(resigns[key] || 0);
+    }
+    this.aiContextService.registerContext('trend', { months, hireData, resignData });
+
+    this.aiContextService.registerContext('factoryRanking',
+      this.factoryRanking.map(f => ({ name: f.name, count: f.count })),
+    );
+
+    let male = 0, female = 0, unknown = 0;
+    this.allEmployees.forEach((emp: any) => {
+      if (emp.Sex === true) male++;
+      else if (emp.Sex === false) female++;
+      else unknown++;
+    });
+    this.aiContextService.registerContext('gender', {
+      male, female, unknown, total: male + female + unknown,
+    });
+
+    const regionCount: Record<string, number> = {};
+    this.allEmployees.forEach((emp: any) => {
+      const r = emp.region_name || '未知';
+      regionCount[r] = (regionCount[r] || 0) + 1;
+    });
+    this.aiContextService.registerContext('regionDistribution',
+      Object.entries(regionCount)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count),
+    );
+
+    const deptCount: Record<string, number> = {};
+    this.allEmployees.forEach((emp: any) => {
+      const d = emp.dept_desc || '未知';
+      deptCount[d] = (deptCount[d] || 0) + 1;
+    });
+    this.aiContextService.registerContext('departmentDistribution',
+      Object.entries(deptCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 20)
+        .map(([name, count]) => ({ name, count })),
+    );
+
+    const filterInfo: Record<string, any> = {};
+    if (this.startDate && this.endDate) {
+      filterInfo['dateRange'] = `${this.fmtDate(this.startDate)} ~ ${this.fmtDate(this.endDate)}`;
+    }
+    if (this.selectedFactory) {
+      filterInfo['factory'] = this.selectedFactory;
+    }
+    if (Object.keys(filterInfo).length > 0) {
+      this.aiContextService.registerContext('currentFilters', filterInfo);
+    } else {
+      this.aiContextService.unregisterContext('currentFilters');
+    }
   }
 
   onSearch(): void {

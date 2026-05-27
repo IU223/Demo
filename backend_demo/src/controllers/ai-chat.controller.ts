@@ -260,7 +260,7 @@ export class AiChatController {
       if (finished) return;
       finished = true;
       try { res.write('data: [TIMEOUT]\n\n'); res.end(); } catch { /* */ }
-    }, 60000);
+    }, parseInt(process.env.AI_STREAM_TIMEOUT || '60', 10) * 1000);
 
     const heartbeat = setInterval(() => {
       if (finished) return;

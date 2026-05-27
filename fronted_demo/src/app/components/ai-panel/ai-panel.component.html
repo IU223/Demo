@@ -15,6 +15,15 @@
               title="对话历史" aria-label="对话历史">
         <span nz-icon nzType="history" nzTheme="outline"></span>
       </button>
+
+      <button class="header-btn"
+              (click)="onExport()"
+              [disabled]="messages.length === 0"
+              [class.disabled-btn]="messages.length === 0"
+              title="导出对话为 Markdown" aria-label="导出对话">
+        <span nz-icon nzType="download" nzTheme="outline"></span>
+      </button>
+
       <button class="header-btn" (click)="onNewChat()" title="新建对话" aria-label="新建对话">
         <span nz-icon nzType="plus" nzTheme="outline"></span>
       </button>

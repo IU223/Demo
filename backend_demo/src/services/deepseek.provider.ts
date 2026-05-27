@@ -22,11 +22,13 @@ export class DeepSeekProvider implements AiProvider {
   private readonly apiKey: string;
   private readonly baseUrl: string;
   private readonly defaultModel: string;
+  private readonly timeoutMs: number;
 
   constructor(apiKey: string, baseUrl?: string, defaultModel?: string) {
     this.apiKey = apiKey;
     this.baseUrl = baseUrl || 'https://api.deepseek.com';
     this.defaultModel = defaultModel || 'deepseek-chat';
+    this.timeoutMs = parseInt(process.env.AI_API_TIMEOUT || '60', 10) * 1000;
   }
 
   // ==================== 公开方法 ====================
@@ -139,9 +141,9 @@ export class DeepSeekProvider implements AiProvider {
       req.on('error', (err: Error) =>
         reject(new Error(`DeepSeek API 请求失败: ${err.message}`)),
       );
-      req.setTimeout(60000, () => {
+      req.setTimeout(this.timeoutMs, () => {
         req.destroy();
-        reject(new Error('DeepSeek API 请求超时 (60s)'));
+        reject(new Error(`DeepSeek API 请求超时 (${this.timeoutMs / 1000}s)`));
       });
       req.write(JSON.stringify(body));
       req.end();
@@ -178,9 +180,9 @@ export class DeepSeekProvider implements AiProvider {
       req.on('error', (err: Error) =>
         reject(new Error(`DeepSeek API 流式请求失败: ${err.message}`)),
       );
-      req.setTimeout(60000, () => {
+      req.setTimeout(this.timeoutMs, () => {
         req.destroy();
-        reject(new Error('DeepSeek API 流式请求超时 (60s)'));
+        reject(new Error(`DeepSeek API 流式请求超时 (${this.timeoutMs / 1000}s)`));
       });
       req.write(JSON.stringify(body));
       req.end();
