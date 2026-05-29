@@ -1,47 +1,146 @@
 .ai-panel-container {
-  position: fixed; right: 0; top: 64px; bottom: 0; width: 420px; z-index: 999;
-  background: #fff; box-shadow: -4px 0 16px rgba(0, 0, 0, 0.12);
-  transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex; flex-direction: column; overflow: hidden;
-  &.visible { transform: translateX(0); }
+  position: fixed;
+  right: 0;
+  top: 64px;
+  bottom: 0;
+  width: 420px;
+  z-index: 999;
+  background: #fff;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.12);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  &.visible {
+    transform: translateX(0);
+  }
 }
 
 .panel-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px; border-bottom: 1px solid #f0f0f0; background: #fff; flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fff;
+  flex-shrink: 0;
 }
 
-.header-left { display: flex; align-items: center; gap: 8px; }
-.header-icon { font-size: 22px; line-height: 1; }
-.header-title { font-size: 15px; font-weight: 600; color: rgba(0, 0, 0, 0.85); }
-.header-actions { display: flex; align-items: center; gap: 2px; }
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.header-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
 
 .header-btn {
-  width: 32px; height: 32px; border: none; background: transparent; border-radius: 6px;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  color: rgba(0, 0, 0, 0.45); font-size: 16px; transition: all 0.2s;
-  &:hover { background: #f5f5f5; color: rgba(0, 0, 0, 0.85); }
-  &.close-btn:hover { background: #fff1f0; color: #ff4d4f; }
-  &.active-btn { background: #e6f7ff; color: #1890ff; }
-  &.disabled-btn { opacity: 0.3; cursor: not-allowed; &:hover { background: transparent; color: rgba(0, 0, 0, 0.45); } }
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 16px;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f5f5f5;
+    color: rgba(0, 0, 0, 0.85);
+  }
+
+  &.close-btn:hover {
+    background: #fff1f0;
+    color: #ff4d4f;
+  }
+
+  &.active-btn {
+    background: #e6f7ff;
+    color: #1890ff;
+  }
+
+  &.disabled-btn {
+    opacity: 0.3;
+    cursor: not-allowed;
+
+    &:hover {
+      background: transparent;
+      color: rgba(0, 0, 0, 0.45);
+    }
+  }
 }
 
 ::ng-deep app-ai-chat-list {
-  flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden;
-}
-::ng-deep app-ai-input-bar { flex-shrink: 0; display: block; }
-::ng-deep app-ai-history-drawer {
-  flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.ai-panel-backdrop { display: none; }
+::ng-deep app-ai-input-bar {
+  flex-shrink: 0;
+  display: block;
+}
+
+::ng-deep app-ai-history-drawer {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* template bar moved into chat list empty state; host rule removed */
+
+.ai-panel-backdrop {
+  display: none;
+}
 
 @media (max-width: 900px) {
-  .ai-panel-container { width: 100vw; top: 0; z-index: 1001; }
+  .ai-panel-container {
+    width: 100vw;
+    top: 0;
+    z-index: 1001;
+  }
+
   .ai-panel-backdrop {
-    display: block; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.45); z-index: 1000; opacity: 0; visibility: hidden;
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
     transition: opacity 0.3s, visibility 0.3s;
-    &.visible { opacity: 1; visibility: visible; }
+
+    &.visible {
+      opacity: 1;
+      visibility: visible;
+    }
   }
 }

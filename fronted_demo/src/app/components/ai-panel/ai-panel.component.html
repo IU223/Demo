@@ -1,7 +1,4 @@
-<div class="ai-panel-container"
-     [class.visible]="isVisible"
-     role="complementary"
-     aria-label="AI 分析助手面板">
+<div class="ai-panel-container" [class.visible]="isVisible" role="complementary" aria-label="AI 分析助手面板">
 
   <div class="panel-header">
     <div class="header-left">
@@ -9,18 +6,13 @@
       <span class="header-title">AI 分析助手</span>
     </div>
     <div class="header-actions">
-      <button class="header-btn"
-              [class.active-btn]="showHistory"
-              (click)="toggleHistory()"
-              title="对话历史" aria-label="对话历史">
+      <button class="header-btn" [class.active-btn]="showHistory" (click)="toggleHistory()" title="对话历史"
+        aria-label="对话历史">
         <span nz-icon nzType="history" nzTheme="outline"></span>
       </button>
 
-      <button class="header-btn"
-              (click)="onExport()"
-              [disabled]="messages.length === 0"
-              [class.disabled-btn]="messages.length === 0"
-              title="导出对话为 Markdown" aria-label="导出对话">
+      <button class="header-btn" (click)="onExport()" [disabled]="messages.length === 0"
+        [class.disabled-btn]="messages.length === 0" title="导出对话为 Markdown" aria-label="导出对话">
         <span nz-icon nzType="download" nzTheme="outline"></span>
       </button>
 
@@ -34,31 +26,20 @@
   </div>
 
   <ng-container *ngIf="showHistory; else chatView">
-    <app-ai-history-drawer
-      [sessions]="sessions"
-      [currentSessionId]="currentSessionId"
-      [loading]="sessionsLoading"
-      (sessionSelected)="onSessionSelected($event)"
-      (sessionDeleted)="onDeleteSession($event)"
-      (newChat)="onNewChat()"
-      (back)="showHistory = false"
-    ></app-ai-history-drawer>
+    <app-ai-history-drawer [sessions]="sessions" [currentSessionId]="currentSessionId" [loading]="sessionsLoading"
+      (sessionSelected)="onSessionSelected($event)" (sessionDeleted)="onDeleteSession($event)" (newChat)="onNewChat()"
+      (back)="showHistory = false"></app-ai-history-drawer>
   </ng-container>
 
   <ng-template #chatView>
-    <app-ai-chat-list
-      [messages]="messages"
-      [isWaiting]="isWaiting"
-    ></app-ai-chat-list>
+    <!-- ★ 模板栏已移入空状态，透传模板数据给 chat-list -->
+    <app-ai-chat-list [messages]="messages" [isWaiting]="isWaiting" [templates]="templates"
+      [templatesLoading]="templatesLoading" [templatesDisabled]="isWaiting"
+      (templateSelected)="onTemplateSelected($event)"></app-ai-chat-list>
 
-    <app-ai-input-bar
-      [disabled]="isWaiting"
-      (messageSent)="onMessageSent($event)"
-    ></app-ai-input-bar>
+    <app-ai-input-bar [disabled]="isWaiting" (messageSent)="onMessageSent($event)"></app-ai-input-bar>
   </ng-template>
 </div>
 
-<div class="ai-panel-backdrop"
-     [class.visible]="isVisible"
-     (click)="closePanel()">
+<div class="ai-panel-backdrop" [class.visible]="isVisible" (click)="closePanel()">
 </div>

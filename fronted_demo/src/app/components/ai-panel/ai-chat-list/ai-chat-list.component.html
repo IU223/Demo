@@ -1,20 +1,19 @@
 <div class="chat-list-container" #scrollContainer>
 
+  <!-- ★ 改造后的空状态：模板栏嵌入 -->
   <div class="chat-empty" *ngIf="messages.length === 0 && !isWaiting">
     <div class="empty-icon">🤖</div>
     <p class="empty-text">你好！我是 AI 数据分析助手</p>
-    <p class="empty-hint">请输入问题或使用快速模板开始分析</p>
-    <div class="empty-suggestions">
-      <span class="suggestion-tag">📊 人员结构分析</span>
-      <span class="suggestion-tag">📈 离职趋势分析</span>
-      <span class="suggestion-tag">🏭 厂区对比</span>
-    </div>
+    <p class="empty-hint">请选择快速分析模板，或在下方输入您的问题</p>
+
+    <!-- ★ 模板栏嵌入到空状态内部 -->
+    <app-ai-template-bar [templates]="templates" [loading]="templatesLoading" [disabled]="templatesDisabled"
+      (templateSelected)="onTemplateSelect($event)"></app-ai-template-bar>
   </div>
 
-  <div *ngFor="let msg of messages; let i = index; trackBy: trackByIndex"
-       class="message-row"
-       [class.user-row]="msg.role === 'user'"
-       [class.assistant-row]="msg.role === 'assistant'">
+  <!-- 消息列表（不变） -->
+  <div *ngFor="let msg of messages; let i = index; trackBy: trackByIndex" class="message-row"
+    [class.user-row]="msg.role === 'user'" [class.assistant-row]="msg.role === 'assistant'">
 
     <ng-container *ngIf="msg.role === 'assistant'">
       <div class="avatar ai-avatar">🤖</div>
@@ -33,7 +32,9 @@
     </ng-container>
   </div>
 
-  <div class="message-row assistant-row" *ngIf="isWaiting && (messages.length === 0 || messages[messages.length - 1]?.content === '')">
+  <!-- Typing 指示器（不变） -->
+  <div class="message-row assistant-row"
+    *ngIf="isWaiting && (messages.length === 0 || messages[messages.length - 1]?.content === '')">
     <div class="avatar ai-avatar">🤖</div>
     <div class="message-bubble ai-bubble typing-bubble">
       <div class="typing-dots" aria-label="AI 正在思考">

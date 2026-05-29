@@ -35,7 +35,7 @@ export class AiService {
   constructor(
     private http: HttpClient,
     private router: Router,
-  ) {}
+  ) { }
 
   chat(body: AiChatRequest): Observable<AiChatResponse> {
     return this.http.post<AiChatResponse>(`${this.apiUrl}/ai/chat`, body);
@@ -163,5 +163,11 @@ export class AiService {
 
   deleteSession(sessionId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/ai/sessions/${sessionId}`);
+  }
+
+  // ==================== Step 10: 分析模板 API ====================
+
+  getTemplates(): Observable<{ template_id?: number; title: string; prompt: string; category?: string; sort_order?: number }[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/ai/templates`);
   }
 }

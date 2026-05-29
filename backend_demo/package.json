@@ -35,7 +35,8 @@
     "start": "node -r source-map-support/register .",
     "clean": "lb-clean dist *.tsbuildinfo .eslintcache",
     "rebuild": "npm run clean && npm run build",
-    "migrate:passwords": "npm run build && node ./dist/migrate-passwords"
+    "migrate:passwords": "npm run build && node ./dist/migrate-passwords",
+    "seed:templates": "npm run build && node ./dist/seed-templates"
   },
   "repository": {
     "type": "git",

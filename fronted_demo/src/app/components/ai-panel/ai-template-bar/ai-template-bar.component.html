@@ -1,0 +1,21 @@
+<div class="template-bar" *ngIf="templates.length > 0 || loading">
+
+    <div class="template-bar-header">
+        <span class="bar-label">快速分析</span>
+    </div>
+
+    <!-- 加载中骨架 -->
+    <div class="template-list skeleton-list" *ngIf="loading">
+        <div class="template-chip skeleton" *ngFor="let _ of [1,2,3,4]"></div>
+    </div>
+
+    <!-- 模板按钮列表 -->
+    <div class="template-list" *ngIf="!loading">
+        <button *ngFor="let tpl of templates" class="template-chip" [class.disabled]="disabled" [disabled]="disabled"
+            (click)="onSelect(tpl)" [title]="tpl.prompt">
+            <span class="chip-icon">{{ getIcon(tpl.category) }}</span>
+            <span class="chip-text">{{ tpl.title }}</span>
+        </button>
+    </div>
+
+</div>

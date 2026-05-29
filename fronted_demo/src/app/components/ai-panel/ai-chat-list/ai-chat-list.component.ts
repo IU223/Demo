@@ -1,10 +1,12 @@
 import {
-  Component, Input, OnChanges, SimpleChanges,
+  Component, Input, Output, EventEmitter,
+  OnChanges, SimpleChanges,
   ViewChild, ElementRef, AfterViewChecked,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ChatMessage } from '../../../models/chat-message';
+import { AiTemplateBarComponent, AnalysisTemplate } from '../ai-template-bar/ai-template-bar.component';  // ★ 新增
 
 /**
  * AI 消息列表子组件
@@ -16,13 +18,19 @@ import { ChatMessage } from '../../../models/chat-message';
 @Component({
   selector: 'app-ai-chat-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AiTemplateBarComponent],    // ★ 新增
   templateUrl: './ai-chat-list.component.html',
   styleUrls: ['./ai-chat-list.component.scss'],
 })
 export class AiChatListComponent implements OnChanges, AfterViewChecked {
   @Input() messages: ChatMessage[] = [];
   @Input() isWaiting = false;
+
+  // ★ 新增：模板相关 Input/Output
+  @Input() templates: AnalysisTemplate[] = [];
+  @Input() templatesLoading = false;
+  @Input() templatesDisabled = false;
+  @Output() templateSelected = new EventEmitter<AnalysisTemplate>();
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
 
@@ -51,6 +59,11 @@ export class AiChatListComponent implements OnChanges, AfterViewChecked {
 
   trackByIndex(index: number): number {
     return index;
+  }
+
+  // ★ 新增：模板选择事件转发
+  onTemplateSelect(template: AnalysisTemplate): void {
+    this.templateSelected.emit(template);
   }
 
   // ==================== Markdown 渲染 ====================

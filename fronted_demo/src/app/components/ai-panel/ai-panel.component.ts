@@ -14,6 +14,7 @@ import { ChatSession } from '../../models/chat-session';
 import { AiChatListComponent } from './ai-chat-list/ai-chat-list.component';
 import { AiInputBarComponent } from './ai-input-bar/ai-input-bar.component';
 import { AiHistoryDrawerComponent } from './ai-history-drawer/ai-history-drawer.component';
+import { AnalysisTemplate } from './ai-template-bar/ai-template-bar.component';
 
 @Component({
   selector: 'app-ai-panel',
@@ -39,6 +40,10 @@ export class AiPanelComponent implements OnInit, OnDestroy {
   showHistory = false;
   sessionsLoading = false;
 
+  // ==================== Step 10: 分析模板 ====================
+  templates: AnalysisTemplate[] = [];
+  templatesLoading = false;
+
   private subscription = new Subscription();
   private currentStreamAbort: (() => void) | null = null;
   private streamSub: Subscription | null = null;
@@ -49,7 +54,7 @@ export class AiPanelComponent implements OnInit, OnDestroy {
     private message: NzMessageService,
     private aiContextService: AiContextService,
     private exportService: ExportService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.subscription.add(
@@ -57,6 +62,8 @@ export class AiPanelComponent implements OnInit, OnDestroy {
         this.isVisible = open;
         if (open) {
           this.loadSessions();
+          // ★ Step 10: 加载分析模板
+          this.loadTemplates();
 
           // ★ Step 9: 检测图表级 AI 分析的自动消息
           const autoMsg = this.aiPanelService.consumeAutoMessage();
@@ -107,6 +114,28 @@ export class AiPanelComponent implements OnInit, OnDestroy {
       next: sessions => { this.sessions = sessions; this.sessionsLoading = false; },
       error: () => { this.sessionsLoading = false; },
     });
+  }
+
+  // ==================== Step 10: 分析模板 ====================
+
+  loadTemplates(): void {
+    this.templatesLoading = true;
+    this.aiService.getTemplates().subscribe({
+      next: data => {
+        this.templates = data;
+        this.templatesLoading = false;
+      },
+      error: () => {
+        this.templatesLoading = false;
+        // 模板加载失败不影响核心功能，静默处理
+      },
+    });
+  }
+
+  onTemplateSelected(template: AnalysisTemplate): void {
+    if (this.isWaiting) return;
+    // 直接将模板的 prompt 作为消息发送
+    this.onMessageSent(template.prompt);
   }
 
   toggleHistory(): void {
