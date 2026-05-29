@@ -345,7 +345,7 @@
 .ai-analyze-btn {
   font-size: 12px;
   color: #8c8c8c;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.25s ease, color 0.2s ease;
   padding: 0 6px;
   height: 24px;
@@ -359,16 +359,7 @@
   }
 }
 
-/* 鼠标悬停到各图表区块时才显示 AI 按钮 */
-.ranking-block:hover,
-.gender-block:hover,
-.map-section:hover,
-.dept-section:hover,
-.chart-section:hover {
-  .ai-analyze-btn {
-    opacity: 1;
-  }
-}
+/* 取消仅悬停才显示：AI 分析按钮默认常显（保留悬停样式改变颜色） */
 
 /* 趋势图筛选栏中的 spacer，将 AI 按钮推到最右侧 */
 .filter-spacer {

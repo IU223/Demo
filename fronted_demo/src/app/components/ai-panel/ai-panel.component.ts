@@ -9,6 +9,7 @@ import { AiPanelService } from '../../services/ai-panel.service';
 import { AiService } from '../../services/ai.service';
 import { AiContextService } from '../../services/ai-context.service';
 import { ExportService } from '../../services/export.service';
+import { AuthService } from '../../services/auth.service';
 import { ChatMessage } from '../../models/chat-message';
 import { ChatSession } from '../../models/chat-session';
 import { AiChatListComponent } from './ai-chat-list/ai-chat-list.component';
@@ -40,23 +41,29 @@ export class AiPanelComponent implements OnInit, OnDestroy {
   showHistory = false;
   sessionsLoading = false;
 
+  // ==================== Step 7: 权限隔离 ====================
+  isSuperAdmin = false;
+
   // ==================== Step 10: 分析模板 ====================
   templates: AnalysisTemplate[] = [];
   templatesLoading = false;
 
-  private subscription = new Subscription();
+  private readonly subscription = new Subscription();
   private currentStreamAbort: (() => void) | null = null;
   private streamSub: Subscription | null = null;
 
   constructor(
-    private aiPanelService: AiPanelService,
-    private aiService: AiService,
-    private message: NzMessageService,
-    private aiContextService: AiContextService,
-    private exportService: ExportService,
+    private readonly aiPanelService: AiPanelService,
+    private readonly aiService: AiService,
+    private readonly message: NzMessageService,
+    private readonly aiContextService: AiContextService,
+    private readonly exportService: ExportService,
+    private readonly authService: AuthService,
   ) { }
 
   ngOnInit(): void {
+    // ★ Step 7: 检测当前用户是否为超级管理员
+    this.isSuperAdmin = this.authService.isSuperAdmin();
     this.subscription.add(
       this.aiPanelService.isOpen$.subscribe(open => {
         this.isVisible = open;
@@ -153,7 +160,7 @@ export class AiPanelComponent implements OnInit, OnDestroy {
       next: data => {
         this.messages = data.messages.filter(m => m.role !== 'system').map(m => ({
           message_id: m.message_id, session_id: m.session_id,
-          role: m.role as 'user' | 'assistant' | 'system',
+          role: m.role,
           content: m.content, created_at: m.created_at,
         }));
       },
@@ -205,7 +212,7 @@ export class AiPanelComponent implements OnInit, OnDestroy {
     this.streamSub = stream$.subscribe({
       next: (chunk: string) => {
         const msgs = [...this.messages];
-        const lastMsg = msgs[msgs.length - 1];
+        const lastMsg = msgs.at(-1);
         if (lastMsg?.role === 'assistant') { lastMsg.content += chunk; this.messages = msgs; }
       },
       error: (err: any) => {
@@ -217,7 +224,7 @@ export class AiPanelComponent implements OnInit, OnDestroy {
         else if (status === 0 || !navigator.onLine) errorText = '⚠️ 网络连接已断开，请检查网络后重试。';
         else if (err?.message) errorText = `⚠️ ${err.message}`;
         const msgs = [...this.messages];
-        const lastMsg = msgs[msgs.length - 1];
+        const lastMsg = msgs.at(-1);
         if (lastMsg?.role === 'assistant' && !lastMsg.content) {
           lastMsg.content = errorText; this.messages = msgs;
         } else {

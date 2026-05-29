@@ -27,18 +27,19 @@
 
   <ng-container *ngIf="showHistory; else chatView">
     <app-ai-history-drawer [sessions]="sessions" [currentSessionId]="currentSessionId" [loading]="sessionsLoading"
-      (sessionSelected)="onSessionSelected($event)" (sessionDeleted)="onDeleteSession($event)" (newChat)="onNewChat()"
+      [isSuperAdmin]="isSuperAdmin" (sessionSelected)="onSessionSelected($event)"
+      (sessionDeleted)="onDeleteSession($event)" (newChat)="onNewChat()"
       (back)="showHistory = false"></app-ai-history-drawer>
   </ng-container>
 
   <ng-template #chatView>
-    <!-- ★ 模板栏已移入空状态，透传模板数据给 chat-list -->
     <app-ai-chat-list [messages]="messages" [isWaiting]="isWaiting" [templates]="templates"
       [templatesLoading]="templatesLoading" [templatesDisabled]="isWaiting"
       (templateSelected)="onTemplateSelected($event)"></app-ai-chat-list>
 
     <app-ai-input-bar [disabled]="isWaiting" (messageSent)="onMessageSent($event)"></app-ai-input-bar>
   </ng-template>
+
 </div>
 
 <div class="ai-panel-backdrop" [class.visible]="isVisible" (click)="closePanel()">

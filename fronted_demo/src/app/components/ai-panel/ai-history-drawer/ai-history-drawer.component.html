@@ -3,29 +3,61 @@
   <div class="drawer-header">
     <button class="back-btn" (click)="onBack()" aria-label="返回对话">
       <span nz-icon nzType="left" nzTheme="outline"></span>
-      <span>对话历史</span>
+      <span>{{ isSuperAdmin ? '所有对话历史' : '我的对话历史' }}</span>
     </button>
     <button class="new-chat-btn" nz-button nzType="primary" nzSize="small" (click)="onNewChat()">
       <span nz-icon nzType="plus"></span>新对话
     </button>
   </div>
 
+  <!-- ★ Step 7: 超管用户筛选框 -->
+  <div class="drawer-filter" *ngIf="isSuperAdmin">
+    <nz-input-group [nzSuffix]="filterSuffix" nzSize="small">
+      <input nz-input [(ngModel)]="filterKeyword" placeholder="搜索工号或对话标题" nzSize="small" />
+    </nz-input-group>
+    <ng-template #filterSuffix>
+      <button nz-button nzType="text" class="filter-suffix-btn" aria-label="清除或搜索" (click)="filterKeyword = ''"
+        (keydown.enter)="filterKeyword = ''">
+        <span nz-icon [nzType]="filterKeyword ? 'close-circle' : 'search'"></span>
+      </button>
+    </ng-template>
+  </div>
+
   <!-- 列表 -->
   <div class="drawer-body">
     <nz-spin [nzSpinning]="loading" nzSize="small">
       <!-- 空状态 -->
-      <nz-empty *ngIf="!loading && sessions.length === 0" nzNotFoundContent="暂无对话历史" [nzNotFoundImage]="'simple'"
-        style="padding: 40px 0;"></nz-empty>
+      <nz-empty *ngIf="!loading && filteredSessions.length === 0"
+        [nzNotFoundContent]="filterKeyword ? '未找到匹配的对话' : '暂无对话历史'" [nzNotFoundImage]="'simple'"
+        style="padding: 40px 0;">
+      </nz-empty>
 
-      <!-- 会话列表 -->
-      <div *ngFor="let session of sessions" class="session-item"
-        [class.active]="session.session_id === currentSessionId" (click)="onSelectSession(session)">
-        <div class="session-info">
-          <div class="session-title">{{ session.title || '未命名对话' }}</div>
-          <div class="session-time">{{ formatTime(session.updated_at) }}</div>
+      <!-- 会话列表（带编号） -->
+      <div *ngFor="let session of filteredSessions; let i = index" class="session-row">
+        <!-- ★ 编号标签 -->
+        <div class="session-index">
+          <span class="index-badge" [class.active]="session.session_id === currentSessionId">
+            {{ i + 1 }}
+          </span>
         </div>
 
-        <!-- ★ 修复：删除按钮 -->
+        <!-- 会话信息卡片 -->
+        <button class="session-item" [class.active]="session.session_id === currentSessionId"
+          (click)="onSelectSession(session)">
+          <div class="session-info">
+            <div class="session-title">{{ session.title || '未命名对话' }}</div>
+            <div class="session-meta">
+              <!-- ★ Step 7: 超管显示操作人工号 -->
+              <span class="session-user" *ngIf="isSuperAdmin">
+                <span nz-icon nzType="user" nzTheme="outline"></span>
+                {{ session.employee_id }}
+              </span>
+              <span class="session-time">{{ formatTime(session.updated_at) }}</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- 删除按钮 -->
         <button class="session-delete-btn" nz-popconfirm nzPopconfirmTitle="确定删除此对话？" nzOkText="删除" nzCancelText="取消"
           nzPopconfirmPlacement="left" (nzOnConfirm)="onDeleteSession(session.session_id!)"
           (click)="$event.stopPropagation()" aria-label="删除对话">
