@@ -77,6 +77,14 @@
           </div>
           <button nz-button nzType="primary" nzSize="small" (click)="onSearch()">查询</button>
           <button nz-button nzType="default" nzSize="small" (click)="onReset()">重置</button>
+
+          <!-- ★ Step 9：趋势图 AI 分析按钮（筛选栏旁） -->
+          <span class="filter-spacer"></span>
+          <button nz-button nzType="text" nzSize="small"
+                  class="ai-analyze-btn"
+                  (click)="analyzeChart('trend')">
+            🤖 AI 分析
+          </button>
         </div>
         <div #trendChartRef class="trend-chart"></div>
       </div>
@@ -84,7 +92,15 @@
       <!-- ========== 3. 右侧面板 ========== -->
       <div class="right-panel">
         <div class="ranking-block">
-          <h4 class="section-title">📈 厂别人数排行</h4>
+          <!-- ★ Step 9 / FIX-14：厂别排行标题栏重构 -->
+          <div class="chart-header">
+            <h4 class="section-title">📈 厂别人数排行</h4>
+            <button nz-button nzType="text" nzSize="small"
+                    class="ai-analyze-btn"
+                    (click)="analyzeChart('factoryRanking')">
+              🤖 AI 分析
+            </button>
+          </div>
           <div class="rank-list">
             <div class="rank-item" *ngFor="let item of displayedRanking; let i = index">
               <span class="rank-badge" [style.background]="item.badgeColor">{{ i + 1 }}</span>
@@ -105,20 +121,44 @@
         </div>
 
         <div class="gender-block">
-          <h4 class="section-title">% 性别比</h4>
+          <!-- ★ Step 9 / FIX-14：性别比标题栏重构 -->
+          <div class="chart-header">
+            <h4 class="section-title">% 性别比</h4>
+            <button nz-button nzType="text" nzSize="small"
+                    class="ai-analyze-btn"
+                    (click)="analyzeChart('gender')">
+              🤖 AI 分析
+            </button>
+          </div>
           <div #genderChartRef class="gender-chart"></div>
         </div>
       </div>
 
       <!-- ========== 4. 地区人员分布 ========== -->
       <div class="map-section">
-        <h4 class="section-title">地区人员分布</h4>
+        <!-- ★ Step 9 / FIX-14：地区分布标题栏重构 -->
+        <div class="chart-header">
+          <h4 class="section-title">地区人员分布</h4>
+          <button nz-button nzType="text" nzSize="small"
+                  class="ai-analyze-btn"
+                  (click)="analyzeChart('region')">
+            🤖 AI 分析
+          </button>
+        </div>
         <div #mapChartRef class="map-chart"></div>
       </div>
 
       <!-- ========== 5. 部门分布 ========== -->
       <div class="dept-section">
-        <h4 class="section-title">部门分布</h4>
+        <!-- ★ Step 9 / FIX-14：部门分布标题栏重构 -->
+        <div class="chart-header">
+          <h4 class="section-title">部门分布</h4>
+          <button nz-button nzType="text" nzSize="small"
+                  class="ai-analyze-btn"
+                  (click)="analyzeChart('department')">
+            🤖 AI 分析
+          </button>
+        </div>
         <div #deptChartRef class="dept-chart"></div>
       </div>
     </div>

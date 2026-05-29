@@ -20,6 +20,7 @@ import { EmployeeService } from '../../services/employee.service';
 import { SelectOption } from '../../models/employee';
 import { environment } from '../../../environments/environment.development';
 import { AiContextService } from '../../services/ai-context.service';
+import { AiPanelService } from '../../services/ai-panel.service';
 /** 排行榜徽章颜色 */
 const BADGE_COLORS = [
   '#ff4d4f', '#ff7a45', '#52c41a',
@@ -84,6 +85,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ===================== 原始数据 / 状态 =====================
   allEmployees: any[] = [];
+  activeEmployees: any[] = [];    // ★ 改动1：仅在职员工（供除折线图外的所有图表使用）
   regionData: any[] = [];
   currentDate = '';
   loading = false;
@@ -106,6 +108,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     private message: NzMessageService,
     private ngZone: NgZone,
     private aiContextService: AiContextService,
+    private aiPanelService: AiPanelService,       // ★ Step 9 新增
   ) { }
 
   // ==================== 生命周期 ====================
@@ -195,6 +198,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
         this.resignCount = resignCount;
         this.totalCount = activeCount + resignCount;
         this.allEmployees = allEmployees;
+        this.activeEmployees = allEmployees.filter((emp: any) => emp.status === true);  // ★ 改动2
         this.regionData = regions;
         console.log(this.regionData);
         // ★ 新增：建立部门映射
@@ -276,7 +280,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     );
 
     let male = 0, female = 0, unknown = 0;
-    this.allEmployees.forEach((emp: any) => {
+    this.activeEmployees.forEach((emp: any) => {            // ★ 改动4b
       if (emp.Sex === true) male++;
       else if (emp.Sex === false) female++;
       else unknown++;
@@ -286,7 +290,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     const regionCount: Record<string, number> = {};
-    this.allEmployees.forEach((emp: any) => {
+    this.activeEmployees.forEach((emp: any) => {            // ★ 改动4c
       const r = emp.region_name || '未知';
       regionCount[r] = (regionCount[r] || 0) + 1;
     });
@@ -297,7 +301,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     );
 
     const deptCount: Record<string, number> = {};
-    this.allEmployees.forEach((emp: any) => {
+    this.activeEmployees.forEach((emp: any) => {            // ★ 改动4d
       const d = emp.dept_desc || '未知';
       deptCount[d] = (deptCount[d] || 0) + 1;
     });
@@ -331,6 +335,31 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedFactory = '';
     this.loadDashboardData();
   }
+
+  // ==================== Step 9: 图表级 AI 分析 ====================
+
+  /**
+   * ★ Step 9: 点击图表旁 "🤖 AI 分析" 按钮时调用
+   * 自动打开 AI 面板，开启新对话，并发送针对该图表的分析提问
+   */
+  analyzeChart(chartType: string): void {
+    const prompts: Record<string, string> = {
+      trend: '请分析近 6 个月的入职/离职趋势数据，识别异常月份并给出建议',
+      factoryRanking: '请分析当前厂别人数排行数据，对比各厂区人数差异并给出管理建议',
+      gender: '请分析当前人员性别比例数据，评估是否合理并给出改善建议',
+      region: '请分析各地区人员分布特征，对比各地区差异并给出优化建议',
+      department: '请分析各部门人员分布情况，识别人员异常的部门并给出建议',
+    };
+
+    const prompt = prompts[chartType] || '请分析当前图表数据';
+    const chartData = this.aiContextService.getFullContext();
+
+    // 1. 设置自动发送的消息
+    this.aiPanelService.setAutoMessage(prompt);
+    // 2. 打开面板（携带图表类型上下文）
+    this.aiPanelService.openWithContext(chartType, chartData);
+  }
+
   // ==================== 同比 / 环比计算 ====================
 
   private calculateComparisons(): void {
@@ -450,7 +479,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private buildFactoryRanking(): void {
     const map: Record<string, number> = {};
-    this.allEmployees.forEach((emp: any) => {
+    this.activeEmployees.forEach((emp: any) => {           // ★ 改动3a
       const f = emp.plant_name || '未知';
       map[f] = (map[f] || 0) + 1;
     });
@@ -513,7 +542,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 1. 按地区聚合人数
     const regionCount: Record<string, number> = {};
-    this.allEmployees.forEach((emp: any) => {
+    this.activeEmployees.forEach((emp: any) => {            // ★ 改动3c
       const r = emp.region_name || '未知';
       regionCount[r] = (regionCount[r] || 0) + 1;
     });
@@ -789,7 +818,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.mapEchart) return;
 
     const regionCount: Record<string, number> = {};
-    this.allEmployees.forEach((emp: any) => {
+    this.activeEmployees.forEach((emp: any) => {            // ★ 改动3d
       const r = emp.region_name || '未知';
       regionCount[r] = (regionCount[r] || 0) + 1;
     });
@@ -846,7 +875,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // ── 1. 按 dept_desc 统计每个部门的人数 ──
     const deptCountMap: Record<string, number> = {};
-    this.allEmployees.forEach((emp: any) => {
+    this.activeEmployees.forEach((emp: any) => {            // ★ 改动3e
       const raw = emp.dept_desc || '未知';
       deptCountMap[raw] = (deptCountMap[raw] || 0) + 1;
     });
@@ -1010,7 +1039,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.genderEchart) return;
 
     let male = 0, female = 0, unknown = 0;
-    this.allEmployees.forEach((emp: any) => {
+    this.activeEmployees.forEach((emp: any) => {            // ★ 改动3b
       if (emp.Sex === true) male++;
       else if (emp.Sex === false) female++;
       else unknown++;

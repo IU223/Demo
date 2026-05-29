@@ -35,7 +35,7 @@ export class AiChatListComponent implements OnChanges, AfterViewChecked {
   private libsLoading = false;
   private renderCache = new Map<string, SafeHtml>();
 
-  constructor(private sanitizer: DomSanitizer) {}
+  constructor(private sanitizer: DomSanitizer) { }
 
   ngOnChanges(_changes: SimpleChanges): void {
     this.updateRenderedMessages();
@@ -75,8 +75,8 @@ export class AiChatListComponent implements OnChanges, AfterViewChecked {
         import('marked'),
         import('dompurify'),
       ]);
-      this.marked = markedMod.marked ?? markedMod['default'];
-      this.DOMPurify = dpMod['default'] ?? dpMod;
+      this.marked = markedMod.marked;
+      this.DOMPurify = (dpMod as any)['default'] ?? dpMod;
       this.libsLoaded = true;
       this.doRender();
     } catch (err) {

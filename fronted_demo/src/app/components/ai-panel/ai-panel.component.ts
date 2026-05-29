@@ -55,7 +55,19 @@ export class AiPanelComponent implements OnInit, OnDestroy {
     this.subscription.add(
       this.aiPanelService.isOpen$.subscribe(open => {
         this.isVisible = open;
-        if (open) this.loadSessions();
+        if (open) {
+          this.loadSessions();
+
+          // ★ Step 9: 检测图表级 AI 分析的自动消息
+          const autoMsg = this.aiPanelService.consumeAutoMessage();
+          if (autoMsg) {
+            // 切到对话视图 & 开启新会话，避免污染当前对话
+            this.showHistory = false;
+            this.onNewChat();
+            // 等待视图稳定后自动发送
+            setTimeout(() => this.onMessageSent(autoMsg), 150);
+          }
+        }
       }),
     );
   }
