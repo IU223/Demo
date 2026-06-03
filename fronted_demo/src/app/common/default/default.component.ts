@@ -353,7 +353,8 @@ export class DefaultComponent implements OnInit, OnDestroy {
         this.loadUserInfo();
       },
       error: (err) => {
-        this.message.error('修改失败：' + (err.error?.error?.message || '请稍后重试'));
+        const msg = err.error?.error?.message || err.message || '请稍后重试';
+        this.message.error('修改失败：' + msg);
         this.profileSubmitting = false;
       }
     });

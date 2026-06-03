@@ -260,18 +260,33 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       momResign: this.momResign,
     });
 
-    const now = new Date();
+    const ref = this.getReferenceDate();
     const months: string[] = [];
     const hireData: number[] = [];
     const resignData: number[] = [];
     const hires = this.groupByMonth('hire_date');
     const resigns = this.groupByMonth('resin_date');
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = this.monthKey(d.getFullYear(), d.getMonth() + 1);
-      months.push(`${d.getMonth() + 1}月`);
-      hireData.push(hires[key] || 0);
-      resignData.push(resigns[key] || 0);
+
+    // ★ 有日期筛选时，月份范围适配筛选器；否则展示最近 6 个月
+    if (this.startDate && this.endDate) {
+      const start = new Date(this.startDate.getFullYear(), this.startDate.getMonth(), 1);
+      const end = new Date(this.endDate.getFullYear(), this.endDate.getMonth(), 1);
+      const cursor = new Date(start);
+      while (cursor <= end) {
+        const key = this.monthKey(cursor.getFullYear(), cursor.getMonth() + 1);
+        months.push(`${cursor.getMonth() + 1}月`);
+        hireData.push(hires[key] || 0);
+        resignData.push(resigns[key] || 0);
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+    } else {
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(ref.getFullYear(), ref.getMonth() - i, 1);
+        const key = this.monthKey(d.getFullYear(), d.getMonth() + 1);
+        months.push(`${d.getMonth() + 1}月`);
+        hireData.push(hires[key] || 0);
+        resignData.push(resigns[key] || 0);
+      }
     }
     this.aiContextService.registerContext('trend', { months, hireData, resignData });
 
@@ -362,14 +377,19 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ==================== 同比 / 环比计算 ====================
 
-  private calculateComparisons(): void {
-    const now = new Date();
-    const curKey = this.monthKey(now.getFullYear(), now.getMonth() + 1);
+  /** 获取同比/环比计算用的参考日期：有筛选器时用 endDate，否则用当前日期 */
+  private getReferenceDate(): Date {
+    return this.endDate ? new Date(this.endDate) : new Date();
+  }
 
-    const prevMonth = now.getMonth() === 0 ? 12 : now.getMonth();
-    const prevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+  private calculateComparisons(): void {
+    const ref = this.getReferenceDate();
+    const curKey = this.monthKey(ref.getFullYear(), ref.getMonth() + 1);
+
+    const prevMonth = ref.getMonth() === 0 ? 12 : ref.getMonth();
+    const prevYear = ref.getMonth() === 0 ? ref.getFullYear() - 1 : ref.getFullYear();
     const prevKey = this.monthKey(prevYear, prevMonth);
-    const lastYearKey = this.monthKey(now.getFullYear() - 1, now.getMonth() + 1);
+    const lastYearKey = this.monthKey(ref.getFullYear() - 1, ref.getMonth() + 1);
 
     const hires = this.groupByMonth('hire_date');
     const resigns = this.groupByMonth('resin_date');
@@ -409,20 +429,39 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private buildTrendChart(): void {
     if (!this.trendChart) return;
 
-    const now = new Date();
+    const hires = this.groupByMonth('hire_date');
+    const resigns = this.groupByMonth('resin_date');
+
     const months: string[] = [];
     const hireData: number[] = [];
     const resignData: number[] = [];
 
-    const hires = this.groupByMonth('hire_date');
-    const resigns = this.groupByMonth('resin_date');
-
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = this.monthKey(d.getFullYear(), d.getMonth() + 1);
-      months.push(`${d.getMonth() + 1}月`);
-      hireData.push(hires[key] || 0);
-      resignData.push(resigns[key] || 0);
+    // ★ 有日期筛选时，X 轴适配筛选器范围；否则展示最近 6 个月
+    if (this.startDate && this.endDate) {
+      const start = new Date(this.startDate.getFullYear(), this.startDate.getMonth(), 1);
+      const end = new Date(this.endDate.getFullYear(), this.endDate.getMonth(), 1);
+      // 跨年时显示年份简称，避免月份标签歧义
+      const crossYear = start.getFullYear() !== end.getFullYear();
+      const cursor = new Date(start);
+      while (cursor <= end) {
+        const key = this.monthKey(cursor.getFullYear(), cursor.getMonth() + 1);
+        const label = crossYear
+          ? `${String(cursor.getFullYear()).slice(2)}年${cursor.getMonth() + 1}月`
+          : `${cursor.getMonth() + 1}月`;
+        months.push(label);
+        hireData.push(hires[key] || 0);
+        resignData.push(resigns[key] || 0);
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+    } else {
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = this.monthKey(d.getFullYear(), d.getMonth() + 1);
+        months.push(`${d.getMonth() + 1}月`);
+        hireData.push(hires[key] || 0);
+        resignData.push(resigns[key] || 0);
+      }
     }
 
     this.trendChart.setOption({

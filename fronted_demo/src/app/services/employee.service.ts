@@ -2,9 +2,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, switchMap, catchError } from 'rxjs/operators';
 import { Employee, EmployeeFilter, EmployeeResponse, SelectOption, RoleOption } from '../models/employee';
 import { environment } from '../../environments/environment.development';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +17,10 @@ export class EmployeeService {
   private apiUrlDept = `${environment.apiUrl}/departments`;
   private apiUrlRole = `${environment.apiUrl}/roles`;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+  ) { }
   private formatDate(d: Date): string {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -140,22 +144,118 @@ export class EmployeeService {
   }
   /**
    * 更新员工
+   *
+   * ★ 管理员保护：非超管不可修改超管账户
    */
   updateEmployee(id: string, employee: Partial<Employee>): Observable<void> {
-    return this.http.patch<void>(`${this.apiUrl}/${id}`, employee);
+    return this.ensureNotSuperAdmin(id).pipe(
+      switchMap(() => this.http.patch<void>(`${this.apiUrl}/${id}`, employee)),
+    );
   }
 
   /**
    * 批量软删除（标记为离职）
+   *
+   * ★ 管理员保护：非超管不可删除超管账户
    */
   deleteEmployees(ids: string[]): Observable<{ count: number }> {
     if (!ids || ids.length === 0) {
       return of({ count: 0 });
     }
-    const where = JSON.stringify({ employee_id: { inq: ids } });
-    const params = new HttpParams().set('where', where);
-    // LoopBack 的 updateAll 返回 Count 类型 {count: number}
-    return this.http.patch<{ count: number }>(`${this.apiUrl}`, { status: false, resin_date: new Date() }, { params });
+    return this.ensureNotSuperAdminBatch(ids).pipe(
+      switchMap(() => {
+        const where = JSON.stringify({ employee_id: { inq: ids } });
+        const params = new HttpParams().set('where', where);
+        return this.http.patch<{ count: number }>(
+          `${this.apiUrl}`, { status: false, resin_date: new Date() }, { params },
+        );
+      }),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // ★ 管理员保护：非超管不可修改/删除超管账户
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * 构造与后端 HTTP 错误兼容的错误对象，确保 message.error() 能正确提取消息
+   */
+  private static forbiddenError(msg: string): Error {
+    const err = new Error(msg);
+    (err as any).error = { error: { message: msg, statusCode: 403 } };
+    (err as any).statusCode = 403;
+    return err;
+  }
+
+  /** 检查单个目标：若当前用户非超管且目标是超管则拒绝 */
+  private ensureNotSuperAdmin(targetId: string): Observable<void> {
+    if (this.authService.isSuperAdmin()) {
+      return of(undefined);
+    }
+    return this.http.get<Employee>(`${this.apiUrl}/${targetId}`).pipe(
+      switchMap(emp => {
+        if (emp.role_id == null) return of(undefined);
+        return this.http
+          .get<{ is_super_admin?: boolean }>(`${environment.apiUrl}/roles/${emp.role_id}`)
+          .pipe(
+            map(role => {
+              if (role.is_super_admin) {
+                throw EmployeeService.forbiddenError('无权修改超级管理员账户');
+              }
+            }),
+            catchError(err => {
+              // 若 catch 到的是我们自己抛出的 forbiddenError，继续向上传递
+              if (err?.error?.error?.statusCode === 403) throw err;
+              // 否则是联网查询失败，降级放行（避免误伤）
+              console.warn('[EmployeeService] 超管保护查询失败，降级放行:', err);
+              return of(undefined);
+            }),
+          );
+      }),
+      catchError(err => {
+        if (err?.error?.error?.statusCode === 403) throw err;
+        console.warn('[EmployeeService] 获取目标员工失败，降级放行:', err);
+        return of(undefined);
+      }),
+    );
+  }
+
+  /** 检查批量目标：若当前用户非超管且任一目标是超管则拒绝 */
+  private ensureNotSuperAdminBatch(ids: string[]): Observable<void> {
+    if (this.authService.isSuperAdmin()) {
+      return of(undefined);
+    }
+    // ★ 修复：where 是对象，不是预序列化的 JSON 字符串
+    const filter = { where: { employee_id: { inq: ids } } };
+    const params = new HttpParams().set('filter', JSON.stringify(filter));
+    return this.http.get<any>(this.apiUrl, { params }).pipe(
+      map(resp => {
+        const employees: Employee[] = Array.isArray(resp) ? resp : (resp?.data || []);
+        const roleIds = [...new Set(
+          employees.map(e => e.role_id).filter((id): id is number => id != null),
+        )];
+        return roleIds;
+      }),
+      switchMap(roleIds => {
+        if (roleIds.length === 0) return of(undefined);
+        const roleFilter = { where: { role_id: { inq: roleIds }, is_super_admin: true } };
+        const roleParams = new HttpParams().set('filter', JSON.stringify(roleFilter));
+        return this.http.get<any>(`${environment.apiUrl}/roles`, { params: roleParams }).pipe(
+          map(resp => {
+            const roles: Array<{ is_super_admin?: boolean }> =
+              Array.isArray(resp) ? resp : (resp?.data || []);
+            if (roles.length > 0) {
+              throw EmployeeService.forbiddenError('批量操作包含超级管理员账户，无权修改');
+            }
+          }),
+        );
+      }),
+      catchError(err => {
+        if (err?.error?.error?.statusCode === 403) throw err;
+        console.warn('[EmployeeService] 超管保护批量查询失败，降级放行:', err);
+        return of(undefined);
+      }),
+    );
   }
 
   /**

@@ -3,12 +3,16 @@ export interface Employee {
   employee_id: string;
   name?: string;
   name_a?: string;
+  Sex?: boolean;
   dept_desc?: string;
   plant_name?: string;
   region_name?: string;
-  status?: string;
+  role_id?: number;
+  status?: boolean;
   hire_date?: string;
   resin_date?: string;
+  hasaccess?: boolean;
+  password?: string;
   checked?: boolean;
 }
 

@@ -515,7 +515,8 @@ export class ReportComponent implements OnInit {
           this.loadData();
         },
         error: (err) => {
-          this.message.error('修改失败：' + (err.error?.error?.message || '请稍后重试'));
+          const msg = err.error?.error?.message || err.message || '请稍后重试';
+          this.message.error('修改失败：' + msg);
           this.submitting = false;
         }
       });
@@ -752,7 +753,10 @@ export class ReportComponent implements OnInit {
             this.setOfCheckedId.clear();
             this.loadData();
           },
-          () => this.message.error('删除失败，请稍后重试')
+          (err: any) => {
+            const msg = err?.error?.error?.message || err?.message || '请稍后重试';
+            this.message.error('删除失败：' + msg);
+          }
         );
       }
     });
