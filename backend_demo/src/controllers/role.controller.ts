@@ -82,11 +82,6 @@ export class RoleController {
   async count(
     @param.where(Role) where?: Where<Role>,
   ): Promise<Count> {
-    const user = this.getCurrentUser();
-    // ★ 非超级管理员只能统计自己角色
-    if (!user?.is_super_admin) {
-      where = { role_id: user?.role_id };
-    }
     return this.roleRepository.count(where);
   }
 
@@ -105,13 +100,6 @@ export class RoleController {
   async find(
     @param.filter(Role) filter?: Filter<Role>,
   ): Promise<Role[]> {
-    const user = this.getCurrentUser();
-    // ★ 非超级管理员只能查看自己的角色
-    if (!user?.is_super_admin) {
-      const myRoleId = user?.role_id;
-      if (myRoleId == null) return [];
-      filter = { ...(filter || {}), where: { role_id: myRoleId } };
-    }
     return this.roleRepository.find(filter);
   }
 
@@ -128,14 +116,6 @@ export class RoleController {
     @param.path.number('id') id: number,
     @param.filter(Role, { exclude: 'where' }) filter?: FilterExcludingWhere<Role>,
   ): Promise<Role> {
-    const user = this.getCurrentUser();
-    // ★ 非超级管理员只能查看自己的角色
-    if (!user?.is_super_admin && user?.role_id !== id) {
-      throw Object.assign(
-        new Error('您只能查看自己的角色'),
-        { statusCode: 403 },
-      );
-    }
     return this.roleRepository.findById(id, filter);
   }
 
