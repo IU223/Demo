@@ -30,7 +30,6 @@ export class AuthInterceptor implements Provider<Interceptor> {
     invocationCtx: InvocationContext,
     next: () => ValueOrPromise<InvocationResult>,
   ): Promise<InvocationResult> {
-    console.log("拦截器被调用")
     let req: Request | undefined;
     try {
       req = await invocationCtx.get(RestBindings.Http.REQUEST, {
@@ -68,7 +67,7 @@ export class AuthInterceptor implements Provider<Interceptor> {
       const token = authHeader.slice(7);
       try {
         const decoded = verifyToken(token);
-        console.log('[AuthInterceptor] JWT 验证通过, 用户:', decoded.employee_id);
+        //console.log('[AuthInterceptor] JWT 验证通过, 用户:', decoded.employee_id);
 
         // ★ Task 4 新增：将解码后的用户信息挂载到 request 对象上
         (req as any).currentUser = {

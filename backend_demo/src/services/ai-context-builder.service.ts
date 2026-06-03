@@ -1,4 +1,4 @@
-import {AiMessage} from './ai-provider.interface';
+import { AiMessage } from './ai-provider.interface';
 
 /** 最大历史轮数（保留最近 10 轮 = 20 条消息） */
 const MAX_HISTORY_MESSAGES = 20;
@@ -9,12 +9,12 @@ const MAX_CONTEXT_BYTES = 4096;
 const SYSTEM_PROMPT = `你是「人事分析系统」的 AI 数据分析助手。你的职责是帮助 HR 团队分析人员数据，提供结构化的、有数据支撑的分析结论。
 
 规则：
-1. 所有分析必须基于提供的数据，不得编造数字
+1. 除了人员分析必须基于提供的数据，不得编造数字，其他问题可以自由回答
 2. 使用中文回复，语气专业但易懂
 3. 分析结构：关键发现 → 数据解读 → 风险提示 → 建议
 4. 百分比保留 1 位小数，人数使用整数
 5. 主动识别异常数据并给出风险提示
-6. 不要回答与人事数据分析无关的问题
+6. 可以回答与人事数据分析无关的问题
 7. 使用 Markdown 格式输出，方便前端渲染
 
 安全规则：
@@ -87,18 +87,18 @@ export class AiContextBuilder {
   ): AiMessage[] {
     const messages: AiMessage[] = [];
 
-    messages.push({role: 'system', content: this.buildSystemPrompt()});
+    messages.push({ role: 'system', content: this.buildSystemPrompt() });
 
     const contextMsg = this.buildContextMessage(context);
     if (contextMsg) {
-      messages.push({role: 'system', content: contextMsg});
+      messages.push({ role: 'system', content: contextMsg });
     }
 
     if (history && history.length > 0) {
       messages.push(...history.slice(-MAX_HISTORY_MESSAGES));
     }
 
-    messages.push({role: 'user', content: userMessage});
+    messages.push({ role: 'user', content: userMessage });
 
     return messages;
   }
