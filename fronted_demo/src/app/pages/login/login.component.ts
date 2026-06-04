@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { NonNullableFormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { NonNullableFormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -62,17 +62,37 @@ export class LoginComponent implements OnInit {
     }
 
     this.validateForm = this.fb.group({
-      username: ['', [Validators.required]],
-      password: ['', [Validators.required]],
+      username: ['', [Validators.required, this.usernameValidator]],
+      password: ['', [Validators.required, this.passwordValidator]],
       remember: [true],
     });
 
     this.forgotPwdForm = this.fb.group({
-      username: ['', [Validators.required]],
-      newPassword: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]],
+      username: ['', [Validators.required, this.usernameValidator]],
+      newPassword: ['', [Validators.required, this.passwordValidator]],
+      confirmPassword: ['', [Validators.required, this.passwordValidator]],
     });
   }
+
+  // 用户名校验：非空、长度 5-20、以字母或数字开头
+  usernameValidator = (control: AbstractControl): ValidationErrors | null => {
+    const v = control.value as string | null;
+    if (!v) return null; // required validator handles empty
+    const re = /^[A-Za-z0-9][A-Za-z0-9]{4,19}$/;
+    return re.test(v) ? null : { invalidUsername: true };
+  };
+
+  // 密码校验：长度 5-20，包含字母/数字/特殊字符 三类中至少两类
+  passwordValidator = (control: AbstractControl): ValidationErrors | null => {
+    const v = control.value as string | null;
+    if (!v) return null; // required handles empty
+    if (v.length < 5 || v.length > 20) return { invalidLength: true };
+    const hasLetter = /[A-Za-z]/.test(v);
+    const hasDigit = /\d/.test(v);
+    const hasSpecial = /[^A-Za-z0-9]/.test(v);
+    const categories = [hasLetter, hasDigit, hasSpecial].filter(Boolean).length;
+    return categories >= 2 ? null : { insufficientCategories: true };
+  };
 
   submitForm(): void {
     if (this.validateForm.valid) {

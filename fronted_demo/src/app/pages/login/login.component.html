@@ -10,20 +10,29 @@
 
       <!-- 用户名输入框 -->
       <nz-form-item>
-        <nz-form-control nzErrorTip="请输入用户名！">
+        <nz-form-control [nzErrorTip]="usernameErrorTpl">
           <nz-input-group nzPrefixIcon="user">
-            <input type="text" nz-input formControlName="username" placeholder="请输入用户名 (admin)" />
+            <input type="text" nz-input formControlName="username" placeholder="请输入用户名 (5-20位，以字母或数字开头)" />
           </nz-input-group>
+          <ng-template #usernameErrorTpl let-control>
+            <ng-container *ngIf="control.hasError('required')">用户名不能为空</ng-container>
+            <ng-container *ngIf="control.hasError('invalidUsername')">用户名须为5-20位，首字符为字母或数字，且仅包含字母数字</ng-container>
+          </ng-template>
         </nz-form-control>
       </nz-form-item>
 
       <!-- 密码输入框 (增加了密码可见性切换) -->
       <nz-form-item>
-        <nz-form-control nzErrorTip="请输入密码！">
+        <nz-form-control [nzErrorTip]="passwordErrorTpl">
           <nz-input-group nzPrefixIcon="lock">
             <input [type]="passwordVisible ? 'text' : 'password'" nz-input formControlName="password"
-              placeholder="请输入密码" />
+              placeholder="请输入密码 (5-20位，包含字母/数字/特殊字符中任意两类)" />
           </nz-input-group>
+          <ng-template #passwordErrorTpl let-control>
+            <ng-container *ngIf="control.hasError('required')">密码不能为空</ng-container>
+            <ng-container *ngIf="control.hasError('invalidLength')">密码长度需为 5-20 位</ng-container>
+            <ng-container *ngIf="control.hasError('insufficientCategories')">密码需包含字母、数字、特殊字符三类中的任意两类</ng-container>
+          </ng-template>
         </nz-form-control>
       </nz-form-item>
 
@@ -67,10 +76,14 @@
         <!-- 用户名（工号） -->
         <nz-form-item>
           <nz-form-label [nzSpan]="7" nzRequired>工号</nz-form-label>
-          <nz-form-control [nzSpan]="15" nzErrorTip="请输入工号">
+          <nz-form-control [nzSpan]="15" [nzErrorTip]="forgotUsernameErrorTpl">
             <nz-input-group nzPrefixIcon="user">
-              <input nz-input formControlName="username" placeholder="请输入工号" />
+              <input nz-input formControlName="username" placeholder="请输入工号 (5-20位)" />
             </nz-input-group>
+            <ng-template #forgotUsernameErrorTpl let-control>
+              <ng-container *ngIf="control.hasError('required')">请输入工号</ng-container>
+              <ng-container *ngIf="control.hasError('invalidUsername')">工号须为5-20位，首字符为字母或数字，且仅包含字母数字</ng-container>
+            </ng-template>
           </nz-form-control>
         </nz-form-item>
 
@@ -80,7 +93,7 @@
           <nz-form-control [nzSpan]="15" [nzErrorTip]="forgotNewPwdErrorTpl">
             <nz-input-group [nzSuffix]="forgotNewPwdSuffix">
               <input nz-input [type]="forgotNewPwdVisible ? 'text' : 'password'" formControlName="newPassword"
-                placeholder="请输入新密码（至少6位）" autocomplete="new-password" />
+                placeholder="请输入新密码（5-20位，字母/数字/特殊字符中任意两类）" autocomplete="new-password" />
             </nz-input-group>
             <ng-template #forgotNewPwdSuffix>
               <span nz-icon [nzType]="forgotNewPwdVisible ? 'eye' : 'eye-invisible'"
@@ -89,7 +102,8 @@
             </ng-template>
             <ng-template #forgotNewPwdErrorTpl let-control>
               <ng-container *ngIf="control.hasError('required')">请输入新密码</ng-container>
-              <ng-container *ngIf="control.hasError('minlength')">密码长度不能少于6位</ng-container>
+              <ng-container *ngIf="control.hasError('invalidLength')">密码长度需为 5-20 位</ng-container>
+              <ng-container *ngIf="control.hasError('insufficientCategories')">密码需包含字母、数字、特殊字符三类中的任意两类</ng-container>
             </ng-template>
           </nz-form-control>
         </nz-form-item>
@@ -109,6 +123,8 @@
             </ng-template>
             <ng-template #forgotConfirmPwdErrorTpl let-control>
               <ng-container *ngIf="control.hasError('required')">请再次输入新密码</ng-container>
+              <ng-container *ngIf="control.hasError('invalidLength')">密码长度需为 5-20 位</ng-container>
+              <ng-container *ngIf="control.hasError('insufficientCategories')">密码需包含字母、数字、特殊字符三类中的任意两类</ng-container>
               <ng-container *ngIf="control.hasError('mismatch')">两次输入的密码不一致</ng-container>
             </ng-template>
           </nz-form-control>
@@ -123,8 +139,8 @@
           密码安全要求
         </div>
         <ul class="tips-list">
-          <li>密码长度至少 6 个字符</li>
-          <li>建议使用字母、数字和符号的组合</li>
+          <li>密码长度至少 5 个字符</li>
+          <li>建议使用字母、数字和符号的组合（至少包含两类）</li>
         </ul>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, Router } from '@angular/router';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Subscription } from 'rxjs';
 
 // NG-ZORRO 模块
@@ -213,10 +213,22 @@ export class DefaultComponent implements OnInit, OnDestroy {
   private initPasswordForm(): void {
     this.passwordForm = this.fb.group({
       oldPassword: ['', [Validators.required]],
-      newPassword: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]],
+      newPassword: ['', [Validators.required, this.passwordValidator]],
+      confirmPassword: ['', [Validators.required, this.passwordValidator]],
     });
   }
+
+  // 密码校验：长度 5-20，包含字母/数字/特殊字符 三类中至少两类
+  private passwordValidator = (control: AbstractControl): ValidationErrors | null => {
+    const v = control.value as string | null;
+    if (!v) return null; // required handles empty
+    if (v.length < 5 || v.length > 20) return { invalidLength: true };
+    const hasLetter = /[A-Za-z]/.test(v);
+    const hasDigit = /\d/.test(v);
+    const hasSpecial = /[^A-Za-z0-9]/.test(v);
+    const categories = [hasLetter, hasDigit, hasSpecial].filter(Boolean).length;
+    return categories >= 2 ? null : { insufficientCategories: true };
+  };
 
   /** 从 localStorage 加载用户信息 */
   private loadUserInfo(): void {

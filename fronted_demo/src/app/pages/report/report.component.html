@@ -148,8 +148,8 @@
             <input nz-input formControlName="employee_id" placeholder="请输入工号" />
             <ng-template #employeeIdErrorTpl>
               <ng-container *ngIf="employeeForm.get('employee_id')?.hasError('required')">请输入工号</ng-container>
-              <ng-container
-                *ngIf="employeeForm.get('employee_id')?.hasError('pattern')">工号格式不正确，应为大写字母和数字</ng-container>
+              <ng-container *ngIf="employeeForm.get('employee_id')?.hasError('pattern')">工号格式不正确，应为 5-20
+                位，以字母或数字开头且仅包含字母或数字</ng-container>
               <ng-container *ngIf="employeeForm.get('employee_id')?.hasError('employeeExists')">工号已存在</ng-container>
             </ng-template>
           </nz-form-control>
@@ -402,8 +402,8 @@
             <input nz-input formControlName="employee_id" placeholder="请输入工号" [readonly]="isEditMode" />
             <ng-template #employeeIdErrorTpl>
               <ng-container *ngIf="employeeForm.get('employee_id')?.hasError('required')">请输入工号</ng-container>
-              <ng-container
-                *ngIf="employeeForm.get('employee_id')?.hasError('pattern')">工号格式不正确，应为大写字母和数字</ng-container>
+              <ng-container *ngIf="employeeForm.get('employee_id')?.hasError('pattern')">工号格式不正确，应为 5-20
+                位，以字母或数字开头且仅包含字母或数字</ng-container>
               <ng-container *ngIf="employeeForm.get('employee_id')?.hasError('employeeExists')">工号已存在</ng-container>
             </ng-template>
           </nz-form-control>

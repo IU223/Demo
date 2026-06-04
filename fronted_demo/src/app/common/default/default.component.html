@@ -99,14 +99,8 @@
 <app-ai-panel></app-ai-panel>
 
 <!-- AI 浮动按钮 -->
-<div class="ai-fab"
-     *ngIf="!isAiPanelOpen"
-     (click)="toggleAiPanel()"
-     role="button"
-     tabindex="0"
-     aria-label="打开 AI 助手"
-     (keydown.enter)="toggleAiPanel()"
-     (keydown.space)="toggleAiPanel()">
+<div class="ai-fab" *ngIf="!isAiPanelOpen" (click)="toggleAiPanel()" role="button" tabindex="0" aria-label="打开 AI 助手"
+  (keydown.enter)="toggleAiPanel()" (keydown.space)="toggleAiPanel()">
   🤖
 </div>
 
@@ -236,7 +230,7 @@
           <nz-form-control [nzSpan]="15" [nzErrorTip]="newPwdErrorTpl">
             <nz-input-group [nzSuffix]="newPwdSuffix">
               <input nz-input [type]="newPwdVisible ? 'text' : 'password'" formControlName="newPassword"
-                placeholder="请输入新密码（至少6位）" autocomplete="new-password" />
+                placeholder="请输入新密码（至少5位）" autocomplete="new-password" />
             </nz-input-group>
             <ng-template #newPwdSuffix>
               <span nz-icon [nzType]="newPwdVisible ? 'eye' : 'eye-invisible'" (click)="newPwdVisible = !newPwdVisible"
@@ -246,7 +240,8 @@
             <!-- 多条件错误提示 -->
             <ng-template #newPwdErrorTpl let-control>
               <ng-container *ngIf="control.hasError('required')">请输入新密码</ng-container>
-              <ng-container *ngIf="control.hasError('minlength')">密码长度不能少于6位</ng-container>
+              <ng-container *ngIf="control.hasError('invalidLength')">密码长度需为 5-20 位</ng-container>
+              <ng-container *ngIf="control.hasError('insufficientCategories')">密码需包含字母、数字、特殊字符三类中的任意两类</ng-container>
             </ng-template>
           </nz-form-control>
         </nz-form-item>
@@ -267,6 +262,8 @@
             <!-- 多条件错误提示 -->
             <ng-template #confirmPwdErrorTpl let-control>
               <ng-container *ngIf="control.hasError('required')">请再次输入新密码</ng-container>
+              <ng-container *ngIf="control.hasError('invalidLength')">密码长度需为 5-20 位</ng-container>
+              <ng-container *ngIf="control.hasError('insufficientCategories')">密码需包含字母、数字、特殊字符三类中的任意两类</ng-container>
               <ng-container *ngIf="control.hasError('mismatch')">两次输入的密码不一致</ng-container>
             </ng-template>
           </nz-form-control>
@@ -281,8 +278,8 @@
           密码安全要求
         </div>
         <ul class="tips-list">
-          <li>密码长度至少 6 个字符</li>
-          <li>建议使用字母、数字和符号的组合</li>
+          <li>密码长度至少 5 个字符</li>
+          <li>建议使用字母、数字和符号的组合（至少包含两类）</li>
           <li>新密码不能与原密码相同</li>
         </ul>
       </div>

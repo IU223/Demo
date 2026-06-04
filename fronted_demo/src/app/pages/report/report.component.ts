@@ -133,11 +133,11 @@ export class ReportComponent implements OnInit {
   private initForm(): void {
     this.employeeForm = this.fb.group({
       employee_id: ['', {
-        validators: [Validators.required, Validators.pattern(/^[A-Z0-9]+$/)],
+        validators: [Validators.required, Validators.pattern(/^[A-Za-z0-9][A-Za-z0-9]{4,19}$/)],
         asyncValidators: [this.employeeIdExistsValidator()],
         updateOn: 'blur'
       }],
-      password: ['123456'],
+      password: ['password123'],
       name: ['', [Validators.required, Validators.pattern(/^[\u4e00-\u9fff\u3400-\u4dbf]+$/)]],
       name_a: ['', [Validators.required, Validators.pattern(/^[a-zA-Z\s]+$/)]],
       Sex: [true],
