@@ -1,3 +1,5 @@
+// src/interceptors/audit-log.interceptor.ts
+
 import {
   Interceptor,
   InvocationContext,
@@ -7,13 +9,12 @@ import {
   bind,
   asGlobalInterceptor,
 } from '@loopback/core';
-import {RestBindings, Request} from '@loopback/rest';
-import {AuditLog} from '../models';
-import {AuditLogRepository} from '../repositories';
+import { RestBindings, Request } from '@loopback/rest';
+import { AuditLog } from '../models';
+import { AuditLogRepository } from '../repositories';
 
 // ==================== 常量配置 ====================
 
-/** URL 路径前缀 → 资源类型映射 */
 const PATH_RESOURCE_MAP: Record<string, string> = {
   '/employees': 'Employee',
   '/roles': 'Role',
@@ -22,7 +23,6 @@ const PATH_RESOURCE_MAP: Record<string, string> = {
   '/regions': 'Region',
 };
 
-/** 资源类型 → Repository 绑定 key */
 const REPO_BINDINGS: Record<string, string> = {
   Employee: 'repositories.EmployeeRepository',
   Role: 'repositories.RoleRepository',
@@ -31,7 +31,6 @@ const REPO_BINDINGS: Record<string, string> = {
   Region: 'repositories.RegionRepository',
 };
 
-/** 跳过的路径（手动记录或无需记录） */
 const SKIP_PATHS = [
   '/audit-logs',
   '/login',
@@ -41,23 +40,13 @@ const SKIP_PATHS = [
   '/ping',
   '/explorer',
   '/openapi.json',
-  '/ai',              // AI 端点有独立的 chat_messages 记录，不走审计日志
+  '/ai',
 ];
 
-/** 需要脱敏的字段名 */
 const SENSITIVE_FIELDS = ['password'];
 
 // ==================== 拦截器 ====================
 
-/**
- * 全局审计日志拦截器
- *
- * 执行顺序说明：
- *   LoopBack 4 按 group 名字母序排列全局拦截器。
- *   'audit' < 'auth'，所以 AuditLogInterceptor 是**外层**，AuthInterceptor 是**内层**。
- *   流程：Audit.intercept() → next() → Auth.intercept() → next() → Controller
- *   在 Audit 的 finally 块中，Auth 已执行完毕，currentUser 已挂载到 request 上。
- */
 @bind(asGlobalInterceptor('audit'))
 export class AuditLogInterceptor implements Provider<Interceptor> {
   value(): Interceptor {
@@ -68,7 +57,6 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
     invocationCtx: InvocationContext,
     next: () => ValueOrPromise<InvocationResult>,
   ): Promise<InvocationResult> {
-    // ── 1. 获取 HTTP 请求对象 ──
     let req: Request | undefined;
     try {
       req = await invocationCtx.get(RestBindings.Http.REQUEST, {
@@ -79,12 +67,10 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
     }
     if (!req) return next();
 
-    // ── 2. 仅拦截写操作 ──
     if (!['POST', 'PATCH', 'PUT', 'DELETE'].includes(req.method)) {
       return next();
     }
 
-    // ── 3. 跳过特殊路径 ──
     if (
       req.path === '/' ||
       req.path === '' ||
@@ -93,13 +79,11 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
       return next();
     }
 
-    // ── 4. 解析资源类型和资源 ID ──
-    const {resourceType, resourceId} = this.parseResource(req.path);
+    const { resourceType, resourceId } = this.parseResource(req.path);
     if (!resourceType) {
       return next();
     }
 
-    // ── 5. 提前获取 AuditLogRepository（避免 finally 中异步解析） ──
     let auditLogRepo: AuditLogRepository;
     try {
       auditLogRepo = await invocationCtx.get<AuditLogRepository>(
@@ -109,17 +93,28 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
       return next();
     }
 
-    // ── 6. 获取变更前的数据快照（仅 UPDATE / DELETE） ──
+    // ── 6. ★ 修改：获取变更前的数据快照 ──
     let oldValue: string | undefined;
-    if (['PATCH', 'PUT', 'DELETE'].includes(req.method) && resourceId) {
-      oldValue = await this.fetchOldValue(
-        invocationCtx,
-        resourceType,
-        resourceId,
-      );
+
+    if (['PATCH', 'PUT', 'DELETE'].includes(req.method)) {
+      if (resourceId) {
+        // ── 单条操作：按 ID 获取快照 ──
+        oldValue = await this.fetchOldValue(
+          invocationCtx,
+          resourceType,
+          resourceId,
+        );
+      } else {
+        // ── ★ 新增：批量操作（无 ID）：按 where 条件获取所有受影响记录的快照 ──
+        oldValue = await this.fetchOldValueBatch(
+          invocationCtx,
+          resourceType,
+          req,
+        );
+      }
     }
 
-    // ── 7. 执行原始操作 ──
+    // ── 7~9 不变 ──
     let result: InvocationResult = undefined;
     let statusCode = 0;
     let errorMessage: string | undefined;
@@ -127,7 +122,6 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
     try {
       result = await next();
 
-      // 根据 HTTP 方法推断成功状态码
       if (req.method === 'POST') {
         statusCode = 200;
       } else if (resourceId) {
@@ -140,16 +134,13 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
       errorMessage = err.message;
       throw err;
     } finally {
-      // ── 8. 构建日志条目 ──
       const currentUser = (req as any).currentUser;
 
-      // CREATE 操作：从返回结果中提取新资源 ID
       let finalResourceId = resourceId;
       if (req.method === 'POST' && !finalResourceId && result) {
         finalResourceId = this.extractCreatedId(result) ?? null;
       }
 
-      // 批量 PATCH（无 ID）：捕获 where 条件
       if (['PATCH', 'PUT'].includes(req.method) && !resourceId) {
         try {
           const url = new URL(
@@ -161,7 +152,7 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
             finalResourceId = `[batch] ${whereParam}`;
           }
         } catch {
-          /* URL 解析失败，忽略 */
+          /* ignore */
         }
       }
 
@@ -177,7 +168,7 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
         request_method: req.method,
         request_path: req.path,
         ip_address: req.ip ?? req.socket?.remoteAddress,
-        old_value: oldValue,
+        old_value: oldValue,                          // ★ 现在批量操作也会有值
         new_value:
           ['POST', 'PATCH', 'PUT'].includes(req.method) && sanitizedBody
             ? JSON.stringify(sanitizedBody)
@@ -186,7 +177,6 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
         error_message: errorMessage,
       };
 
-      // ── 9. 异步写入日志（Fire-and-forget，不阻塞响应） ──
       auditLogRepo.create(logEntry as AuditLog).catch(err => {
         console.error('[AuditLog] 日志写入失败:', err);
       });
@@ -197,9 +187,6 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
 
   // ==================== 工具方法 ====================
 
-  /**
-   * 从 URL 路径解析资源类型和资源 ID
-   */
   private parseResource(path: string): {
     resourceType: string | null;
     resourceId: string | null;
@@ -209,24 +196,21 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
         const rest = path.substring(prefix.length);
 
         if (!rest || rest === '/') {
-          return {resourceType: type, resourceId: null};
+          return { resourceType: type, resourceId: null };
         }
 
         if (rest.startsWith('/')) {
           const segment = rest.substring(1).split('/')[0].split('?')[0];
           if (segment === 'count') {
-            return {resourceType: type, resourceId: null};
+            return { resourceType: type, resourceId: null };
           }
-          return {resourceType: type, resourceId: segment || null};
+          return { resourceType: type, resourceId: segment || null };
         }
       }
     }
-    return {resourceType: null, resourceId: null};
+    return { resourceType: null, resourceId: null };
   }
 
-  /**
-   * 根据 HTTP 方法判断操作类型
-   */
   private determineAction(method: string, hasId: boolean): string {
     switch (method) {
       case 'POST':
@@ -242,13 +226,10 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
     }
   }
 
-  /**
-   * 脱敏处理：将敏感字段值替换为 '******'
-   */
   private sanitize(data: any): any {
     if (!data || typeof data !== 'object') return data;
 
-    const copy = Array.isArray(data) ? [...data] : {...data};
+    const copy = Array.isArray(data) ? [...data] : { ...data };
     for (const field of SENSITIVE_FIELDS) {
       if (field in copy) {
         copy[field] = '******';
@@ -257,9 +238,6 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
     return copy;
   }
 
-  /**
-   * 从 CREATE 操作的返回值中提取新资源的主键 ID
-   */
   private extractCreatedId(result: any): string | undefined {
     if (!result || typeof result !== 'object') return undefined;
     return (
@@ -272,9 +250,7 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
     );
   }
 
-  /**
-   * 获取资源被修改/删除前的数据快照
-   */
+  /** 单条操作：按 ID 获取变更前快照 */
   private async fetchOldValue(
     ctx: InvocationContext,
     resourceType: string,
@@ -298,6 +274,53 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
       const entity = await repo.findById(id);
       return JSON.stringify(this.sanitize(entity));
     } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * ★ 新增：批量操作 — 按 where 条件获取所有受影响记录的快照
+   *
+   * 解析 URL 中的 where 参数，查询所有匹配的记录作为变更前快照。
+   * 对于批量软删除（PATCH /employees?where={employee_id:{inq:[...]}}），
+   * 这将捕获所有被"删除"的员工数据。
+   */
+  private async fetchOldValueBatch(
+    ctx: InvocationContext,
+    resourceType: string,
+    req: Request,
+  ): Promise<string | undefined> {
+    const repoKey = REPO_BINDINGS[resourceType];
+    if (!repoKey) return undefined;
+
+    try {
+      const repo = await ctx.get<any>(repoKey);
+
+      // 从 URL query 中解析 where 参数
+      const url = new URL(
+        req.url,
+        `http://${req.headers.host || 'localhost'}`,
+      );
+      const whereParam = url.searchParams.get('where');
+      if (!whereParam) return undefined;
+
+      const where = JSON.parse(whereParam);
+
+      // 查询所有匹配的记录（限制最多 100 条，防止数据量过大）
+      const entities = await repo.find({ where, limit: 100 });
+
+      if (!entities || entities.length === 0) return undefined;
+
+      // 对每条记录做脱敏处理
+      const sanitizedEntities = entities.map((e: any) => this.sanitize(e));
+
+      // 如果只有一条，直接返回对象；多条则返回数组
+      if (sanitizedEntities.length === 1) {
+        return JSON.stringify(sanitizedEntities[0]);
+      }
+      return JSON.stringify(sanitizedEntities);
+    } catch (err) {
+      console.warn('[AuditLog] 批量获取变更前快照失败:', err);
       return undefined;
     }
   }

@@ -97,7 +97,7 @@ export class AuditLogComponent implements OnInit {
     private auditLogService: AuditLogService,
     private authService: AuthService,
     private message: NzMessageService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // 检测当前用户身份
@@ -271,8 +271,8 @@ export class AuditLogComponent implements OnInit {
       const newKeys = Object.keys(newObj);
       for (const key of newKeys) {
         if (key.startsWith('$')) continue;
-        const nv = this.formatValue(newObj[key]);
-        const ov = oldObj ? this.formatValue(oldObj[key]) : '-';
+        const nv = this.formatValue(newObj[key], key);
+        const ov = oldObj ? this.formatValue(oldObj[key], key) : '-';
         rows.push({ field: key, oldVal: ov, newVal: nv, changed: ov !== nv });
       }
       return rows;
@@ -284,7 +284,7 @@ export class AuditLogComponent implements OnInit {
         .filter(k => !k.startsWith('$'))
         .map(key => ({
           field: key,
-          oldVal: this.formatValue(oldObj[key]),
+          oldVal: this.formatValue(oldObj[key], key),
           newVal: '(已删除)',
           changed: true,
         }));
@@ -306,10 +306,20 @@ export class AuditLogComponent implements OnInit {
     }
   }
 
-  private formatValue(val: any): string {
+  private formatValue(val: any, field?: string): string {
     if (val === undefined) return '-';
     if (val === null) return 'null';
-    if (typeof val === 'boolean') return val ? 'true' : 'false';
+
+    // 根据字段名对布尔值做友好显示
+    if (typeof val === 'boolean') {
+      if (field === 'Sex') return val ? '男' : '女';
+      if (field === 'status') return val ? '在职' : '离职';
+      if (field === 'hasaccess') return val ? '有权限' : '无权限';
+      if (field === 'is_super_admin') return val ? '是' : '否';
+      if (field === 'is_deleted') return val ? '已删除' : '正常';
+      return val ? 'true' : 'false';
+    }
+
     if (typeof val === 'object') return JSON.stringify(val);
     return String(val);
   }
@@ -340,7 +350,7 @@ export class AuditLogComponent implements OnInit {
     if (!this.parsedNewValue) return [];
     return Object.keys(this.parsedNewValue)
       .filter(k => !k.startsWith('$'))
-      .map(k => ({ key: k, value: this.formatValue(this.parsedNewValue![k]) }));
+      .map(k => ({ key: k, value: this.formatValue(this.parsedNewValue![k], k) }));
   }
 
   /** 日期禁用：开始不能晚于结束 */

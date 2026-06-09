@@ -1090,7 +1090,10 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     const up = 100 - mp - fp;
 
     this.genderEchart.setOption({
-      tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+      tooltip: {
+        trigger: 'item', formatter: '{b}: {c} ({d}%)', appendTo: document.body,   // ★ tooltip 脱离图表容器，挂载到 body
+        confine: false,
+      },
       legend: {
         orient: 'vertical',
         right: '-4%',
