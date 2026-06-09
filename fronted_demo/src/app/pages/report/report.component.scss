@@ -133,6 +133,7 @@
   align-items: center;
   gap: 8px;
   user-select: none;
+  flex-wrap: nowrap;
 }
 
 /* 通用页码按钮 */
@@ -192,6 +193,9 @@
   font-weight: 500;
   padding: 0 14px;
   background: #fafafa;
+  white-space: nowrap;
+  /* ★ 新增：文字不换行 */
+  flex-shrink: 0;
 }
 
 /* 省略号 */

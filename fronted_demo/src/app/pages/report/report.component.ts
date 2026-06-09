@@ -183,16 +183,31 @@ export class ReportComponent implements OnInit {
   }
 
   private getDefaultEmployeeData(): any {
+    // return {
+    //   employee_id: '',
+    //   password: 'password123',
+    //   name: '',
+    //   name_a: '',
+    //   Sex: true,
+    //   dept_desc: null,
+    //   region_name: null,
+    //   plant_name: null,
+    //   role_id: null,
+    //   hire_date: new Date(),
+    //   resin_date: null,
+    //   status: true,
+    //   hasaccess: true
+    // };
     return {
-      employee_id: '',
-      password: '123456',
-      name: '',
-      name_a: '',
+      employee_id: 'test01',
+      password: 'password123',
+      name: '测试',
+      name_a: 'test',
       Sex: true,
-      dept_desc: null,
-      region_name: null,
-      plant_name: null,
-      role_id: null,
+      dept_desc: 'IT Department',
+      region_name: 'WZS',
+      plant_name: 'WZS-P3',
+      role_id: 3,
       hire_date: new Date(),
       resin_date: null,
       status: true,

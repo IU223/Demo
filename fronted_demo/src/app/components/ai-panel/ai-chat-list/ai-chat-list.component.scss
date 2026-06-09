@@ -1,3 +1,5 @@
+// src/app/components/ai-panel/ai-chat-list/ai-chat-list.component.scss
+
 :host {
   display: flex;
   flex-direction: column;
@@ -57,7 +59,7 @@
     margin: 0 0 16px;
   }
 
-  // ★ 新增：嵌入的模板栏在空状态中居中显示
+  // ★ 嵌入的模板栏在空状态中居中显示
   ::ng-deep app-ai-template-bar {
     width: 100%;
     max-width: 360px;
@@ -69,7 +71,7 @@
     }
 
     .template-bar-header {
-      display: none; // 隐藏 "快速分析" 标题（空状态的 hint 已替代）
+      display: none;
     }
 
     .template-list {
@@ -134,6 +136,7 @@
   font-size: 14px;
   line-height: 1.6;
   word-break: break-word;
+  overflow-x: auto; // ★ 新增：允许气泡内容横向滚动（表格超宽时）
 }
 
 .ai-bubble {
@@ -319,13 +322,15 @@
     }
   }
 
+  // ==================== ★ 修复：表格样式 ====================
   table {
-    width: 100%;
+    width: max-content; // ★ 让表格按内容自动撑开宽度
+    min-width: 100%; // ★ 至少占满容器宽度
     border-collapse: collapse;
     margin: 8px 0;
     font-size: 13px;
-    overflow-x: auto;
-    display: block;
+    // ★ 删除了 display: block — 这是导致表格格式无法显示的根因
+    // ★ 删除了 overflow-x: auto — 横向滚动由父级 .message-bubble 处理
   }
 
   th,
@@ -344,6 +349,11 @@
 
   tr:nth-child(even) td {
     background: #fafafa;
+  }
+
+  // ★ 新增：表格行 hover 效果，提升可读性
+  tr:hover td {
+    background: #e6f7ff;
   }
 
   hr {
