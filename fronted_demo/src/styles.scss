@@ -1,1 +1,60 @@
 /* You can add global styles to this file, and also import other style files */
+
+// ═══════════════════════════════════════════════════════════
+// ★ 全局 Markdown 表格样式（修复 Angular ViewEncapsulation
+//   导致 [innerHTML] 插入的 <table> 无法匹配组件内 CSS 的问题）
+// ═══════════════════════════════════════════════════════════
+.markdown-body {
+
+  // ★ 表格滚动容器：让 table 自身变成 block 并支持横向滚动
+  table {
+    display: block; // ★ 让 table 变为块级元素才能触发 overflow-x 滚动
+    width: max-content; // ★ 按内容自动撑开宽度
+    max-width: 100%; // ★ 限制最大宽度为父容器宽度
+    overflow-x: auto; // ★ 超出时显示水平滚动条
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 13px;
+
+    // ★ 自定义滚动条样式（让滚动条更美观）
+    &::-webkit-scrollbar {
+      height: 6px; // ★ 滚动条高度
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f0f0f0; // ★ 滚动条轨道背景色
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #c0c0c0; // ★ 滚动条滑块颜色
+      border-radius: 3px;
+
+      &:hover {
+        background: #999; // ★ 悬停时滑块颜色加深
+      }
+    }
+  }
+
+  th,
+  td {
+    border: 1px solid #e8e8e8;
+    padding: 6px 10px;
+    text-align: left;
+    white-space: nowrap; // ★ 单元格内容不换行，确保表格横向展开
+  }
+
+  th {
+    background: #fafafa;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.85);
+  }
+
+  tr:nth-child(even) td {
+    background: #fafafa;
+  }
+
+  tr:hover td {
+    background: #e6f7ff;
+  }
+}

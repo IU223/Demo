@@ -136,7 +136,7 @@
   font-size: 14px;
   line-height: 1.6;
   word-break: break-word;
-  overflow-x: auto; // ★ 新增：允许气泡内容横向滚动（表格超宽时）
+  overflow-x: auto;
 }
 
 .ai-bubble {
@@ -203,6 +203,10 @@
 }
 
 // ==================== Markdown 渲染样式 ====================
+// ★ 注意：table / th / td / tr 样式已移至全局 styles.scss
+//   解决 Angular ViewEncapsulation 导致 [innerHTML] 插入的
+//   <table> 无法匹配组件内 CSS 选择器的问题
+// ===========================================================
 .markdown-body {
   p {
     margin: 0 0 8px;
@@ -322,39 +326,12 @@
     }
   }
 
-  // ==================== ★ 修复：表格样式 ====================
-  table {
-    width: max-content; // ★ 让表格按内容自动撑开宽度
-    min-width: 100%; // ★ 至少占满容器宽度
-    border-collapse: collapse;
-    margin: 8px 0;
-    font-size: 13px;
-    // ★ 删除了 display: block — 这是导致表格格式无法显示的根因
-    // ★ 删除了 overflow-x: auto — 横向滚动由父级 .message-bubble 处理
-  }
-
-  th,
-  td {
-    border: 1px solid #e8e8e8;
-    padding: 6px 10px;
-    text-align: left;
-    white-space: nowrap;
-  }
-
-  th {
-    background: #fafafa;
-    font-weight: 600;
-    color: rgba(0, 0, 0, 0.85);
-  }
-
-  tr:nth-child(even) td {
-    background: #fafafa;
-  }
-
-  // ★ 新增：表格行 hover 效果，提升可读性
-  tr:hover td {
-    background: #e6f7ff;
-  }
+  // ★★★ 以下表格样式已移至 src/styles.scss（全局） ★★★
+  // 原因：Angular ViewEncapsulation.Emulated 会给组件内 CSS 选择器
+  //       自动添加 [_ngcontent-xxx] 属性限制，但 [innerHTML] 动态
+  //       插入的 <table> 元素不带该属性，导致样式无法匹配。
+  //       移至全局样式后不受 ViewEncapsulation 影响。
+  // ════════════════════════════════════════════════════════
 
   hr {
     border: none;
