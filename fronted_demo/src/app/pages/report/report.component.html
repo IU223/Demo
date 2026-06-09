@@ -71,6 +71,24 @@
           *ngIf="canReportDelete">
           <span nz-icon nzType="delete"></span>删除
         </button>
+        <!-- 导出按钮（下拉选择格式） -->
+        <button nz-button nzType="default" nz-dropdown [nzDropdownMenu]="exportMenu"
+          [nzLoading]="exporting" [disabled]="listOfData.length === 0">
+          <span nz-icon nzType="download"></span>导出
+          <span nz-icon nzType="down"></span>
+        </button>
+        <nz-dropdown-menu #exportMenu="nzDropdownMenu">
+          <ul nz-menu>
+            <li nz-menu-item (click)="onExport('xlsx')">
+              <span nz-icon nzType="file-excel" nzTheme="outline" style="color: #52c41a;"></span>
+              导出为 Excel（.xlsx）
+            </li>
+            <li nz-menu-item (click)="onExport('csv')">
+              <span nz-icon nzType="file-text" nzTheme="outline" style="color: #1890ff;"></span>
+              导出为 CSV（.csv）
+            </li>
+          </ul>
+        </nz-dropdown-menu>
       </div>
     </div>
 

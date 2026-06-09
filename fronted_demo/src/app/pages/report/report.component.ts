@@ -14,12 +14,14 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
+import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
 
 import { EmployeeService } from '../../services/employee.service';
 import { Employee, EmployeeFilter, SelectOption, RoleOption } from '../../models/employee';
 import { forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { PermissionService, Permission } from '../../services/permission.service';
+import { ExportService } from '../../services/export.service';
 @Component({
   selector: 'app-report',
   standalone: true,
@@ -39,7 +41,8 @@ import { PermissionService, Permission } from '../../services/permission.service
     NzTagModule,
     NzFormModule,
     NzSwitchModule,
-    NzRadioModule
+    NzRadioModule,
+    NzDropDownModule
   ],
   templateUrl: './report.component.html',
   styleUrls: ['./report.component.scss']
@@ -100,9 +103,55 @@ export class ReportComponent implements OnInit {
     private modal: NzModalService,
     private fb: FormBuilder,
     private permService: PermissionService,
+    private exportService: ExportService,
   ) {
     this.initForm();
     this.initViewForm(); // ← 新增
+  }
+
+  // 导出状态
+  exporting = false;
+
+  /**
+   * 导出当前筛选条件下的所有员工数据
+   * @param format 'xlsx' | 'csv'
+   */
+  onExport(format: 'xlsx' | 'csv'): void {
+    this.exporting = true;
+
+    const filter: EmployeeFilter = {
+      startDate: this.startDate,
+      endDate: this.endDate,
+      area: this.selectedArea,
+      factory: this.selectedFactory,
+      searchText: this.searchText,
+      skip: 0,
+      limit: 100000,
+    };
+
+    this.employeeService.getEmployees(filter).subscribe({
+      next: (res) => {
+        const data = res.data;
+        if (!data || data.length === 0) {
+          this.message.warning('当前筛选条件下没有数据可导出');
+          this.exporting = false;
+          return;
+        }
+
+        const filenameParts = ['员工数据'];
+        if (this.selectedArea && this.selectedArea !== '1') filenameParts.push(this.selectedArea);
+        if (this.selectedFactory && this.selectedFactory !== '1') filenameParts.push(this.selectedFactory);
+
+        this.exportService.exportEmployees(data, format, filenameParts.join('_'));
+        this.message.success(`成功导出 ${data.length} 条数据（${format.toUpperCase()} 格式）`);
+        this.exporting = false;
+      },
+      error: (err) => {
+        console.error('导出失败:', err);
+        this.message.error('导出失败，请稍后重试');
+        this.exporting = false;
+      }
+    });
   }
 
   ngOnInit(): void {
