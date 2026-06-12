@@ -21,7 +21,7 @@ import { PermissionService, Permission } from '../../services/permission.service
 import { AuthService } from '../../services/auth.service';
 import { RoleDetail, PageAuthField, PagePermRow } from '../../models/role';
 
-const READ_ONLY_PAGES: string[] = ['首页', '日志页面'];
+const READ_ONLY_PAGES: string[] = ['首页', '权限页面', '日志页面'];
 
 @Component({
   selector: 'app-permissions',

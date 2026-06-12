@@ -14,19 +14,38 @@ export interface LoginResponse {
     employee_id: string;
     name?: string;
     role_id?: number;
-    is_super_admin?: boolean;   // ★ Task 8 新增
+    is_super_admin?: boolean;
+    home_page_auth?: number;
+    report_page_auth?: number;
+    auth_page_auth?: number;
+    log_page_auth?: number;
   };
 }
+
+/** 页面权限字段名 */
+export type PageAuthField = 'home_page_auth' | 'report_page_auth' | 'auth_page_auth' | 'log_page_auth';
 
 /** JWT Payload 中的字段（与后端 JwtPayload 对应） */
 export interface TokenPayload {
   employee_id: string;
   name?: string;
   role_id?: number;
-  is_super_admin?: boolean;   // ★ Task 8 新增
+  is_super_admin?: boolean;
+  home_page_auth?: number;
+  report_page_auth?: number;
+  auth_page_auth?: number;
+  log_page_auth?: number;
   iat: number;
   exp: number;
 }
+
+/** 页面权限位掩码常量 */
+export const PagePermission = {
+  READ: 1,
+  CREATE: 2,
+  DELETE: 4,
+  UPDATE: 8,
+} as const;
 
 // ★ 新增：修改密码请求
 export interface ChangePasswordRequest {
@@ -118,9 +137,26 @@ export class AuthService {
     return raw ? JSON.parse(raw) : null;
   }
 
-  // ★ Task 8 新增：快捷判断当前用户是否为超级管理员
   isSuperAdmin(): boolean {
     const user = this.getCurrentUser();
     return user?.is_super_admin === true;
+  }
+
+  /** ★ 从 JWT Token 中获取页面权限值（同步，无需 API 调用） */
+  getPageAuthFromToken(field: PageAuthField): number {
+    const payload = this.decodeToken();
+    if (!payload) return 0;
+    return payload[field] ?? 0;
+  }
+
+  /** ★ 判断当前用户对某页面是否有某项权限（位运算） */
+  hasPagePermission(field: PageAuthField, perm: number): boolean {
+    return (this.getPageAuthFromToken(field) & perm) === perm;
+  }
+
+  /** ★ 判断当前用户对某页面是否有查看权限 */
+  canViewPage(field: PageAuthField): boolean {
+    if (this.isSuperAdmin()) return true;
+    return this.hasPagePermission(field, PagePermission.READ);
   }
 }

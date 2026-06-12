@@ -12,6 +12,7 @@ export const routes: Routes = [
   {
     path: 'default', component: DefaultComponent,
     canActivate: [AuthGuard],
+    canActivateChild: [AuthGuard],
     children: [
       { path: 'welcome', component: WelcomeComponent },
       { path: 'report', component: ReportComponent },

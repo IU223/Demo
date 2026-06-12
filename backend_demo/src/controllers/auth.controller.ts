@@ -111,7 +111,6 @@ export class AuthController {
     });
 
     if (!employee || !employee.password) {
-      // ★ 登录失败日志
       this.writeAuditLog({
         operator_id: username,
         operator_name: undefined,
@@ -130,7 +129,27 @@ export class AuthController {
       throw Object.assign(new Error('用户名或密码错误'), { statusCode: 401 });
     }
 
-    // 2. bcrypt 比对密码
+    // 2. 检查 hasaccess 登录系统权限
+    if (employee.hasaccess === false) {
+      this.writeAuditLog({
+        operator_id: username,
+        operator_name: employee.name,
+        action: 'LOGIN_FAILED',
+        resource_type: 'Session',
+        resource_id: undefined,
+        request_method: 'POST',
+        request_path: '/login',
+        ip_address: ip,
+        old_value: undefined,
+        new_value: JSON.stringify({ username }),
+        status_code: 403,
+        error_message: '该用户没有登录系统的权限',
+      });
+
+      throw Object.assign(new Error('您没有登录此系统的权限，请联系管理员'), { statusCode: 403 });
+    }
+
+    // 3. bcrypt 比对密码
     const isMatch = await comparePassword(password, employee.password);
     if (!isMatch) {
       // ★ 登录失败日志
@@ -152,23 +171,35 @@ export class AuthController {
       throw Object.assign(new Error('用户名或密码错误'), { statusCode: 401 });
     }
 
-    // 3. 查询角色获取 is_super_admin
+    // 4. 查询角色获取 is_super_admin 和页面权限
     let isSuperAdmin = false;
+    let homePageAuth = 0;
+    let reportPageAuth = 0;
+    let authPageAuth = 0;
+    let logPageAuth = 0;
     if (employee.role_id != null) {
       try {
         const role = await this.roleRepository.findById(employee.role_id);
         isSuperAdmin = role?.is_super_admin ?? false;
+        homePageAuth = role?.home_page_auth ?? 0;
+        reportPageAuth = role?.report_page_auth ?? 0;
+        authPageAuth = role?.auth_page_auth ?? 0;
+        logPageAuth = role?.log_page_auth ?? 0;
       } catch {
-        // 角色不存在，默认非超级管理员
+        // 角色不存在，默认非超级管理员，无页面权限
       }
     }
 
-    // 4. 签发 JWT
+    // 5. 签发 JWT（包含页面权限位掩码）
     const token = generateToken({
       employee_id: employee.employee_id,
       name: employee.name,
       role_id: employee.role_id,
       is_super_admin: isSuperAdmin,
+      home_page_auth: homePageAuth,
+      report_page_auth: reportPageAuth,
+      auth_page_auth: authPageAuth,
+      log_page_auth: logPageAuth,
     });
 
     // ★ 登录成功日志
@@ -199,6 +230,10 @@ export class AuthController {
         name: employee.name,
         role_id: employee.role_id,
         is_super_admin: isSuperAdmin,
+        home_page_auth: homePageAuth,
+        report_page_auth: reportPageAuth,
+        auth_page_auth: authPageAuth,
+        log_page_auth: logPageAuth,
       },
     };
   }

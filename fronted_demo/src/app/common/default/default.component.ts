@@ -24,7 +24,6 @@ import { AuthService } from '../../services/auth.service';
 import { EmployeeService } from '../../services/employee.service';
 import { SelectOption, RoleOption } from '../../models/employee';
 import { forkJoin, of } from 'rxjs';
-import { PermissionService, Permission } from '../../services/permission.service';
 // AI 面板
 import { AiPanelComponent } from '../../components/ai-panel/ai-panel.component';
 import { AiPanelService } from '../../services/ai-panel.service';
@@ -83,11 +82,12 @@ export class DefaultComponent implements OnInit, OnDestroy {
   oldPwdVisible = false;
   newPwdVisible = false;
   confirmPwdVisible = false;
-  // 侧边栏菜单权限控制
-  showHomeMenu = true;
-  showReportMenu = true;
-  showPermMenu = true;
+  // 侧边栏菜单权限控制（从 Token 同步读取，默认为 false）
+  showHomeMenu = false;
+  showReportMenu = false;
+  showPermMenu = false;
   showAuditLogMenu = false;
+  permissionsLoaded = false;
 
   // AI 面板状态
   isAiPanelOpen = false;
@@ -99,7 +99,6 @@ export class DefaultComponent implements OnInit, OnDestroy {
     private router: Router,
     private fb: FormBuilder,
     private message: NzMessageService,
-    private permService: PermissionService,
     private aiPanelService: AiPanelService,
   ) {
     this.initProfileForm();
@@ -124,34 +123,24 @@ export class DefaultComponent implements OnInit, OnDestroy {
     this.aiPanelService.toggle();
   }
 
-  // ★ 新增方法
+  // ★ 从 JWT Token 同步读取页面权限（无竞态，零延迟）
   private loadMenuPermissions(): void {
-    // ★ 超级管理员直接放行
-    const user = this.authService.getCurrentUser();
-    if (user?.is_super_admin) {
+    if (this.authService.isSuperAdmin()) {
       this.showHomeMenu = true;
       this.showReportMenu = true;
       this.showPermMenu = true;
       this.showAuditLogMenu = true;
+      this.permissionsLoaded = true;
       return;
     }
 
-    this.permService.getCurrentUserPermissions().subscribe({
-      next: (role) => {
-        if (role) {
-          this.showHomeMenu = this.permService.hasPermission(role.home_page_auth ?? 0, Permission.READ);
-          this.showReportMenu = this.permService.hasPermission(role.report_page_auth ?? 0, Permission.READ);
-          this.showPermMenu = this.permService.hasPermission(role.auth_page_auth ?? 0, Permission.READ);
-          this.showAuditLogMenu = this.permService.hasPermission(role.log_page_auth ?? 0, Permission.READ);
-        }
+    this.showHomeMenu = this.authService.canViewPage('home_page_auth');
+    this.showReportMenu = this.authService.canViewPage('report_page_auth');
+    this.showPermMenu = this.authService.canViewPage('auth_page_auth');
+    this.showAuditLogMenu = this.authService.canViewPage('log_page_auth');
+    this.permissionsLoaded = true;
 
-        // ★ 加载完权限后，检查当前页面是否有权访问
-        this.checkCurrentRoutePermission();
-      },
-      error: () => {
-        console.warn('菜单权限加载失败，默认显示全部菜单');
-      }
-    });
+    this.checkCurrentRoutePermission();
   }
 
   /**

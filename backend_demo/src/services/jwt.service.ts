@@ -9,6 +9,11 @@ export interface JwtPayload {
   name?: string;
   role_id?: number;
   is_super_admin?: boolean;   // ★ Task 3 新增
+  // ★ 页面权限位掩码（从角色表同步到 Token）
+  home_page_auth?: number;
+  report_page_auth?: number;
+  auth_page_auth?: number;
+  log_page_auth?: number;
   [key: string]: unknown;
 }
 

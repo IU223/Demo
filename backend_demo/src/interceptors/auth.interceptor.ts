@@ -18,6 +18,10 @@ export interface CurrentUserProfile {
   name?: string;
   role_id?: number;
   is_super_admin?: boolean;
+  home_page_auth?: number;
+  report_page_auth?: number;
+  auth_page_auth?: number;
+  log_page_auth?: number;
 }
 
 @bind(asGlobalInterceptor('auth'))
@@ -75,6 +79,10 @@ export class AuthInterceptor implements Provider<Interceptor> {
           name: decoded.name,
           role_id: decoded.role_id,
           is_super_admin: decoded.is_super_admin ?? false,
+          home_page_auth: decoded.home_page_auth,
+          report_page_auth: decoded.report_page_auth,
+          auth_page_auth: decoded.auth_page_auth,
+          log_page_auth: decoded.log_page_auth,
         } as CurrentUserProfile;
 
       } catch (err) {

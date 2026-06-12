@@ -3,7 +3,6 @@ import { NonNullableFormBuilder, FormGroup, Validators, ReactiveFormsModule, Abs
 import { HttpClientModule } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { PermissionService, Permission } from '../../services/permission.service';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzIconModule } from 'ng-zorro-antd/icon';
@@ -49,18 +48,11 @@ export class LoginComponent implements OnInit {
     private fb: NonNullableFormBuilder,
     private authService: AuthService,
     private router: Router,
-    private permService: PermissionService,  // ★ 新增
     private message: NzMessageService,
   ) { }
 
   ngOnInit(): void {
-    // 如果已登录，直接跳转
-    if (this.authService.isTokenValid()) {
-      // ★ 也改为动态跳转
-      this.navigateToFirstAllowedPage();
-      return;
-    }
-
+    // 先初始化表单（避免模板 [formGroup] 绑定到 undefined）
     this.validateForm = this.fb.group({
       username: ['', [Validators.required, this.usernameValidator]],
       password: ['', [Validators.required, this.passwordValidator]],
@@ -72,6 +64,12 @@ export class LoginComponent implements OnInit {
       newPassword: ['', [Validators.required, this.passwordValidator]],
       confirmPassword: ['', [Validators.required, this.passwordValidator]],
     });
+
+    // 如果已登录，直接跳转
+    if (this.authService.isTokenValid()) {
+      this.navigateToFirstAllowedPage();
+      return;
+    }
   }
 
   // 用户名校验：非空、长度 5-20、以字母或数字开头
@@ -123,34 +121,7 @@ export class LoginComponent implements OnInit {
   }
 
   private navigateToFirstAllowedPage(): void {
-    if (this.authService.isSuperAdmin()) {
-      this.router.navigate(['/default/welcome']);
-      return;
-    }
-    // 普通用户：查询角色权限后决定跳转目标
-    this.permService.getCurrentUserPermissions().subscribe({
-      next: (role) => {
-        if (role) {
-          if (this.permService.hasPermission(role.home_page_auth ?? 0, Permission.READ)) {
-            this.router.navigate(['/default/welcome']);
-          } else if (this.permService.hasPermission(role.report_page_auth ?? 0, Permission.READ)) {
-            this.router.navigate(['/default/report']);
-          } else if (this.permService.hasPermission(role.auth_page_auth ?? 0, Permission.READ)) {
-            this.router.navigate(['/default/permissions']);
-          } else {
-            // 所有页面都没权限
-            this.router.navigate(['/default/welcome']);
-          }
-        } else {
-          // 没有角色信息，默认跳首页
-          this.router.navigate(['/default/welcome']);
-        }
-      },
-      error: () => {
-        // 查询失败，默认跳首页
-        this.router.navigate(['/default/welcome']);
-      }
-    });
+    this.router.navigate(['/default/welcome']);
   }
 
   /** 点击"忘记密码？" → 重置表单 → 打开弹框 */
