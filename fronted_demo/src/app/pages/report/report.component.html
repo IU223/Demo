@@ -4,18 +4,10 @@
   <div class="filter-section">
     <div class="filter-row">
       <!-- 时间范围 -->
-      <!-- 时间范围 -->
       <div class="filter-item">
-        <label>时间</label>
-        <div class="date-range">
-          <nz-date-picker [(ngModel)]="startDate" nzPlaceHolder="开始日期" [nzDisabledDate]="disabledStartDate"
-            nzFormat="yyyy-MM-dd">
-          </nz-date-picker>
-          <span class="range-separator">至</span>
-          <nz-date-picker [(ngModel)]="endDate" nzPlaceHolder="结束日期" [nzDisabledDate]="disabledEndDate"
-            nzFormat="yyyy-MM-dd">
-          </nz-date-picker>
-        </div>
+        <label>时间范围</label>
+        <nz-range-picker [(ngModel)]="filterDateRange" nzFormat="yyyy-MM-dd" [nzPlaceHolder]="['开始日期', '结束日期']"
+          style="width: 260px;"></nz-range-picker>
       </div>
 
       <!-- 地区选择 -->
@@ -72,8 +64,8 @@
           <span nz-icon nzType="delete"></span>删除
         </button>
         <!-- 导出按钮（下拉选择格式） -->
-        <button nz-button nzType="default" nz-dropdown [nzDropdownMenu]="exportMenu"
-          [nzLoading]="exporting" [disabled]="listOfData.length === 0">
+        <button nz-button nzType="default" nz-dropdown [nzDropdownMenu]="exportMenu" [nzLoading]="exporting"
+          [disabled]="listOfData.length === 0">
           <span nz-icon nzType="download"></span>导出
           <span nz-icon nzType="down"></span>
         </button>

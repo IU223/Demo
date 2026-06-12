@@ -59,14 +59,8 @@
         <div class="filter-bar">
           <div class="filter-group">
             <label>日期</label>
-            <div class="date-range-wrapper">
-              <nz-date-picker [(ngModel)]="startDate" nzPlaceHolder="请选择日期" [nzDisabledDate]="disabledStartDate"
-                nzFormat="yyyy-MM-dd" nzSize="small">
-              </nz-date-picker>
-              <nz-date-picker [(ngModel)]="endDate" nzPlaceHolder="请选择日期" [nzDisabledDate]="disabledEndDate"
-                nzFormat="yyyy-MM-dd" nzSize="small">
-              </nz-date-picker>
-            </div>
+            <nz-range-picker [(ngModel)]="filterDateRange" nzFormat="yyyy-MM-dd" [nzPlaceHolder]="['开始日期', '结束日期']"
+              nzSize="small" style="width: 240px;"></nz-range-picker>
           </div>
           <div class="filter-group">
             <label>厂区</label>

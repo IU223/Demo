@@ -49,30 +49,23 @@ import { ExportService } from '../../services/export.service';
 })
 export class ReportComponent implements OnInit {
 
-  // ===================== 筛选条件 =====================
-  startDate: Date | null = null;
-  endDate: Date | null = null;
+  filterDateRange: Date[] = [];
   selectedArea: string = '1';
   selectedFactory: string = '1';
   searchText: string = '';
-
-  // ===================== 分页 =====================
   pageIndex = 1;
   pageSize = 10;
   total = 0;
 
-  // ===================== 表格数据 =====================
   listOfData: Employee[] = [];
   loading = false;
   checked = false;
   indeterminate = false;
   setOfCheckedId = new Set<string>();
 
-  // ===================== 筛选栏下拉选项（含"全部"） =====================
   areaOptions: SelectOption[] = [{ label: '全部', value: '1' }];
   factoryOptions: SelectOption[] = [{ label: '全部', value: '1' }];
 
-  // ===================== 对话框 =====================
   isModalVisible = false;
   isEditMode = false;
   modalTitle = '新增';
@@ -93,7 +86,6 @@ export class ReportComponent implements OnInit {
   // ===================== 批量新增 =====================
   batchEmployees: any[] = [];
   currentBatchIndex: number = 0;
-  // ★ 报表页按钮权限
   canReportCreate = true;
   canReportDelete = true;
   canReportUpdate = true;
@@ -106,7 +98,7 @@ export class ReportComponent implements OnInit {
     private exportService: ExportService,
   ) {
     this.initForm();
-    this.initViewForm(); // ← 新增
+    this.initViewForm();
   }
 
   // 导出状态
@@ -120,8 +112,8 @@ export class ReportComponent implements OnInit {
     this.exporting = true;
 
     const filter: EmployeeFilter = {
-      startDate: this.startDate,
-      endDate: this.endDate,
+      startDate: this.filterDateRange?.[0] ?? null,
+      endDate: this.filterDateRange?.[1] ?? null,
       area: this.selectedArea,
       factory: this.selectedFactory,
       searchText: this.searchText,
@@ -160,10 +152,10 @@ export class ReportComponent implements OnInit {
     this.loadDepartments();
     this.loadRoles();
     this.loadData();
-    this.loadReportPermissions();  // ★ 新增
+    this.loadReportPermissions();
   }
 
-  // ★ 新增方法
+
   private loadReportPermissions(): void {
     this.permService.getCurrentUserPermissions().subscribe({
       next: (role) => {
@@ -279,9 +271,6 @@ export class ReportComponent implements OnInit {
     });
   }
 
-  /**
-   * ★ 加载部门列表（从 API 获取）
-   */
   loadDepartments(): void {
     this.employeeService.getDepartments().subscribe({
       next: (depts) => {
@@ -294,6 +283,7 @@ export class ReportComponent implements OnInit {
       }
     });
   }
+
   loadRoles(): void {
     this.employeeService.getRoles().subscribe({
       next: (roles) => {
@@ -317,14 +307,15 @@ export class ReportComponent implements OnInit {
   loadData(): void {
     this.loading = true;
     const filter: EmployeeFilter = {
-      startDate: this.startDate,
-      endDate: this.endDate,
+      startDate: this.filterDateRange?.[0] ?? null,
+      endDate: this.filterDateRange?.[1] ?? null,
       area: this.selectedArea,
       factory: this.selectedFactory,
       searchText: this.searchText,
       skip: (this.pageIndex - 1) * this.pageSize,
       limit: this.pageSize
     };
+    console.log('加载数据，筛选条件:', filter);
     // 同时请求数据页和总数，确保分页 total 正确
     forkJoin({
       page: this.employeeService.getEmployees(filter),
@@ -350,8 +341,7 @@ export class ReportComponent implements OnInit {
   }
 
   onReset(): void {
-    this.startDate = null;
-    this.endDate = null;
+    this.filterDateRange = [];
     this.selectedArea = '1';
     this.selectedFactory = '1';
     this.searchText = '';
@@ -382,15 +372,10 @@ export class ReportComponent implements OnInit {
     this.isModalVisible = true;
   }
 
-  /**
-   * 加载弹框中的下拉选项（地区/厂别不含"全部"，部门/角色直接复用）
-   */
   private loadModalOptions(): void {
-    // 地区（不含"全部"）
     this.employeeService.getAreas().subscribe(areas => {
       this.modalAreaOptions = areas.filter(a => a.value !== '1');
     });
-    // 厂别（不含"全部"）
     this.employeeService.getFactories().subscribe(factories => {
       this.modalFactoryOptions = factories.filter(f => f.value !== '1');
     });
@@ -423,8 +408,6 @@ export class ReportComponent implements OnInit {
       }
     });
   }
-
-  // =====================  批量分页导航 =====================
 
   private saveFormToBatch(): void {
     this.batchEmployees[this.currentBatchIndex] = { ...this.employeeForm.getRawValue() };
@@ -475,8 +458,6 @@ export class ReportComponent implements OnInit {
   getVisiblePages(): (number | string)[] {
     const total = this.batchEmployees.length;
     const current = this.currentBatchIndex + 1;
-
-    // 总页数 <= 7 时全部显示
     if (total <= 7) {
       return Array.from({ length: total }, (_, i) => i + 1);
     }
@@ -484,17 +465,14 @@ export class ReportComponent implements OnInit {
     const pages: (number | string)[] = [];
 
     if (current <= 4) {
-      // 靠近开头：显示前5页 + ... + 末页
       for (let i = 1; i <= 5; i++) pages.push(i);
       pages.push('...');
       pages.push(total);
     } else if (current >= total - 3) {
-      // 靠近末尾：首页 + ... + 后5页
       pages.push(1);
       pages.push('...');
       for (let i = total - 4; i <= total; i++) pages.push(i);
     } else {
-      // 居中：首页 + ... + 当前±1 + ... + 末页
       pages.push(1);
       pages.push('...');
       pages.push(current - 1);
@@ -507,9 +485,6 @@ export class ReportComponent implements OnInit {
     return pages;
   }
 
-  /**
-   * 跳转到指定批次页
-   */
   goToPage(page: number | string): void {
     if (typeof page === 'string') return;           // 省略号不可点
     const index = (page as number) - 1;
@@ -854,27 +829,19 @@ export class ReportComponent implements OnInit {
       this.setOfCheckedId.has(item.employee_id)
     ) && !this.checked;
   }
+
   // ===================== 其他工具函数 =====================
   /**
   * ★ 开始日期的禁用函数：不能晚于已选的结束日期
   */
   disabledStartDate = (startValue: Date): boolean => {
-    if (!startValue || !this.endDate) {
-      return false;
-    }
-    // 开始日期不能晚于结束日期
-    return startValue.getTime() > this.endDate.getTime();
+    if (!startValue || !this.filterDateRange?.[1]) return false;
+    return startValue.getTime() > this.filterDateRange[1].getTime();
   };
 
-  /**
-   * ★ 结束日期的禁用函数：不能早于已选的开始日期
-   */
   disabledEndDate = (endValue: Date): boolean => {
-    if (!endValue || !this.startDate) {
-      return false;
-    }
-    // 结束日期不能早于开始日期
-    return endValue.getTime() < this.startDate.getTime();
+    if (!endValue || !this.filterDateRange?.[0]) return false;
+    return endValue.getTime() < this.filterDateRange[0].getTime();
   };
 
 }

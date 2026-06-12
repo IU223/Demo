@@ -9,7 +9,7 @@ import { environment } from '../../environments/environment.development';
 export class AuditLogService {
   private apiUrl = `${environment.apiUrl}/audit-logs`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * 获取日志列表（支持 LoopBack filter）
@@ -17,6 +17,7 @@ export class AuditLogService {
   getLogs(filter?: any): Observable<AuditLog[]> {
     let params = new HttpParams();
     if (filter) {
+      console.log('Fetching audit logs with filter:', filter);
       params = params.set('filter', JSON.stringify(filter));
     }
     return this.http.get<AuditLog[]>(this.apiUrl, { params });

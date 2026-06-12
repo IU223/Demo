@@ -18,10 +18,9 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 
 import { PermissionService, Permission } from '../../services/permission.service';
-import { AuthService } from '../../services/auth.service';              // ★ Task 9 新增
+import { AuthService } from '../../services/auth.service';
 import { RoleDetail, PageAuthField, PagePermRow } from '../../models/role';
 
-/** ★ Step 9：仅需 READ 权限的页面（隐藏 C/D/U 复选框） */
 const READ_ONLY_PAGES: string[] = ['首页', '日志页面'];
 
 @Component({
@@ -38,12 +37,9 @@ const READ_ONLY_PAGES: string[] = ['首页', '日志页面'];
 })
 export class PermissionsComponent implements OnInit {
 
-  // ==================== 角色列表 & 选中 ====================
   roleList: RoleDetail[] = [];
   selectedRoleId: number | null = null;
   selectedRole: RoleDetail | null = null;
-
-  // 可编辑字段
   editRoleName = '';
   editDescription = '';
 
@@ -51,16 +47,12 @@ export class PermissionsComponent implements OnInit {
   pagePermissions: PagePermRow[] = [];
 
   // ==================== 当前用户权限 ====================
-  permLoaded = false;  // 权限是否加载完成
+  permLoaded = false;
   canRead = false;
   canCreate = false;
   canDelete = false;
   canUpdate = false;
-
-  // ★ Task 9 新增：超级管理员标记
   isSuperAdmin = false;
-
-  // ★ Step 9：仅需 READ 权限的页面列表（供模板使用）
   readOnlyPages = READ_ONLY_PAGES;
 
   // ==================== 新增角色弹框 ====================
@@ -75,7 +67,7 @@ export class PermissionsComponent implements OnInit {
 
   constructor(
     private permService: PermissionService,
-    private authService: AuthService,   // ★ Task 9 新增
+    private authService: AuthService,
     private message: NzMessageService,
     private modal: NzModalService,
     private fb: FormBuilder,
@@ -84,16 +76,12 @@ export class PermissionsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // ★ Task 9: 根据超级管理员身份分流加载逻辑
     this.isSuperAdmin = this.authService.isSuperAdmin();
     this.loadPermissionsAndData();
   }
 
-  // ==================== ★ Task 9: 分流加载逻辑 ====================
-
   private loadPermissionsAndData(): void {
     if (this.isSuperAdmin) {
-      // ★ 超级管理员：拥有全部 CRUD 权限，加载所有角色
       this.canRead = true;
       this.canCreate = true;
       this.canDelete = true;
@@ -101,7 +89,7 @@ export class PermissionsComponent implements OnInit {
       this.permLoaded = true;
       this.loadRoles();
     } else {
-      // ★ 普通用户：只能只读查看自己的角色
+      // 普通用户：只能只读查看自己的角色
       this.canRead = true;
       this.canCreate = false;
       this.canDelete = false;
@@ -111,7 +99,7 @@ export class PermissionsComponent implements OnInit {
     }
   }
 
-  // ★ Task 9 新增：普通用户加载自己的角色
+  //普通用户仅加载自己的角色
   private loadMyRole(): void {
     this.loading = true;
     this.permService.getMyRole().subscribe({
@@ -165,7 +153,6 @@ export class PermissionsComponent implements OnInit {
           this.canUpdate = this.permService.hasPermission(authVal, Permission.UPDATE);
         }
         this.permLoaded = true;
-        // 有查看权限才加载角色列表
         if (this.canRead) {
           this.loadRoles();
         }

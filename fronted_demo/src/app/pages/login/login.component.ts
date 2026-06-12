@@ -103,7 +103,6 @@ export class LoginComponent implements OnInit {
         next: () => {
           this.isLoading = false;
           this.message.success('登录成功');
-          // ★ 改为动态跳转
           this.navigateToFirstAllowedPage();
         },
         error: (err) => {
@@ -123,16 +122,11 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  /**
-   * ★ 新增：登录成功后，根据权限跳转到第一个有权限的页面
-   */
   private navigateToFirstAllowedPage(): void {
-    // 超级管理员直接去首页
     if (this.authService.isSuperAdmin()) {
       this.router.navigate(['/default/welcome']);
       return;
     }
-
     // 普通用户：查询角色权限后决定跳转目标
     this.permService.getCurrentUserPermissions().subscribe({
       next: (role) => {
@@ -158,8 +152,6 @@ export class LoginComponent implements OnInit {
       }
     });
   }
-
-  // ===================== 忘记密码 =====================
 
   /** 点击"忘记密码？" → 重置表单 → 打开弹框 */
   onForgotPassword(): void {

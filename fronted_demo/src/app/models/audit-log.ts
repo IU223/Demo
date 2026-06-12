@@ -20,9 +20,9 @@ export interface AuditLog {
 export const ACTION_OPTIONS: { label: string; value: string }[] = [
   { label: '新增', value: 'CREATE' },
   { label: '修改', value: 'UPDATE' },
-  { label: '删除', value: 'DELETE' },
+  // { label: '删除', value: 'DELETE' },
   { label: '批量修改', value: 'BATCH_UPDATE' },
-  { label: '批量删除', value: 'BATCH_DELETE' },
+  // { label: '批量删除', value: 'BATCH_DELETE' },
   { label: '登录成功', value: 'LOGIN' },
   { label: '登录失败', value: 'LOGIN_FAILED' },
   { label: '登出', value: 'LOGOUT' },
@@ -34,9 +34,6 @@ export const ACTION_OPTIONS: { label: string; value: string }[] = [
 export const RESOURCE_TYPE_OPTIONS: { label: string; value: string }[] = [
   { label: 'Employee', value: 'Employee' },
   { label: 'Role', value: 'Role' },
-  { label: 'Department', value: 'Department' },
-  { label: 'Plant', value: 'Plant' },
-  { label: 'Region', value: 'Region' },
   { label: 'Session', value: 'Session' },
 ];
 
@@ -59,8 +56,8 @@ export const ACTION_LABEL: Record<string, string> = {
   CREATE: '新增',
   UPDATE: '修改',
   BATCH_UPDATE: '批量修改',
-  DELETE: '删除',
-  BATCH_DELETE: '批量删除',
+  // DELETE: '删除',
+  // BATCH_DELETE: '批量删除',
   LOGIN: '登录成功',
   LOGIN_FAILED: '登录失败',
   LOGOUT: '登出',

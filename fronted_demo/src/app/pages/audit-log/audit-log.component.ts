@@ -144,7 +144,6 @@ export class AuditLogComponent implements OnInit {
   private buildWhereClause(): any {
     const where: any = {};
 
-    // 1. 时间范围
     if (this.filterDateRange && this.filterDateRange.length === 2) {
       const [start, end] = this.filterDateRange;
       if (start && end) {
@@ -154,7 +153,6 @@ export class AuditLogComponent implements OnInit {
       }
     }
 
-    // 2. 操作人（仅超级管理员可使用）
     if (this.isSuperAdmin && this.filterOperator && this.filterOperator.trim()) {
       const kw = this.filterOperator.trim();
       where.or = [
@@ -163,17 +161,14 @@ export class AuditLogComponent implements OnInit {
       ];
     }
 
-    // 3. 操作类型
     if (this.filterAction) {
       where.action = this.filterAction;
     }
 
-    // 4. 资源类型
     if (this.filterResourceType) {
       where.resource_type = this.filterResourceType;
     }
 
-    // 5. 关键词（搜索 resource_id 或 request_path）
     if (this.filterKeyword && this.filterKeyword.trim()) {
       const kw = this.filterKeyword.trim();
       const keywordOr = [
@@ -196,8 +191,6 @@ export class AuditLogComponent implements OnInit {
     return where;
   }
 
-  // ===================== 筛选操作 =====================
-
   onSearch(): void {
     this.pageIndex = 1;
     this.loadData();
@@ -213,8 +206,6 @@ export class AuditLogComponent implements OnInit {
     this.loadData();
   }
 
-  // ===================== 分页 =====================
-
   onPageIndexChange(index: number): void {
     this.pageIndex = index;
     this.loadData();
@@ -225,8 +216,6 @@ export class AuditLogComponent implements OnInit {
     this.pageIndex = 1;
     this.loadData();
   }
-
-  // ===================== 详情弹框 =====================
 
   onViewDetail(log: AuditLog): void {
     this.detailLog = log;
@@ -278,17 +267,17 @@ export class AuditLogComponent implements OnInit {
       return rows;
     }
 
-    if (action === 'DELETE') {
-      if (!oldObj) return [];
-      return Object.keys(oldObj)
-        .filter(k => !k.startsWith('$'))
-        .map(key => ({
-          field: this.getFieldLabel(key),
-          oldVal: this.formatValue(oldObj[key], key),
-          newVal: '(已删除)',
-          changed: true,
-        }));
-    }
+    // if (action === 'DELETE') {
+    //   if (!oldObj) return [];
+    //   return Object.keys(oldObj)
+    //     .filter(k => !k.startsWith('$'))
+    //     .map(key => ({
+    //       field: this.getFieldLabel(key),
+    //       oldVal: this.formatValue(oldObj[key], key),
+    //       newVal: '(已删除)',
+    //       changed: true,
+    //     }));
+    // }
 
     return [];
   }

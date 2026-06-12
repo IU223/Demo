@@ -73,8 +73,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
   momResign = 0;
 
   // ===================== 筛选条件 =====================
-  startDate: Date | null = null;
-  endDate: Date | null = null;
+  filterDateRange: Date[] = [];
   selectedFactory = '';
   factoryOptions: SelectOption[] = [];
 
@@ -85,7 +84,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ===================== 原始数据 / 状态 =====================
   allEmployees: any[] = [];
-  activeEmployees: any[] = [];    // ★ 改动1：仅在职员工（供除折线图外的所有图表使用）
+  activeEmployees: any[] = [];
   regionData: any[] = [];
   currentDate = '';
   loading = false;
@@ -93,14 +92,13 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
   mapLoadFailed = false;
   deptMap: Record<string, string> = {};
   deptDescToCode: Record<string, string> = {};
-  // ===================== 部门饼图自定义 Tooltip =====================
+
   // 部门饼图自定义 Tooltip
   deptTooltipVisible = false;
   deptTooltipTitle = '';
   deptTooltipDetails: { code: string; desc: string; count: number }[] = [];
   deptTooltipTop = 0;
   deptTooltipLeft = 0;
-
 
   constructor(
     private employeeService: EmployeeService,
@@ -110,8 +108,6 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     private aiContextService: AiContextService,
     private aiPanelService: AiPanelService,       // ★ Step 9 新增
   ) { }
-
-  // ==================== 生命周期 ====================
 
   ngOnInit(): void {
     this.currentDate = this.formatDisplayDate(new Date());
@@ -130,8 +126,6 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
         this.buildGenderChart();
         if (this.mapReady) {
           this.buildMapChart();
-        } else if (this.mapLoadFailed) {
-          this.buildMapFallbackChart();
         }
       }
     }, 400);
@@ -191,17 +185,17 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       resignCount: this.employeeService.getCountByStatus(false, where),
       allEmployees: this.employeeService.getAllForAnalysis(where),
       regions: this.http.get<any[]>(`${environment.apiUrl}/regions`),
-      departments: this.http.get<any[]>(`${environment.apiUrl}/departments`)   // ★ 新增
+      departments: this.http.get<any[]>(`${environment.apiUrl}/departments`)
     }).subscribe({
       next: ({ activeCount, resignCount, allEmployees, regions, departments }) => {
         this.activeCount = activeCount;
         this.resignCount = resignCount;
         this.totalCount = activeCount + resignCount;
         this.allEmployees = allEmployees;
-        this.activeEmployees = allEmployees.filter((emp: any) => emp.status === true);  // ★ 改动2
+        this.activeEmployees = allEmployees.filter((emp: any) => emp.status === true);
         this.regionData = regions;
         console.log(this.regionData);
-        // ★ 新增：建立部门映射
+        // 建立部门映射
         this.buildDeptMap(departments);
 
         this.calculateComparisons();
@@ -212,8 +206,6 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
         if (this.mapReady) {
           this.buildMapChart();
-        } else if (this.mapLoadFailed) {
-          this.buildMapFallbackChart();
         }
 
         this.loading = false;
@@ -233,11 +225,12 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private buildWhereFilter(): any {
     const where: any = {};
-    if (this.startDate && this.endDate) {
+    if (this.filterDateRange && this.filterDateRange.length === 2) {
+      const [startDate, endDate] = this.filterDateRange;
       where.hire_date = {
         between: [
-          this.fmtDate(this.startDate),
-          this.fmtDate(this.endDate) + 'T23:59:59'
+          this.fmtDate(startDate),
+          this.fmtDate(endDate) + 'T23:59:59'
         ]
       };
     }
@@ -246,9 +239,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     return where;
   }
-
-  // ==================== Step 8: AI 上下文注册 ====================
-
+  //AI上下文注册
   private registerDashboardContext(): void {
     this.aiContextService.registerContext('stats', {
       activeCount: this.activeCount,
@@ -267,10 +258,11 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     const hires = this.groupByMonth('hire_date');
     const resigns = this.groupByMonth('resin_date');
 
-    // ★ 有日期筛选时，月份范围适配筛选器；否则展示最近 6 个月
-    if (this.startDate && this.endDate) {
-      const start = new Date(this.startDate.getFullYear(), this.startDate.getMonth(), 1);
-      const end = new Date(this.endDate.getFullYear(), this.endDate.getMonth(), 1);
+    //  日期筛选时，月份范围适配筛选器；否则展示最近 6 个月
+    if (this.filterDateRange && this.filterDateRange.length === 2) {
+      const [sDate, eDate] = this.filterDateRange;
+      const start = new Date(sDate.getFullYear(), sDate.getMonth(), 1);
+      const end = new Date(eDate.getFullYear(), eDate.getMonth(), 1);
       const cursor = new Date(start);
       while (cursor <= end) {
         const key = this.monthKey(cursor.getFullYear(), cursor.getMonth() + 1);
@@ -295,7 +287,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     );
 
     let male = 0, female = 0, unknown = 0;
-    this.activeEmployees.forEach((emp: any) => {            // ★ 改动4b
+    this.activeEmployees.forEach((emp: any) => {
       if (emp.Sex === true) male++;
       else if (emp.Sex === false) female++;
       else unknown++;
@@ -305,7 +297,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     const regionCount: Record<string, number> = {};
-    this.activeEmployees.forEach((emp: any) => {            // ★ 改动4c
+    this.activeEmployees.forEach((emp: any) => {
       const r = emp.region_name || '未知';
       regionCount[r] = (regionCount[r] || 0) + 1;
     });
@@ -316,7 +308,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     );
 
     const deptCount: Record<string, number> = {};
-    this.activeEmployees.forEach((emp: any) => {            // ★ 改动4d
+    this.activeEmployees.forEach((emp: any) => {
       const d = emp.dept_desc || '未知';
       deptCount[d] = (deptCount[d] || 0) + 1;
     });
@@ -328,8 +320,9 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     );
 
     const filterInfo: Record<string, any> = {};
-    if (this.startDate && this.endDate) {
-      filterInfo['dateRange'] = `${this.fmtDate(this.startDate)} ~ ${this.fmtDate(this.endDate)}`;
+    if (this.filterDateRange && this.filterDateRange.length === 2) {
+      const [sDate, eDate] = this.filterDateRange;
+      filterInfo['dateRange'] = `${this.fmtDate(sDate)} ~ ${this.fmtDate(eDate)}`;
     }
     if (this.selectedFactory) {
       filterInfo['factory'] = this.selectedFactory;
@@ -345,16 +338,15 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadDashboardData();
   }
   onReset(): void {
-    this.startDate = null;
-    this.endDate = null;
+    this.filterDateRange = [];
     this.selectedFactory = '';
     this.loadDashboardData();
   }
 
-  // ==================== Step 9: 图表级 AI 分析 ====================
+  // ==================== 图表级 AI 分析 ====================
 
   /**
-   * ★ Step 9: 点击图表旁 "🤖 AI 分析" 按钮时调用
+   * 点击图表旁 "AI 分析" 按钮时调用
    * 自动打开 AI 面板，开启新对话，并发送针对该图表的分析提问
    */
   analyzeChart(chartType: string): void {
@@ -379,7 +371,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** 获取同比/环比计算用的参考日期：有筛选器时用 endDate，否则用当前日期 */
   private getReferenceDate(): Date {
-    return this.endDate ? new Date(this.endDate) : new Date();
+    return this.filterDateRange?.[1] ? new Date(this.filterDateRange[1]) : new Date();
   }
 
   private calculateComparisons(): void {
@@ -436,10 +428,11 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     const hireData: number[] = [];
     const resignData: number[] = [];
 
-    // ★ 有日期筛选时，X 轴适配筛选器范围；否则展示最近 6 个月
-    if (this.startDate && this.endDate) {
-      const start = new Date(this.startDate.getFullYear(), this.startDate.getMonth(), 1);
-      const end = new Date(this.endDate.getFullYear(), this.endDate.getMonth(), 1);
+    //  有日期筛选时，X 轴适配筛选器范围；否则展示最近 6 个月
+    if (this.filterDateRange && this.filterDateRange.length === 2) {
+      const [sDate, eDate] = this.filterDateRange;
+      const start = new Date(sDate.getFullYear(), sDate.getMonth(), 1);
+      const end = new Date(eDate.getFullYear(), eDate.getMonth(), 1);
       // 跨年时显示年份简称，避免月份标签歧义
       const crossYear = start.getFullYear() !== end.getFullYear();
       const cursor = new Date(start);
@@ -518,7 +511,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private buildFactoryRanking(): void {
     const map: Record<string, number> = {};
-    this.activeEmployees.forEach((emp: any) => {           // ★ 改动3a
+    this.activeEmployees.forEach((emp: any) => {
       const f = emp.plant_name || '未知';
       map[f] = (map[f] || 0) + 1;
     });
@@ -553,7 +546,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // ==================== 世界地图 ====================
 
   private loadWorldMap(): void {
-    // ★ 优先使用本地 assets，不再依赖外部 CDN
+
     const localUrl = 'assets/map/world.json';
 
     fetch(localUrl)
@@ -571,9 +564,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       .catch(err => {
         console.warn('地图加载失败，使用备用图表:', err);
         this.mapLoadFailed = true;
-        if (this.allEmployees.length > 0 && this.mapEchart) {
-          this.buildMapFallbackChart();
-        }
+
       });
   }
   private buildMapChart(): void {
@@ -596,7 +587,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       }))
       .sort((a: any, b: any) => b.value[2] - a.value[2]);
 
-    // 3. ★ 拆分：前3名 vs 其余
+    // 3.  拆分：前3名 vs 其余
     const top3Data = scatterData.slice(0, 3);
     const restData = scatterData.slice(3);
 
@@ -665,7 +656,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       },
       series: [
-        // ★ 系列1：前3名散点（带颜色排名）
+        // 系列1：前3名散点（带颜色排名）
         {
           name: 'TOP3',
           type: 'scatter',
@@ -683,7 +674,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
           zlevel: 2
         },
 
-        // ★ 系列2：其余散点 — 默认不显示标签，hover 时显示
+        //  系列2：其余散点 — 默认不显示标签，hover 时显示
         {
           name: '其他地区',
           type: 'scatter',
@@ -704,9 +695,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
             shadowBlur: 6,
             shadowColor: 'rgba(0,0,0,0.2)'
           },
-          // ★ 默认不显示标签
           label: { show: false },
-          // ★ 鼠标悬停时显示标签
           emphasis: {
             scale: true,
             itemStyle: {
@@ -739,7 +728,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
           zlevel: 2
         },
 
-        // ★ 系列3：连线 — 仅前3名
+        // 系列3：连线 — 仅前3名
         {
           name: '连线',
           type: 'lines',
@@ -755,7 +744,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
           zlevel: 1
         },
 
-        // ★ 系列4：标签端点 — 仅前3名
+        //  系列4：标签端点 — 仅前3名
         {
           name: '标签',
           type: 'scatter',
@@ -801,27 +790,21 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       ]
     }, true);
   }
-  /**
-   * ★ 计算标签在右侧空白区域的位置
-   * 标签放在太平洋空白海域，垂直排列，避免与地图陆地重叠
-   */
+
   private calculateLabelPositions(data: any[]): { lon: number; lat: number }[] {
     const count = data.length;
-
     // 标签列的经度位置（太平洋空白区域）
     const baseLon = 160;
-
     // 根据数据量动态计算垂直分布范围
     const topLat = 50;                                   // 最高标签的纬度
     const spacing = count > 1 ? Math.min(15, 70 / count) : 0;  // 标签间距（自动适应）
-
     return data.map((_: any, index: number) => ({
       lon: baseLon + (index % 2 === 0 ? 0 : 5),          // 奇偶交错，避免标签重叠
       lat: topLat - index * spacing
     }));
   }
   /**
-   * ★ 计算每个散点的标签偏移方向和距离，避免标签重叠
+   * 计算每个散点的标签偏移方向和距离，避免标签重叠
    * 策略：按索引交替分配不同方向（右上、右下、左上、左下等）
    */
   private calculateLabelOffsets(data: any[]): { dx: number; dy: number }[] {
@@ -852,58 +835,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
 
 
-  /** 地图加载失败时的备用柱状图 */
-  private buildMapFallbackChart(): void {
-    if (!this.mapEchart) return;
 
-    const regionCount: Record<string, number> = {};
-    this.activeEmployees.forEach((emp: any) => {            // ★ 改动3d
-      const r = emp.region_name || '未知';
-      regionCount[r] = (regionCount[r] || 0) + 1;
-    });
-    const sorted = Object.entries(regionCount).sort((a, b) => b[1] - a[1]);
-
-    this.mapEchart.setOption({
-      tooltip: {
-        trigger: 'item',
-        backgroundColor: 'rgba(0,0,0,0.75)',
-        borderColor: 'transparent',
-        textStyle: { color: '#fff', fontSize: 13 },
-        formatter: (params: any) => {
-          // ★ 过滤掉 geo 组件（国家区域）的 tooltip → 白色框消失
-          if (params.componentType === 'geo') return '';
-          if (params.seriesType === 'lines') return '';
-          if (params.seriesName === '标签') return '';
-          const count = params.value?.[2] ?? 0;
-          return `
-      <div style="padding:4px 8px;">
-        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">📍 ${params.name}</div>
-        <div style="font-size:20px;font-weight:700;color:#faad14;">
-          ${count.toLocaleString()} <span style="font-size:12px;color:#ccc;">人</span>
-        </div>
-      </div>`;
-        }
-      },
-      grid: { left: '3%', right: '10%', bottom: '3%', top: '10%', containLabel: true },
-      xAxis: { type: 'value' },
-      yAxis: {
-        type: 'category',
-        data: sorted.map(([n]) => n).reverse(),
-        axisLabel: { fontSize: 11 }
-      },
-      series: [{
-        type: 'bar',
-        data: sorted.map(([, c]) => c).reverse(),
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: '#1890ff' },
-            { offset: 1, color: '#69c0ff' }
-          ])
-        },
-        barWidth: '60%'
-      }]
-    }, true);
-  }
 
   // ==================== 部门饼图 ====================
 
@@ -949,7 +881,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       };
     });
 
-    // ── 5. 渲染（★ 禁用内置 tooltip，改用自定义浮层） ──
+    // ── 5. 渲染（ 禁用内置 tooltip，改用自定义浮层） ──
     this.deptEchart.setOption({
       tooltip: { show: false },          // ★ 禁用内置 tooltip
       series: [{
@@ -973,7 +905,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       }]
     }, true);
 
-    // ── 6. ★ 绑定自定义 Tooltip 事件 ──
+    // ── 6.  绑定自定义 Tooltip 事件 ──
     this.bindDeptChartEvents();
   }
 
@@ -999,7 +931,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     });
 
-    // ★ 鼠标移动 → 跟随鼠标位置（带边界检测）
+    //  鼠标移动 → 跟随鼠标位置（带边界检测）
     this.deptEchart.getZr().on('mousemove', (params: any) => {
       if (!this.deptTooltipVisible) return;
 
@@ -1011,7 +943,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
         const tooltipHeight = 300;    // 预估高度
         const offset = 15;            // 鼠标与浮层间距
 
-        // ★ 边界检测：防止超出视口
+        //  边界检测：防止超出视口
         let x = mouseX + offset;
         let y = mouseY + offset;
 
@@ -1039,10 +971,6 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     });
   }
-
-
-
-
   /**
    * 建立部门映射表
    * 同时支持 dept_code → dept_desc 和 dept_desc → dept_desc
@@ -1078,7 +1006,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.genderEchart) return;
 
     let male = 0, female = 0, unknown = 0;
-    this.activeEmployees.forEach((emp: any) => {            // ★ 改动3b
+    this.activeEmployees.forEach((emp: any) => {
       if (emp.Sex === true) male++;
       else if (emp.Sex === false) female++;
       else unknown++;
@@ -1091,7 +1019,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.genderEchart.setOption({
       tooltip: {
-        trigger: 'item', formatter: '{b}: {c} ({d}%)', appendTo: document.body,   // ★ tooltip 脱离图表容器，挂载到 body
+        trigger: 'item', formatter: '{b}: {c} ({d}%)', appendTo: document.body,
         confine: false,
       },
       legend: {
@@ -1136,13 +1064,13 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // ==================== 日期禁用 ====================
 
   disabledStartDate = (startValue: Date): boolean => {
-    if (!startValue || !this.endDate) return false;
-    return startValue.getTime() > this.endDate.getTime();
+    if (!startValue || !this.filterDateRange?.[1]) return false;
+    return startValue.getTime() > this.filterDateRange[1].getTime();
   };
 
   disabledEndDate = (endValue: Date): boolean => {
-    if (!endValue || !this.startDate) return false;
-    return endValue.getTime() < this.startDate.getTime();
+    if (!endValue || !this.filterDateRange?.[0]) return false;
+    return endValue.getTime() < this.filterDateRange[0].getTime();
   };
 
   // ==================== 工具函数 ====================

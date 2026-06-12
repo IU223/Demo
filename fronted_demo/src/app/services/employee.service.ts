@@ -39,13 +39,9 @@ export class EmployeeService {
       limit: filter?.limit || 10,
       order: ['hire_date DESC']
     };
-
-    // ========== ★ 新增：时间范围筛选 ==========
-    // 如果后端使用 between 接受 [start, end]，构造为 ["YYYY-MM-DD", "YYYY-MM-DDTHH:mm:ss"]
     if (filter?.startDate && filter?.endDate) {
       const start = this.formatDate(filter.startDate); // 仅日期部分
       const end = this.formatDate(filter.endDate) + 'T23:59:59'; // 包含当天结束时间
-      // 注意字段名使用下划线与后端一致：hire_date
       loopbackFilter.where.hire_date = {
         between: [start, end]
       };
@@ -59,7 +55,6 @@ export class EmployeeService {
       ];
     }
 
-    // 【修改点】将地区和厂别筛选合并到 LoopBack 4 filter的 where 对象中
     if (filter?.area && filter.area !== '1') {
       loopbackFilter.where.region_name = filter.area;
     }
@@ -135,29 +130,19 @@ export class EmployeeService {
 
     return this.http.post<Employee>(this.apiUrl, employee);
   }
-  /**
-    * 批量创建员工（使用 forkJoin 并行发送多个创建请求）
-    */
+
   createEmployees(employees: Partial<Employee>[]): Observable<Employee[]> {
     const requests = employees.map(emp => this.createEmployee(emp));
     return forkJoin(requests);
   }
-  /**
-   * 更新员工
-   *
-   * ★ 管理员保护：非超管不可修改超管账户
-   */
+
   updateEmployee(id: string, employee: Partial<Employee>): Observable<void> {
     return this.ensureNotSuperAdmin(id).pipe(
       switchMap(() => this.http.patch<void>(`${this.apiUrl}/${id}`, employee)),
     );
   }
 
-  /**
-   * 批量软删除（标记为离职）
-   *
-   * ★ 管理员保护：非超管不可删除超管账户
-   */
+
   deleteEmployees(ids: string[]): Observable<{ count: number }> {
     if (!ids || ids.length === 0) {
       return of({ count: 0 });
@@ -172,10 +157,6 @@ export class EmployeeService {
       }),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════
-  // ★ 管理员保护：非超管不可修改/删除超管账户
-  // ═══════════════════════════════════════════════════════════
 
   /**
    * 构造与后端 HTTP 错误兼容的错误对象，确保 message.error() 能正确提取消息
@@ -310,10 +291,7 @@ export class EmployeeService {
     );
   }
 
-  /**
-   * 获取角色列表
-   * 后端返回示例: [{ role_id: 1, role_name: "管理员" }, { role_id: 2, role_name: "普通用户" }, ...]
-   */
+
   getRoles(): Observable<RoleOption[]> {
     return this.http.get<any[]>(this.apiUrlRole).pipe(
       map(list => {
@@ -325,9 +303,7 @@ export class EmployeeService {
       })
     );
   }
-  // ===================== 分析页专用 =====================
 
-  /** 按状态统计人数（在职/离职） */
   getCountByStatus(status: boolean, extraWhere?: any): Observable<number> {
     const where = { status, ...(extraWhere || {}) };
     const params = new HttpParams().set('where', JSON.stringify(where));
