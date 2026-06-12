@@ -273,7 +273,7 @@ export class AuditLogComponent implements OnInit {
         if (key.startsWith('$')) continue;
         const nv = this.formatValue(newObj[key], key);
         const ov = oldObj ? this.formatValue(oldObj[key], key) : '-';
-        rows.push({ field: key, oldVal: ov, newVal: nv, changed: ov !== nv });
+        rows.push({ field: this.getFieldLabel(key), oldVal: ov, newVal: nv, changed: ov !== nv });
       }
       return rows;
     }
@@ -283,7 +283,7 @@ export class AuditLogComponent implements OnInit {
       return Object.keys(oldObj)
         .filter(k => !k.startsWith('$'))
         .map(key => ({
-          field: key,
+          field: this.getFieldLabel(key),
           oldVal: this.formatValue(oldObj[key], key),
           newVal: '(已删除)',
           changed: true,
@@ -310,12 +310,23 @@ export class AuditLogComponent implements OnInit {
     if (val === undefined) return '-';
     if (val === null) return 'null';
 
-    // 根据字段名对布尔值做友好显示
+    // ★ 新增：日期字段自动转本地时间显示
+    if (field && ['hire_date', 'resin_date', 'created_at', 'updated_at'].includes(field)) {
+      if (typeof val === 'string' && val.includes('T')) {
+        const d = new Date(val);
+        if (!isNaN(d.getTime())) {
+          const pad = (n: number) => String(n).padStart(2, '0');
+          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+            `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        }
+      }
+    }
+
     if (typeof val === 'boolean') {
       if (field === 'Sex') return val ? '男' : '女';
       if (field === 'status') return val ? '在职' : '离职';
       if (field === 'hasaccess') return val ? '有权限' : '无权限';
-      if (field === 'is_super_admin') return val ? '是' : '否';
+      if (field === 'is_super_admin') return val ? '超级管理员' : '普通用户';
       if (field === 'is_deleted') return val ? '已删除' : '正常';
       return val ? 'true' : 'false';
     }
@@ -323,6 +334,7 @@ export class AuditLogComponent implements OnInit {
     if (typeof val === 'object') return JSON.stringify(val);
     return String(val);
   }
+
 
   // ===================== 工具方法 =====================
 
@@ -346,11 +358,84 @@ export class AuditLogComponent implements OnInit {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
 
+  // ===================== 字段中文映射与操作摘要 =====================
+  private readonly FIELD_LABEL_MAP: Record<string, string> = {
+    employee_id: '工号',
+    name: '姓名',
+    name_a: '英文姓名',
+    Sex: '性别',
+    dept_desc: '部门',
+    plant_name: '厂别',
+    region_name: '地区',
+    role_id: '角色 ID',
+    role_name: '角色名称',
+    status: '状态',
+    hasaccess: '访问权限',
+    hire_date: '入职时间',
+    resin_date: '离职时间',
+    password: '密码',
+    is_super_admin: '超级管理员',
+    is_deleted: '删除标记',
+    home_page_auth: '首页权限',
+    report_page_auth: '报表页权限',
+    auth_page_auth: '权限页权限',
+    log_page_auth: '日志页权限',
+    description: '描述',
+    username: '用户名',
+  };
+
+  getFieldLabel(field: string): string {
+    return this.FIELD_LABEL_MAP[field] || field;
+  }
+
+  /** 生成一句话操作摘要 */
+  getOperationSummary(): string {
+    if (!this.detailLog) return '';
+
+    const operator = this.detailLog.operator_name
+      ? `${this.detailLog.operator_name}（${this.detailLog.operator_id}）`
+      : this.detailLog.operator_id;
+
+    const time = this.formatTime(this.detailLog.created_at);
+    const resourceId = this.detailLog.resource_id;
+
+    switch (this.detailLog.action) {
+      case 'LOGIN':
+        return `${operator} 于 ${time} 登录系统成功`;
+      case 'LOGIN_FAILED':
+        return `${operator} 于 ${time} 尝试登录系统失败`;
+      case 'LOGOUT':
+        return `${operator} 于 ${time} 退出系统`;
+      case 'PASSWORD_CHANGE':
+        return `${operator} 于 ${time} 修改了自己的密码`;
+      case 'PASSWORD_RESET':
+        return `工号 ${resourceId || operator} 的密码于 ${time} 被重置`;
+      case 'CREATE':
+        return `${operator} 于 ${time} 新增了 ${this.detailLog.resource_type} 记录（${resourceId || ''}）`;
+      case 'UPDATE':
+        return `${operator} 于 ${time} 修改了 ${this.detailLog.resource_type} 记录（${resourceId || ''}）`;
+      case 'DELETE':
+        return `${operator} 于 ${time} 删除了 ${this.detailLog.resource_type} 记录（${resourceId || ''}）`;
+      case 'BATCH_UPDATE':
+        return `${operator} 于 ${time} 批量修改了 ${this.detailLog.resource_type} 记录`;
+      case 'BATCH_DELETE':
+        return `${operator} 于 ${time} 批量删除了 ${this.detailLog.resource_type} 记录`;
+      default:
+        return `${operator} 于 ${time} 执行了 ${this.getActionLabel(this.detailLog.action)} 操作`;
+    }
+  }
+
+  showTechDetails = false;
+
+  toggleTechDetails(): void {
+    this.showTechDetails = !this.showTechDetails;
+  }
+
   getNewValueEntries(): { key: string; value: string }[] {
     if (!this.parsedNewValue) return [];
     return Object.keys(this.parsedNewValue)
       .filter(k => !k.startsWith('$'))
-      .map(k => ({ key: k, value: this.formatValue(this.parsedNewValue![k], k) }));
+      .map(k => ({ key: this.getFieldLabel(k), value: this.formatValue(this.parsedNewValue![k], k) }));
   }
 
   /** 日期禁用：开始不能晚于结束 */

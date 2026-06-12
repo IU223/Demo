@@ -114,7 +114,6 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
       }
     }
 
-    // ── 7~9 不变 ──
     let result: InvocationResult = undefined;
     let statusCode = 0;
     let errorMessage: string | undefined;
@@ -285,6 +284,9 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
    * 对于批量软删除（PATCH /employees?where={employee_id:{inq:[...]}}），
    * 这将捕获所有被"删除"的员工数据。
    */
+  /**
+ * ★ 修复：批量操作 — 按 where 条件获取所有受影响记录的快照
+ */
   private async fetchOldValueBatch(
     ctx: InvocationContext,
     resourceType: string,
@@ -296,15 +298,41 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
     try {
       const repo = await ctx.get<any>(repoKey);
 
-      // 从 URL query 中解析 where 参数
-      const url = new URL(
-        req.url,
-        `http://${req.headers.host || 'localhost'}`,
-      );
-      const whereParam = url.searchParams.get('where');
+      // ★ 修复：多种方式尝试获取 where 参数
+      let whereParam: string | null = null;
+
+      // 方式 1：从 req.query 获取（Express 已解析的查询参数）
+      if ((req as any).query?.where) {
+        const raw = (req as any).query.where;
+        whereParam = typeof raw === 'string' ? raw : JSON.stringify(raw);
+      }
+
+      // 方式 2：如果方式 1 失败，从 URL 手动解析
+      if (!whereParam) {
+        try {
+          const url = new URL(
+            req.url,
+            `http://${req.headers.host || 'localhost'}`,
+          );
+          whereParam = url.searchParams.get('where');
+        } catch {
+          /* ignore */
+        }
+      }
+
+      // 方式 3：从原始 URL 字符串中正则提取
+      if (!whereParam && req.url) {
+        const match = req.url.match(/[?&]where=([^&]+)/);
+        if (match) {
+          whereParam = decodeURIComponent(match[1]);
+        }
+      }
+
       if (!whereParam) return undefined;
 
-      const where = JSON.parse(whereParam);
+      const where = typeof whereParam === 'object'
+        ? whereParam
+        : JSON.parse(whereParam);
 
       // 查询所有匹配的记录（限制最多 100 条，防止数据量过大）
       const entities = await repo.find({ where, limit: 100 });
@@ -324,4 +352,5 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
       return undefined;
     }
   }
+
 }

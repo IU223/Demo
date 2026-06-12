@@ -1,14 +1,8 @@
 <div class="audit-log-container">
 
   <!-- ===================== 普通用户提示横幅 ===================== -->
-  <nz-alert
-    *ngIf="!isSuperAdmin"
-    nzType="info"
-    nzMessage="您当前仅可查看自己的操作日志"
-    nzShowIcon
-    [nzCloseable]="false"
-    style="margin-bottom: 12px;"
-  ></nz-alert>
+  <nz-alert *ngIf="!isSuperAdmin" nzType="info" nzMessage="您当前仅可查看自己的操作日志" nzShowIcon [nzCloseable]="false"
+    style="margin-bottom: 12px;"></nz-alert>
 
   <!-- ===================== 筛选栏 ===================== -->
   <div class="filter-section">
@@ -17,57 +11,30 @@
       <!-- 时间范围 -->
       <div class="filter-item">
         <label>时间范围</label>
-        <nz-range-picker
-          [(ngModel)]="filterDateRange"
-          nzFormat="yyyy-MM-dd"
-          [nzPlaceHolder]="['开始日期', '结束日期']"
-          style="width: 260px;"
-        ></nz-range-picker>
+        <nz-range-picker [(ngModel)]="filterDateRange" nzFormat="yyyy-MM-dd" [nzPlaceHolder]="['开始日期', '结束日期']"
+          style="width: 260px;"></nz-range-picker>
       </div>
 
       <!-- 操作人：仅超级管理员可见 -->
       <div class="filter-item" *ngIf="isSuperAdmin">
         <label>操作人</label>
-        <input
-          nz-input
-          [(ngModel)]="filterOperator"
-          placeholder="工号或姓名"
-          style="width: 140px;"
-          (keyup.enter)="onSearch()"
-        />
+        <input nz-input [(ngModel)]="filterOperator" placeholder="工号或姓名" style="width: 140px;"
+          (keyup.enter)="onSearch()" />
       </div>
 
       <!-- 操作类型 -->
       <div class="filter-item">
         <label>操作类型</label>
-        <nz-select
-          [(ngModel)]="filterAction"
-          nzPlaceHolder="全部"
-          nzAllowClear
-          style="width: 130px;"
-        >
-          <nz-option
-            *ngFor="let opt of actionOptions"
-            [nzLabel]="opt.label"
-            [nzValue]="opt.value"
-          ></nz-option>
+        <nz-select [(ngModel)]="filterAction" nzPlaceHolder="全部" nzAllowClear style="width: 130px;">
+          <nz-option *ngFor="let opt of actionOptions" [nzLabel]="opt.label" [nzValue]="opt.value"></nz-option>
         </nz-select>
       </div>
 
       <!-- 资源类型 -->
       <div class="filter-item">
         <label>资源类型</label>
-        <nz-select
-          [(ngModel)]="filterResourceType"
-          nzPlaceHolder="全部"
-          nzAllowClear
-          style="width: 120px;"
-        >
-          <nz-option
-            *ngFor="let opt of resourceTypeOptions"
-            [nzLabel]="opt.label"
-            [nzValue]="opt.value"
-          ></nz-option>
+        <nz-select [(ngModel)]="filterResourceType" nzPlaceHolder="全部" nzAllowClear style="width: 120px;">
+          <nz-option *ngFor="let opt of resourceTypeOptions" [nzLabel]="opt.label" [nzValue]="opt.value"></nz-option>
         </nz-select>
       </div>
 
@@ -75,12 +42,7 @@
       <div class="filter-item">
         <label>关键词</label>
         <nz-input-group [nzSuffix]="searchSuffix" style="width: 180px;">
-          <input
-            nz-input
-            [(ngModel)]="filterKeyword"
-            placeholder="资源ID / 路径"
-            (keyup.enter)="onSearch()"
-          />
+          <input nz-input [(ngModel)]="filterKeyword" placeholder="资源ID / 路径" (keyup.enter)="onSearch()" />
         </nz-input-group>
         <ng-template #searchSuffix>
           <span nz-icon nzType="search" style="cursor: pointer;" (click)="onSearch()"></span>
@@ -108,32 +70,21 @@
       </div>
     </div>
 
-    <nz-table
-      #logTable
-      [nzData]="listOfData"
-      [nzLoading]="loading"
-      [nzTotal]="total"
-      [nzPageSize]="pageSize"
-      [nzPageIndex]="pageIndex"
-      [nzFrontPagination]="false"
-      (nzPageIndexChange)="onPageIndexChange($event)"
-      (nzPageSizeChange)="onPageSizeChange($event)"
-      nzShowSizeChanger
-      [nzPageSizeOptions]="[10, 20, 50, 100]"
-      nzBordered
-      nzSize="middle"
-    >
+    <nz-table #logTable [nzData]="listOfData" [nzLoading]="loading" [nzTotal]="total" [nzPageSize]="pageSize"
+      [nzPageIndex]="pageIndex" [nzFrontPagination]="false" (nzPageIndexChange)="onPageIndexChange($event)"
+      (nzPageSizeChange)="onPageSizeChange($event)" nzShowSizeChanger [nzPageSizeOptions]="[10, 20, 50, 100]" nzBordered
+      nzSize="middle">
       <thead>
         <tr>
-          <th nzWidth="160px">时间</th>
-          <th nzWidth="120px">操作人</th>
-          <th nzWidth="100px" nzAlign="center">操作类型</th>
-          <th nzWidth="90px" nzAlign="center">资源类型</th>
-          <th nzWidth="140px">资源ID</th>
-          <th nzWidth="70px" nzAlign="center">状态</th>
-          <th>请求路径</th>
-          <th nzWidth="120px">IP</th>
-          <th nzWidth="70px" nzAlign="center">操作</th>
+          <th nzWidth="160px" scope="col">时间</th>
+          <th nzWidth="120px" scope="col">操作人</th>
+          <th nzWidth="100px" nzAlign="center" scope="col">操作类型</th>
+          <th nzWidth="90px" nzAlign="center" scope="col">资源类型</th>
+          <th nzWidth="140px" scope="col">资源ID</th>
+          <th nzWidth="70px" nzAlign="center" scope="col">状态</th>
+          <th scope="col">请求路径</th>
+          <th nzWidth="120px" scope="col">IP</th>
+          <th nzWidth="70px" nzAlign="center" scope="col">操作</th>
         </tr>
       </thead>
       <tbody>
@@ -182,15 +133,8 @@
 </div>
 
 <!-- ===================== 日志详情弹框 ===================== -->
-<nz-modal
-  [(nzVisible)]="isDetailVisible"
-  [nzTitle]="detailTitleTpl"
-  [nzFooter]="detailFooterTpl"
-  [nzWidth]="680"
-  [nzMaskClosable]="true"
-  [nzClosable]="true"
-  (nzOnCancel)="handleDetailClose()"
->
+<nz-modal [(nzVisible)]="isDetailVisible" [nzTitle]="detailTitleTpl" [nzFooter]="detailFooterTpl" [nzWidth]="680"
+  [nzMaskClosable]="true" [nzClosable]="true" (nzOnCancel)="handleDetailClose()">
   <ng-template #detailTitleTpl>
     <div class="detail-modal-title">
       <span nz-icon nzType="file-text" nzTheme="outline" style="margin-right: 8px;"></span>
@@ -201,59 +145,46 @@
   <ng-container *nzModalContent>
     <div class="detail-content" *ngIf="detailLog">
 
-      <nz-descriptions nzBordered nzSize="small" [nzColumn]="2">
-        <nz-descriptions-item nzTitle="操作人" [nzSpan]="1">
-          {{ detailLog.operator_id }}
-          <span *ngIf="detailLog.operator_name" class="meta-sub">({{ detailLog.operator_name }})</span>
-        </nz-descriptions-item>
-        <nz-descriptions-item nzTitle="操作时间" [nzSpan]="1">
-          {{ formatTime(detailLog.created_at) }}
-        </nz-descriptions-item>
-        <nz-descriptions-item nzTitle="操作类型" [nzSpan]="1">
-          <nz-tag [nzColor]="getActionColor(detailLog.action)">
+      <!-- ★ 1. 操作摘要（最直观的一句话） -->
+      <div class="operation-summary">
+        <div class="summary-icon">
+          <nz-tag [nzColor]="getActionColor(detailLog.action)" style="font-size: 14px; padding: 4px 12px;">
             {{ getActionLabel(detailLog.action) }}
           </nz-tag>
-        </nz-descriptions-item>
-        <nz-descriptions-item nzTitle="资源类型" [nzSpan]="1">
-          {{ detailLog.resource_type }}
-        </nz-descriptions-item>
-        <nz-descriptions-item nzTitle="资源 ID" [nzSpan]="1">
-          <span class="mono-text">{{ detailLog.resource_id || '-' }}</span>
-        </nz-descriptions-item>
-        <nz-descriptions-item nzTitle="状态码" [nzSpan]="1">
-          <nz-tag *ngIf="detailLog.status_code" [nzColor]="isSuccess(detailLog.status_code) ? 'green' : 'red'">
-            {{ detailLog.status_code }}
-          </nz-tag>
-          <span *ngIf="!detailLog.status_code">-</span>
-        </nz-descriptions-item>
-        <nz-descriptions-item nzTitle="请求路径" [nzSpan]="2">
-          <span class="mono-text">{{ detailLog.request_method }} {{ detailLog.request_path }}</span>
-        </nz-descriptions-item>
-        <nz-descriptions-item nzTitle="IP 地址" [nzSpan]="1">
-          {{ detailLog.ip_address || '-' }}
-        </nz-descriptions-item>
-        <nz-descriptions-item nzTitle="错误信息" [nzSpan]="1" *ngIf="detailLog.error_message">
-          <span class="error-text">{{ detailLog.error_message }}</span>
-        </nz-descriptions-item>
-      </nz-descriptions>
+        </div>
+        <div class="summary-text">{{ getOperationSummary() }}</div>
+      </div>
 
-      <!-- 变更对比（UPDATE / DELETE） -->
+      <!-- ★ 2. 操作环境信息（简洁排列） -->
+      <div class="operation-context">
+        <div class="context-item">
+          <span class="context-label">IP 地址</span>
+          <span class="context-value">{{ detailLog.ip_address || '-' }}</span>
+        </div>
+        <div class="context-item" *ngIf="isSuccess(detailLog.status_code)">
+          <span class="context-label">操作结果</span>
+          <span class="context-value" style="color: #52c41a;">✓ 操作成功</span>
+        </div>
+        <div class="context-item" *ngIf="!isSuccess(detailLog.status_code)">
+          <span class="context-label">操作结果</span>
+          <span class="context-value" style="color: #ff4d4f;">✗ 操作失败</span>
+        </div>
+        <div class="context-item" *ngIf="detailLog.error_message">
+          <span class="context-label">失败原因</span>
+          <span class="context-value error-text">{{ detailLog.error_message }}</span>
+        </div>
+      </div>
+
+      <!-- ★ 3. 变更对比（UPDATE / DELETE）-->
       <ng-container *ngIf="showDiffSection">
         <nz-divider nzText="变更对比" nzOrientation="left"></nz-divider>
-        <nz-table
-          #diffTable
-          [nzData]="diffRows"
-          [nzFrontPagination]="false"
-          [nzShowPagination]="false"
-          nzBordered
-          nzSize="small"
-          *ngIf="diffRows.length > 0"
-        >
+        <nz-table #diffTable [nzData]="diffRows" [nzFrontPagination]="false" [nzShowPagination]="false" nzBordered
+          nzSize="small" *ngIf="diffRows.length > 0">
           <thead>
             <tr>
-              <th nzWidth="160px">字段</th>
-              <th>变更前</th>
-              <th>变更后</th>
+              <th nzWidth="140px" scope="col">字段</th>
+              <th scope="col">变更前</th>
+              <th scope="col">变更后</th>
             </tr>
           </thead>
           <tbody>
@@ -271,22 +202,15 @@
         <nz-empty *ngIf="diffRows.length === 0" nzNotFoundContent="无变更数据"></nz-empty>
       </ng-container>
 
-      <!-- 新值展示（CREATE / LOGIN 等） -->
+      <!-- ★ 4. 操作数据（CREATE / LOGIN 等） -->
       <ng-container *ngIf="showNewValueSection">
         <nz-divider nzText="操作数据" nzOrientation="left"></nz-divider>
-        <nz-table
-          #newValTable
-          [nzData]="getNewValueEntries()"
-          [nzFrontPagination]="false"
-          [nzShowPagination]="false"
-          nzBordered
-          nzSize="small"
-          *ngIf="getNewValueEntries().length > 0"
-        >
+        <nz-table #newValTable [nzData]="getNewValueEntries()" [nzFrontPagination]="false" [nzShowPagination]="false"
+          nzBordered nzSize="small" *ngIf="getNewValueEntries().length > 0">
           <thead>
             <tr>
-              <th nzWidth="160px">字段</th>
-              <th>值</th>
+              <th nzWidth="140px" scope="col">字段</th>
+              <th scope="col">值</th>
             </tr>
           </thead>
           <tbody>
@@ -297,6 +221,38 @@
           </tbody>
         </nz-table>
       </ng-container>
+
+      <!-- ★ 5. 技术详情（默认折叠） -->
+      <nz-divider></nz-divider>
+      <div class="tech-details-toggle">
+        <a (click)="toggleTechDetails()">
+          <span nz-icon [nzType]="showTechDetails ? 'up' : 'down'" nzTheme="outline"></span>
+          {{ showTechDetails ? '收起技术详情' : '查看技术详情' }}
+        </a>
+      </div>
+
+      <div class="tech-details-section" *ngIf="showTechDetails">
+        <nz-descriptions nzBordered nzSize="small" [nzColumn]="2">
+          <nz-descriptions-item nzTitle="请求路径" [nzSpan]="2">
+            <span class="mono-text">{{ detailLog.request_method }} {{ detailLog.request_path }}</span>
+          </nz-descriptions-item>
+          <nz-descriptions-item nzTitle="状态码" [nzSpan]="1">
+            <nz-tag *ngIf="detailLog.status_code" [nzColor]="isSuccess(detailLog.status_code) ? 'green' : 'red'">
+              {{ detailLog.status_code }}
+            </nz-tag>
+            <span *ngIf="!detailLog.status_code">-</span>
+          </nz-descriptions-item>
+          <nz-descriptions-item nzTitle="资源类型" [nzSpan]="1">
+            {{ detailLog.resource_type }}
+          </nz-descriptions-item>
+          <nz-descriptions-item nzTitle="资源 ID" [nzSpan]="1">
+            <span class="mono-text">{{ detailLog.resource_id || '-' }}</span>
+          </nz-descriptions-item>
+          <nz-descriptions-item nzTitle="日志 ID" [nzSpan]="1">
+            {{ detailLog.log_id }}
+          </nz-descriptions-item>
+        </nz-descriptions>
+      </div>
 
     </div>
   </ng-container>
