@@ -181,18 +181,30 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
     const where = this.buildWhereFilter();
 
     forkJoin({
-      activeCount: this.employeeService.getCountByStatus(true, where),
-      resignCount: this.employeeService.getCountByStatus(false, where),
       allEmployees: this.employeeService.getAllForAnalysis(where),
       regions: this.http.get<any[]>(`${environment.apiUrl}/regions`),
       departments: this.http.get<any[]>(`${environment.apiUrl}/departments`)
     }).subscribe({
-      next: ({ activeCount, resignCount, allEmployees, regions, departments }) => {
-        this.activeCount = activeCount;
-        this.resignCount = resignCount;
-        this.totalCount = activeCount + resignCount;
+      next: ({ allEmployees, regions, departments }) => {
         this.allEmployees = allEmployees;
         this.activeEmployees = allEmployees.filter((emp: any) => emp.status === true);
+
+        // ★ 按日期范围从全量数据中汇总入离职人数
+        if (this.filterDateRange && this.filterDateRange.length === 2) {
+          const [s, e] = this.filterDateRange;
+          const hires = this.groupByMonth('hire_date');
+          const resigns = this.groupByMonth('resin_date');
+          this.activeCount = this.sumInRange(hires, s, e);
+          this.resignCount = this.sumInRange(resigns, s, e);
+        } else {
+          const now = new Date();
+          const curKey = this.monthKey(now.getFullYear(), now.getMonth() + 1);
+          const hires = this.groupByMonth('hire_date');
+          const resigns = this.groupByMonth('resin_date');
+          this.activeCount = hires[curKey] || 0;
+          this.resignCount = resigns[curKey] || 0;
+        }
+        this.totalCount = allEmployees.length;
         this.regionData = regions;
         console.log(this.regionData);
         // 建立部门映射
@@ -225,15 +237,6 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private buildWhereFilter(): any {
     const where: any = {};
-    if (this.filterDateRange && this.filterDateRange.length === 2) {
-      const [startDate, endDate] = this.filterDateRange;
-      where.hire_date = {
-        between: [
-          this.fmtDate(startDate),
-          this.fmtDate(endDate) + 'T23:59:59'
-        ]
-      };
-    }
     if (this.selectedFactory) {
       where.plant_name = this.selectedFactory;
     }
@@ -414,6 +417,19 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private monthKey(y: number, m: number): string {
     return `${y}-${String(m).padStart(2, '0')}`;
+  }
+
+  /** 汇总指定日期范围内所有月份的数值 */
+  private sumInRange(monthMap: Record<string, number>, start: Date, end: Date): number {
+    let total = 0;
+    const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+    const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+    while (cursor <= endMonth) {
+      const key = this.monthKey(cursor.getFullYear(), cursor.getMonth() + 1);
+      total += monthMap[key] || 0;
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+    return total;
   }
 
   // ==================== 趋势折线图 ====================
