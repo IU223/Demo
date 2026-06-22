@@ -12,7 +12,7 @@
       <!-- ========== 1. 左侧统计卡片 ========== -->
       <div class="stats-section">
         <div class="stat-card">
-          <span class="stat-label">在职人数</span>
+          <span class="stat-label">入职人数</span>
           <span class="stat-number">{{ activeCount }}</span>
           <div class="stat-row">
             <span class="row-label">同比</span>
@@ -74,9 +74,7 @@
 
           <!-- ★ Step 9：趋势图 AI 分析按钮（筛选栏旁） -->
           <span class="filter-spacer"></span>
-          <button nz-button nzType="text" nzSize="small"
-                  class="ai-analyze-btn"
-                  (click)="analyzeChart('trend')">
+          <button nz-button nzType="text" nzSize="small" class="ai-analyze-btn" (click)="analyzeChart('trend')">
             🤖 AI 分析
           </button>
         </div>
@@ -89,9 +87,8 @@
           <!-- ★ Step 9 / FIX-14：厂别排行标题栏重构 -->
           <div class="chart-header">
             <h4 class="section-title">📈 厂别人数排行</h4>
-            <button nz-button nzType="text" nzSize="small"
-                    class="ai-analyze-btn"
-                    (click)="analyzeChart('factoryRanking')">
+            <button nz-button nzType="text" nzSize="small" class="ai-analyze-btn"
+              (click)="analyzeChart('factoryRanking')">
               🤖 AI 分析
             </button>
           </div>
@@ -118,9 +115,7 @@
           <!-- ★ Step 9 / FIX-14：性别比标题栏重构 -->
           <div class="chart-header">
             <h4 class="section-title">% 性别比</h4>
-            <button nz-button nzType="text" nzSize="small"
-                    class="ai-analyze-btn"
-                    (click)="analyzeChart('gender')">
+            <button nz-button nzType="text" nzSize="small" class="ai-analyze-btn" (click)="analyzeChart('gender')">
               🤖 AI 分析
             </button>
           </div>
@@ -133,9 +128,7 @@
         <!-- ★ Step 9 / FIX-14：地区分布标题栏重构 -->
         <div class="chart-header">
           <h4 class="section-title">地区人员分布</h4>
-          <button nz-button nzType="text" nzSize="small"
-                  class="ai-analyze-btn"
-                  (click)="analyzeChart('region')">
+          <button nz-button nzType="text" nzSize="small" class="ai-analyze-btn" (click)="analyzeChart('region')">
             🤖 AI 分析
           </button>
         </div>
@@ -147,9 +140,7 @@
         <!-- ★ Step 9 / FIX-14：部门分布标题栏重构 -->
         <div class="chart-header">
           <h4 class="section-title">部门分布</h4>
-          <button nz-button nzType="text" nzSize="small"
-                  class="ai-analyze-btn"
-                  (click)="analyzeChart('department')">
+          <button nz-button nzType="text" nzSize="small" class="ai-analyze-btn" (click)="analyzeChart('department')">
             🤖 AI 分析
           </button>
         </div>

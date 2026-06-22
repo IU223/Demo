@@ -197,12 +197,13 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
           this.activeCount = this.sumInRange(hires, s, e);
           this.resignCount = this.sumInRange(resigns, s, e);
         } else {
+          // 默认展示当年数据：从1月1日到当前日期
           const now = new Date();
-          const curKey = this.monthKey(now.getFullYear(), now.getMonth() + 1);
+          const yearStart = new Date(now.getFullYear(), 0, 1);
           const hires = this.groupByMonth('hire_date');
           const resigns = this.groupByMonth('resin_date');
-          this.activeCount = hires[curKey] || 0;
-          this.resignCount = resigns[curKey] || 0;
+          this.activeCount = this.sumInRange(hires, yearStart, now);
+          this.resignCount = this.sumInRange(resigns, yearStart, now);
         }
         this.totalCount = allEmployees.length;
         this.regionData = regions;
