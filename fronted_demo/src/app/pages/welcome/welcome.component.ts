@@ -891,7 +891,7 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
         data: pieData,
         label: {
           show: true,
-          formatter: '{b}\n{c}',
+          formatter: '{b}',
           fontSize: 10,
           color: '#555'
         },
@@ -1039,11 +1039,11 @@ export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
       title: {
         text: '总人数',
         subtext: `${total}`,
-        left: '30%',
+        left: '28%',
         top: '35%',
         textAlign: 'center',
         textStyle: { fontSize: 13, color: '#999', fontWeight: 'normal' },
-        subtextStyle: { fontSize: 24, color: '#333', fontWeight: 'bold' }
+        subtextStyle: { fontSize: 20, color: '#333', fontWeight: 'bold' }
       },
       series: [{
         type: 'pie',

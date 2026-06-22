@@ -152,7 +152,7 @@ export class EmployeeService {
         const where = JSON.stringify({ employee_id: { inq: ids } });
         const params = new HttpParams().set('where', where);
         return this.http.patch<{ count: number }>(
-          `${this.apiUrl}`, { status: false, resin_date: new Date() }, { params },
+          `${this.apiUrl}`, { status: false, resin_date: new Date(), hasaccess: false }, { params },
         );
       }),
     );

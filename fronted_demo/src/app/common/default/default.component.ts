@@ -143,9 +143,7 @@ export class DefaultComponent implements OnInit, OnDestroy {
     this.checkCurrentRoutePermission();
   }
 
-  /**
-   * ★ 新增：检查当前路由是否有权限，无权限则跳转到第一个有权限的页面
-   */
+
   private checkCurrentRoutePermission(): void {
     const currentUrl = this.router.url;
 
@@ -171,20 +169,19 @@ export class DefaultComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ★ 新增：获取第一个有权限的路由
+   * 获取第一个有权限的路由
    */
   private getFirstAllowedRoute(): string | null {
     if (this.showHomeMenu) return '/default/welcome';
     if (this.showReportMenu) return '/default/report';
     if (this.showPermMenu) return '/default/permissions';
     if (this.showAuditLogMenu) return '/default/audit-log';
-    return null;  // 所有页面都没权限（极端情况）
+    return null;
   }
 
 
   // ===================== 初始化 =====================
 
-  /** 初始化个人资料编辑表单 */
   private initProfileForm(): void {
     this.profileForm = this.fb.group({
       employee_id: [{ value: '', disabled: true }],
@@ -365,7 +362,7 @@ export class DefaultComponent implements OnInit, OnDestroy {
     this.isProfileVisible = false;
   }
 
-  // ===================== ★ 修改密码（核心功能） =====================
+  // ===================== 修改密码（核心功能） =====================
 
   /** 点击"修改密码" → 重置表单 → 打开弹框 */
   onChangePassword(): void {
