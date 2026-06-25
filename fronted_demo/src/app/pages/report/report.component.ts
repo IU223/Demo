@@ -22,6 +22,7 @@ import { forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { PermissionService, Permission } from '../../services/permission.service';
 import { ExportService } from '../../services/export.service';
+import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-report',
   standalone: true,
@@ -96,6 +97,7 @@ export class ReportComponent implements OnInit {
     private fb: FormBuilder,
     private permService: PermissionService,
     private exportService: ExportService,
+    private authService: AuthService,
   ) {
     this.initForm();
     this.initViewForm();
@@ -224,21 +226,11 @@ export class ReportComponent implements OnInit {
   }
 
   private getDefaultEmployeeData(): any {
-    // return {
-    //   employee_id: '',
-    //   password: 'password123',
-    //   name: '',
-    //   name_a: '',
-    //   Sex: true,
-    //   dept_desc: null,
-    //   region_name: null,
-    //   plant_name: null,
-    //   role_id: null,
-    //   hire_date: new Date(),
-    //   resin_date: null,
-    //   status: true,
-    //   hasaccess: true
-    // };
+    // 非管理员用户自动设置自己的角色，管理员默认为 null（需手动选择）
+    const defaultRoleId = this.authService.isSuperAdmin()
+      ? null
+      : (this.authService.getCurrentUser()?.role_id ?? null);
+
     return {
       employee_id: 'test01',
       password: 'password123',
@@ -248,7 +240,7 @@ export class ReportComponent implements OnInit {
       dept_desc: 'IT Department',
       region_name: 'WZS',
       plant_name: 'WZS-P3',
-      role_id: 3,
+      role_id: defaultRoleId,
       hire_date: new Date(),
       resin_date: null,
       status: true,
@@ -287,7 +279,14 @@ export class ReportComponent implements OnInit {
   loadRoles(): void {
     this.employeeService.getRoles().subscribe({
       next: (roles) => {
-        this.roleOptions = roles;
+        // 非管理员用户只能看到自己的角色
+        if (!this.authService.isSuperAdmin()) {
+          const currentUser = this.authService.getCurrentUser();
+          const userRoleId = currentUser?.role_id;
+          this.roleOptions = roles.filter(r => r.value === userRoleId);
+        } else {
+          this.roleOptions = roles;
+        }
         console.log('加载角色列表成功:', this.roleOptions);
       },
       error: (err) => {
@@ -417,6 +416,10 @@ export class ReportComponent implements OnInit {
     const data = this.batchEmployees[index];
     this.employeeForm.reset();
     this.employeeForm.patchValue(data);
+    // 非管理员在新增模式下禁用角色选择（只能用自己的角色）
+    if (!this.isEditMode && !this.authService.isSuperAdmin()) {
+      this.employeeForm.get('role_id')?.disable();
+    }
     if (data.region_name) {
       this.onModalAreaChange(data.region_name, data.plant_name);
     }
@@ -733,8 +736,9 @@ export class ReportComponent implements OnInit {
             this.modalAreaOptions = areas.filter(a => a.value !== '1');
             this.modalFactoryOptions = factories.filter(f => f.value !== '1');
 
-            // 2. 重置表单并填充数据
+            // 2. 重置表单并填充数据（编辑模式下确保角色控件可编辑）
             this.employeeForm.reset();
+            this.employeeForm.get('role_id')?.enable();
             this.employeeForm.patchValue({
               employee_id: emp.employee_id ?? '',
               password: emp.password ?? '123456',

@@ -167,7 +167,7 @@ export class AuditLogInterceptor implements Provider<Interceptor> {
         request_method: req.method,
         request_path: req.path,
         ip_address: req.ip ?? req.socket?.remoteAddress,
-        old_value: oldValue,                          // ★ 现在批量操作也会有值
+        old_value: oldValue,
         new_value:
           ['POST', 'PATCH', 'PUT'].includes(req.method) && sanitizedBody
             ? JSON.stringify(sanitizedBody)

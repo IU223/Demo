@@ -36,9 +36,7 @@ export class EmployeeControllerController {
       employee.password = await hashPassword(employee.password);
     }
 
-    console.log('========= POST /employees =========');
     const result = await this.employeeRepository.create(employee);
-    console.log('========= 创建成功 =========');
     return result;
   }
 
@@ -87,10 +85,6 @@ export class EmployeeControllerController {
     employee: Employee,
     @param.where(Employee) where?: Where<Employee>,
   ): Promise<Count> {
-    // ★ 批量更新也要哈希
-    if (employee.password) {
-      employee.password = await hashPassword(employee.password);
-    }
     return this.employeeRepository.updateAll(employee, where);
   }
 
@@ -124,10 +118,6 @@ export class EmployeeControllerController {
     })
     employee: Employee,
   ): Promise<void> {
-    // ★ 单条更新时如果传了 password 则哈希
-    if (employee.password) {
-      employee.password = await hashPassword(employee.password);
-    }
     await this.employeeRepository.updateById(id, employee);
   }
 
@@ -137,9 +127,6 @@ export class EmployeeControllerController {
     @param.path.string('id') id: string,
     @requestBody() employee: Employee,
   ): Promise<void> {
-    if (employee.password) {
-      employee.password = await hashPassword(employee.password);
-    }
     await this.employeeRepository.replaceById(id, employee);
   }
 

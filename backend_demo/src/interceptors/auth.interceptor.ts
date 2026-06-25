@@ -11,7 +11,7 @@ import { RestBindings, Request } from '@loopback/rest';
 import { verifyToken } from '../services/jwt.service';
 
 /**
- * ★ Task 4: 用户信息接口，用于在请求上下文中传递当前用户
+ * 用户信息接口，用于在请求上下文中传递当前用户
  */
 export interface CurrentUserProfile {
   employee_id: string;
@@ -71,9 +71,7 @@ export class AuthInterceptor implements Provider<Interceptor> {
       const token = authHeader.slice(7);
       try {
         const decoded = verifyToken(token);
-        //console.log('[AuthInterceptor] JWT 验证通过, 用户:', decoded.employee_id);
-
-        // ★ Task 4 新增：将解码后的用户信息挂载到 request 对象上
+        // 将解码后的用户信息挂载到 request 对象上
         (req as any).currentUser = {
           employee_id: decoded.employee_id,
           name: decoded.name,

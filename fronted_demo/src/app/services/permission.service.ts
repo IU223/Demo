@@ -57,7 +57,7 @@ export class PermissionService {
     return this.http.get<RoleDetail>(`${this.apiUrl}/${user.role_id}`);
   }
 
-  // ★ Task 8 新增：获取当前用户自己的角色详情
+  // 新增：获取当前用户自己的角色详情
   getMyRole(): Observable<RoleDetail | null> {
     const user = this.authService.getCurrentUser();
     if (!user || user.role_id == null) {

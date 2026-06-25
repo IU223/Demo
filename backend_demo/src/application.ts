@@ -17,6 +17,7 @@ import { DeepSeekProvider } from './services/deepseek.provider';
 import { ZhipuProvider } from './services/zhipu.provider';
 import { AiService } from './services/ai.service';
 import { AiContextBuilder } from './services/ai-context-builder.service';
+import { AuthService } from './services/auth.service';
 
 export { ApplicationConfig };
 
@@ -50,6 +51,9 @@ export class BackendDemoApplication extends BootMixin(
 
     // 注册 AI 服务
     this.setupAiServices();
+
+    // 注册认证服务
+    this.bind('services.AuthService').toClass(AuthService);
   }
 
   /**
