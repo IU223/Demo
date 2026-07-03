@@ -6,6 +6,7 @@ import { ReportComponent } from './pages/report/report.component';
 import { PermissionsComponent } from './pages/permissions/permissions.component';
 import { AuditLogComponent } from './pages/audit-log/audit-log.component';
 import { AuthGuard } from './guards/auth.guard';
+import { EmployeeComponent } from './pages/statments/statments.component';
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: '/login' },
   { path: 'login', component: LoginComponent },
@@ -18,6 +19,7 @@ export const routes: Routes = [
       { path: 'report', component: ReportComponent },
       { path: 'permissions', component: PermissionsComponent },
       { path: 'audit-log', component: AuditLogComponent },
+      { path: 'employees', component: EmployeeComponent }
     ]
   }
 ];

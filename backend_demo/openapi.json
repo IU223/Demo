@@ -1,0 +1,3953 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "backend_demo",
+    "version": "0.0.1",
+    "description": "backend_demo",
+    "contact": {
+      "name": "Yongfeng YF Xu",
+      "email": "Yongfeng_YF_Xu@wistron.com"
+    }
+  },
+  "paths": {
+    "/ai/chat/stream": {
+      "post": {
+        "x-controller-name": "AiChatController",
+        "x-operation-name": "chatStream",
+        "tags": [
+          "AiChatController"
+        ],
+        "responses": {
+          "200": {
+            "description": "SSE stream",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string"
+                  },
+                  "context": {
+                    "type": "object"
+                  },
+                  "session_id": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "message"
+                ]
+              }
+            }
+          },
+          "description": "AI chat stream request",
+          "required": true
+        },
+        "operationId": "AiChatController.chatStream"
+      }
+    },
+    "/ai/chat": {
+      "post": {
+        "x-controller-name": "AiChatController",
+        "x-operation-name": "chat",
+        "tags": [
+          "AiChatController"
+        ],
+        "responses": {
+          "200": {
+            "description": "AI chat response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "string"
+                    },
+                    "session_id": {
+                      "type": "number"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "number"
+                        },
+                        "output_tokens": {
+                          "type": "number"
+                        },
+                        "total_tokens": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string"
+                  },
+                  "context": {
+                    "type": "object"
+                  },
+                  "session_id": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "message"
+                ]
+              }
+            }
+          },
+          "description": "AI chat request",
+          "required": true
+        },
+        "operationId": "AiChatController.chat"
+      }
+    },
+    "/ai/sessions/count": {
+      "get": {
+        "x-controller-name": "AiSessionController",
+        "x-operation-name": "count",
+        "tags": [
+          "AiSessionController"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Session count"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "AiSessionController.count"
+      }
+    },
+    "/ai/sessions/{id}": {
+      "patch": {
+        "x-controller-name": "AiSessionController",
+        "x-operation-name": "updateById",
+        "tags": [
+          "AiSessionController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Session PATCH success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "x-parameter-index": 1
+        },
+        "operationId": "AiSessionController.updateById"
+      },
+      "get": {
+        "x-controller-name": "AiSessionController",
+        "x-operation-name": "findById",
+        "tags": [
+          "AiSessionController"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Session detail with messages"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "operationId": "AiSessionController.findById"
+      },
+      "delete": {
+        "x-controller-name": "AiSessionController",
+        "x-operation-name": "deleteById",
+        "tags": [
+          "AiSessionController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Session soft-delete success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "operationId": "AiSessionController.deleteById"
+      }
+    },
+    "/ai/sessions": {
+      "get": {
+        "x-controller-name": "AiSessionController",
+        "x-operation-name": "find",
+        "tags": [
+          "AiSessionController"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "List chat sessions"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "operationId": "AiSessionController.find"
+      }
+    },
+    "/ai/templates": {
+      "get": {
+        "x-controller-name": "AiTemplateController",
+        "x-operation-name": "getTemplates",
+        "tags": [
+          "AiTemplateController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of AnalysisTemplate instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "template_id": {
+                        "type": "number"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "prompt": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string"
+                      },
+                      "sort_order": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "AiTemplateController.getTemplates"
+      }
+    },
+    "/audit-logs/count": {
+      "get": {
+        "x-controller-name": "AuditLogController",
+        "x-operation-name": "count",
+        "tags": [
+          "AuditLogController"
+        ],
+        "responses": {
+          "200": {
+            "description": "AuditLog model count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loopback.Count"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "where",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "AuditLog.WhereFilter",
+                  "additionalProperties": true,
+                  "x-typescript-type": "@loopback/repository#Where<AuditLog>"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "AuditLogController.count"
+      }
+    },
+    "/audit-logs/{id}": {
+      "get": {
+        "x-controller-name": "AuditLogController",
+        "x-operation-name": "findById",
+        "tags": [
+          "AuditLogController"
+        ],
+        "responses": {
+          "200": {
+            "description": "AuditLog model instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLogWithRelations"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLog.Filter"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "AuditLogController.findById"
+      }
+    },
+    "/audit-logs": {
+      "get": {
+        "x-controller-name": "AuditLogController",
+        "x-operation-name": "find",
+        "tags": [
+          "AuditLogController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of AuditLog model instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditLogWithRelations"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLog.Filter1"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "AuditLogController.find"
+      }
+    },
+    "/change-password": {
+      "post": {
+        "x-controller-name": "AuthController",
+        "x-operation-name": "changePassword",
+        "tags": [
+          "AuthController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Change password response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "oldPassword": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "oldPassword",
+                  "newPassword"
+                ]
+              }
+            }
+          },
+          "description": "Change password payload",
+          "required": true
+        },
+        "operationId": "AuthController.changePassword"
+      }
+    },
+    "/departments/count": {
+      "get": {
+        "x-controller-name": "DepartmentController",
+        "x-operation-name": "count",
+        "tags": [
+          "DepartmentController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Department model count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loopback.Count"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "where",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Department.WhereFilter",
+                  "additionalProperties": true,
+                  "x-typescript-type": "@loopback/repository#Where<Department>"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "DepartmentController.count"
+      }
+    },
+    "/departments/{id}": {
+      "put": {
+        "x-controller-name": "DepartmentController",
+        "x-operation-name": "replaceById",
+        "tags": [
+          "DepartmentController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Department PUT success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Department"
+              }
+            }
+          },
+          "x-parameter-index": 1
+        },
+        "operationId": "DepartmentController.replaceById"
+      },
+      "patch": {
+        "x-controller-name": "DepartmentController",
+        "x-operation-name": "updateById",
+        "tags": [
+          "DepartmentController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Department PATCH success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepartmentPartial"
+              }
+            }
+          },
+          "x-parameter-index": 1
+        },
+        "operationId": "DepartmentController.updateById"
+      },
+      "get": {
+        "x-controller-name": "DepartmentController",
+        "x-operation-name": "findById",
+        "tags": [
+          "DepartmentController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Department model instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepartmentWithRelations"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Department.Filter"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "DepartmentController.findById"
+      },
+      "delete": {
+        "x-controller-name": "DepartmentController",
+        "x-operation-name": "deleteById",
+        "tags": [
+          "DepartmentController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Department DELETE success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "operationId": "DepartmentController.deleteById"
+      }
+    },
+    "/departments": {
+      "post": {
+        "x-controller-name": "DepartmentController",
+        "x-operation-name": "create",
+        "tags": [
+          "DepartmentController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Department model instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Department"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewDepartment"
+              }
+            }
+          }
+        },
+        "operationId": "DepartmentController.create"
+      },
+      "patch": {
+        "x-controller-name": "DepartmentController",
+        "x-operation-name": "updateAll",
+        "tags": [
+          "DepartmentController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Department PATCH success count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loopback.Count"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "where",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Department.WhereFilter",
+                  "additionalProperties": true,
+                  "x-typescript-type": "@loopback/repository#Where<Department>"
+                }
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DepartmentPartial"
+              }
+            }
+          }
+        },
+        "operationId": "DepartmentController.updateAll"
+      },
+      "get": {
+        "x-controller-name": "DepartmentController",
+        "x-operation-name": "find",
+        "tags": [
+          "DepartmentController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of Department model instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DepartmentWithRelations"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Department.Filter1"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "DepartmentController.find"
+      }
+    },
+    "/employees/count": {
+      "get": {
+        "x-controller-name": "EmployeeControllerController",
+        "x-operation-name": "count",
+        "tags": [
+          "EmployeeControllerController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Employee model count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loopback.Count"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "where",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Employee.WhereFilter",
+                  "additionalProperties": true,
+                  "x-typescript-type": "@loopback/repository#Where<Employee>"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "EmployeeControllerController.count"
+      }
+    },
+    "/employees/{id}": {
+      "put": {
+        "x-controller-name": "EmployeeControllerController",
+        "x-operation-name": "replaceById",
+        "tags": [
+          "EmployeeControllerController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Employee PUT success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Employee"
+              }
+            }
+          },
+          "x-parameter-index": 1
+        },
+        "operationId": "EmployeeControllerController.replaceById"
+      },
+      "patch": {
+        "x-controller-name": "EmployeeControllerController",
+        "x-operation-name": "updateById",
+        "tags": [
+          "EmployeeControllerController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Employee PATCH success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeePartial"
+              }
+            }
+          },
+          "x-parameter-index": 1
+        },
+        "operationId": "EmployeeControllerController.updateById"
+      },
+      "get": {
+        "x-controller-name": "EmployeeControllerController",
+        "x-operation-name": "findById",
+        "tags": [
+          "EmployeeControllerController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Employee model instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeWithRelations"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Employee.Filter"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "EmployeeControllerController.findById"
+      },
+      "delete": {
+        "x-controller-name": "EmployeeControllerController",
+        "x-operation-name": "deleteById",
+        "tags": [
+          "EmployeeControllerController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Employee DELETE success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "operationId": "EmployeeControllerController.deleteById"
+      }
+    },
+    "/employees": {
+      "post": {
+        "x-controller-name": "EmployeeControllerController",
+        "x-operation-name": "create",
+        "tags": [
+          "EmployeeControllerController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Employee model instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Employee"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewEmployee"
+              }
+            }
+          }
+        },
+        "operationId": "EmployeeControllerController.create"
+      },
+      "patch": {
+        "x-controller-name": "EmployeeControllerController",
+        "x-operation-name": "updateAll",
+        "tags": [
+          "EmployeeControllerController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Employee PATCH success count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loopback.Count"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "where",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Employee.WhereFilter",
+                  "additionalProperties": true,
+                  "x-typescript-type": "@loopback/repository#Where<Employee>"
+                }
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeePartial"
+              }
+            }
+          }
+        },
+        "operationId": "EmployeeControllerController.updateAll"
+      },
+      "get": {
+        "x-controller-name": "EmployeeControllerController",
+        "x-operation-name": "find",
+        "tags": [
+          "EmployeeControllerController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of Employee model instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EmployeeWithRelations"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Employee.Filter1"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "EmployeeControllerController.find"
+      }
+    },
+    "/forgot-password": {
+      "post": {
+        "x-controller-name": "AuthController",
+        "x-operation-name": "forgotPassword",
+        "tags": [
+          "AuthController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Change password response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "newPassword"
+                ]
+              }
+            }
+          },
+          "description": "Forgot password payload",
+          "required": true
+        },
+        "operationId": "AuthController.forgotPassword"
+      }
+    },
+    "/hash-password": {
+      "post": {
+        "x-controller-name": "AuthController",
+        "x-operation-name": "hashPwd",
+        "tags": [
+          "AuthController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Hash a plain-text password (utility endpoint)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "operationId": "AuthController.hashPwd"
+      }
+    },
+    "/login": {
+      "post": {
+        "x-controller-name": "AuthController",
+        "x-operation-name": "login",
+        "tags": [
+          "AuthController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Login response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "password"
+                ]
+              }
+            }
+          },
+          "description": "Credentials",
+          "required": true
+        },
+        "operationId": "AuthController.login"
+      }
+    },
+    "/ping": {
+      "get": {
+        "x-controller-name": "PingController",
+        "x-operation-name": "ping",
+        "tags": [
+          "PingController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Ping Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PingResponse"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "PingController.ping"
+      }
+    },
+    "/plants/count": {
+      "get": {
+        "x-controller-name": "PlantController",
+        "x-operation-name": "count",
+        "tags": [
+          "PlantController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Plant model count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loopback.Count"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "where",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Plant.WhereFilter",
+                  "additionalProperties": true,
+                  "x-typescript-type": "@loopback/repository#Where<Plant>"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "PlantController.count"
+      }
+    },
+    "/plants/{id}": {
+      "put": {
+        "x-controller-name": "PlantController",
+        "x-operation-name": "replaceById",
+        "tags": [
+          "PlantController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Plant PUT success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Plant"
+              }
+            }
+          },
+          "x-parameter-index": 1
+        },
+        "operationId": "PlantController.replaceById"
+      },
+      "patch": {
+        "x-controller-name": "PlantController",
+        "x-operation-name": "updateById",
+        "tags": [
+          "PlantController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Plant PATCH success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlantPartial"
+              }
+            }
+          },
+          "x-parameter-index": 1
+        },
+        "operationId": "PlantController.updateById"
+      },
+      "get": {
+        "x-controller-name": "PlantController",
+        "x-operation-name": "findById",
+        "tags": [
+          "PlantController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Plant model instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantWithRelations"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Plant.Filter"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "PlantController.findById"
+      },
+      "delete": {
+        "x-controller-name": "PlantController",
+        "x-operation-name": "deleteById",
+        "tags": [
+          "PlantController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Plant DELETE success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "operationId": "PlantController.deleteById"
+      }
+    },
+    "/plants": {
+      "post": {
+        "x-controller-name": "PlantController",
+        "x-operation-name": "create",
+        "tags": [
+          "PlantController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Plant model instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Plant"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewPlant"
+              }
+            }
+          }
+        },
+        "operationId": "PlantController.create"
+      },
+      "patch": {
+        "x-controller-name": "PlantController",
+        "x-operation-name": "updateAll",
+        "tags": [
+          "PlantController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Plant PATCH success count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loopback.Count"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "where",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Plant.WhereFilter",
+                  "additionalProperties": true,
+                  "x-typescript-type": "@loopback/repository#Where<Plant>"
+                }
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlantPartial"
+              }
+            }
+          }
+        },
+        "operationId": "PlantController.updateAll"
+      },
+      "get": {
+        "x-controller-name": "PlantController",
+        "x-operation-name": "find",
+        "tags": [
+          "PlantController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of Plant model instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlantWithRelations"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Plant.Filter1"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "PlantController.find"
+      }
+    },
+    "/regions/count": {
+      "get": {
+        "x-controller-name": "RegionController",
+        "x-operation-name": "count",
+        "tags": [
+          "RegionController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Region model count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loopback.Count"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "where",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Region.WhereFilter",
+                  "additionalProperties": true,
+                  "x-typescript-type": "@loopback/repository#Where<Region>"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "RegionController.count"
+      }
+    },
+    "/regions/{id}": {
+      "put": {
+        "x-controller-name": "RegionController",
+        "x-operation-name": "replaceById",
+        "tags": [
+          "RegionController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Region PUT success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Region"
+              }
+            }
+          },
+          "x-parameter-index": 1
+        },
+        "operationId": "RegionController.replaceById"
+      },
+      "patch": {
+        "x-controller-name": "RegionController",
+        "x-operation-name": "updateById",
+        "tags": [
+          "RegionController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Region PATCH success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegionPartial"
+              }
+            }
+          },
+          "x-parameter-index": 1
+        },
+        "operationId": "RegionController.updateById"
+      },
+      "get": {
+        "x-controller-name": "RegionController",
+        "x-operation-name": "findById",
+        "tags": [
+          "RegionController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Region model instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegionWithRelations"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Region.Filter"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "RegionController.findById"
+      },
+      "delete": {
+        "x-controller-name": "RegionController",
+        "x-operation-name": "deleteById",
+        "tags": [
+          "RegionController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Region DELETE success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "operationId": "RegionController.deleteById"
+      }
+    },
+    "/regions": {
+      "post": {
+        "x-controller-name": "RegionController",
+        "x-operation-name": "create",
+        "tags": [
+          "RegionController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Region model instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Region"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewRegion"
+              }
+            }
+          }
+        },
+        "operationId": "RegionController.create"
+      },
+      "patch": {
+        "x-controller-name": "RegionController",
+        "x-operation-name": "updateAll",
+        "tags": [
+          "RegionController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Region PATCH success count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loopback.Count"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "where",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Region.WhereFilter",
+                  "additionalProperties": true,
+                  "x-typescript-type": "@loopback/repository#Where<Region>"
+                }
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegionPartial"
+              }
+            }
+          }
+        },
+        "operationId": "RegionController.updateAll"
+      },
+      "get": {
+        "x-controller-name": "RegionController",
+        "x-operation-name": "find",
+        "tags": [
+          "RegionController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of Region model instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RegionWithRelations"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Region.Filter1"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "RegionController.find"
+      }
+    },
+    "/roles/count": {
+      "get": {
+        "x-controller-name": "RoleController",
+        "x-operation-name": "count",
+        "tags": [
+          "RoleController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Role model count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loopback.Count"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "where",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Role.WhereFilter",
+                  "additionalProperties": true,
+                  "x-typescript-type": "@loopback/repository#Where<Role>"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "RoleController.count"
+      }
+    },
+    "/roles/{id}": {
+      "put": {
+        "x-controller-name": "RoleController",
+        "x-operation-name": "replaceById",
+        "tags": [
+          "RoleController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Role PUT success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Role"
+              }
+            }
+          },
+          "x-parameter-index": 1
+        },
+        "operationId": "RoleController.replaceById"
+      },
+      "patch": {
+        "x-controller-name": "RoleController",
+        "x-operation-name": "updateById",
+        "tags": [
+          "RoleController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Role PATCH success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RolePartial"
+              }
+            }
+          },
+          "x-parameter-index": 1
+        },
+        "operationId": "RoleController.updateById"
+      },
+      "get": {
+        "x-controller-name": "RoleController",
+        "x-operation-name": "findById",
+        "tags": [
+          "RoleController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Role model instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleWithRelations"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Role.Filter"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "RoleController.findById"
+      },
+      "delete": {
+        "x-controller-name": "RoleController",
+        "x-operation-name": "deleteById",
+        "tags": [
+          "RoleController"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Role DELETE success"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "number"
+            },
+            "required": true
+          }
+        ],
+        "operationId": "RoleController.deleteById"
+      }
+    },
+    "/roles": {
+      "post": {
+        "x-controller-name": "RoleController",
+        "x-operation-name": "create",
+        "tags": [
+          "RoleController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Role model instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Role"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewRole"
+              }
+            }
+          }
+        },
+        "operationId": "RoleController.create"
+      },
+      "patch": {
+        "x-controller-name": "RoleController",
+        "x-operation-name": "updateAll",
+        "tags": [
+          "RoleController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Role PATCH success count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loopback.Count"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "where",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Role.WhereFilter",
+                  "additionalProperties": true,
+                  "x-typescript-type": "@loopback/repository#Where<Role>"
+                }
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RolePartial"
+              }
+            }
+          }
+        },
+        "operationId": "RoleController.updateAll"
+      },
+      "get": {
+        "x-controller-name": "RoleController",
+        "x-operation-name": "find",
+        "tags": [
+          "RoleController"
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of Role model instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoleWithRelations"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Role.Filter1"
+                }
+              }
+            }
+          }
+        ],
+        "operationId": "RoleController.find"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:3000"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "Role": {
+        "title": "Role",
+        "type": "object",
+        "properties": {
+          "role_id": {
+            "type": "number"
+          },
+          "role_name": {
+            "type": "string"
+          },
+          "home_page_auth": {
+            "type": "number"
+          },
+          "report_page_auth": {
+            "type": "number"
+          },
+          "auth_page_auth": {
+            "type": "number"
+          },
+          "log_page_auth": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "is_super_admin": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NewRole": {
+        "title": "NewRole",
+        "type": "object",
+        "description": "(tsType: Role, schemaOptions: { title: 'NewRole' })",
+        "properties": {
+          "role_id": {
+            "type": "number"
+          },
+          "role_name": {
+            "type": "string"
+          },
+          "home_page_auth": {
+            "type": "number"
+          },
+          "report_page_auth": {
+            "type": "number"
+          },
+          "auth_page_auth": {
+            "type": "number"
+          },
+          "log_page_auth": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "is_super_admin": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "Role"
+      },
+      "RoleWithRelations": {
+        "title": "RoleWithRelations",
+        "type": "object",
+        "description": "(tsType: RoleWithRelations, schemaOptions: { includeRelations: true })",
+        "properties": {
+          "role_id": {
+            "type": "number"
+          },
+          "role_name": {
+            "type": "string"
+          },
+          "home_page_auth": {
+            "type": "number"
+          },
+          "report_page_auth": {
+            "type": "number"
+          },
+          "auth_page_auth": {
+            "type": "number"
+          },
+          "log_page_auth": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "is_super_admin": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "RoleWithRelations"
+      },
+      "RolePartial": {
+        "title": "RolePartial",
+        "type": "object",
+        "description": "(tsType: Partial<Role>, schemaOptions: { partial: true })",
+        "properties": {
+          "role_id": {
+            "type": "number"
+          },
+          "role_name": {
+            "type": "string"
+          },
+          "home_page_auth": {
+            "type": "number"
+          },
+          "report_page_auth": {
+            "type": "number"
+          },
+          "auth_page_auth": {
+            "type": "number"
+          },
+          "log_page_auth": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "is_super_admin": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "Partial<Role>"
+      },
+      "Region": {
+        "title": "Region",
+        "type": "object",
+        "properties": {
+          "region_id": {
+            "type": "number"
+          },
+          "region_name": {
+            "type": "string"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "region_name_cn": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NewRegion": {
+        "title": "NewRegion",
+        "type": "object",
+        "description": "(tsType: Region, schemaOptions: { title: 'NewRegion' })",
+        "properties": {
+          "region_id": {
+            "type": "number"
+          },
+          "region_name": {
+            "type": "string"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "region_name_cn": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "Region"
+      },
+      "RegionWithRelations": {
+        "title": "RegionWithRelations",
+        "type": "object",
+        "description": "(tsType: RegionWithRelations, schemaOptions: { includeRelations: true })",
+        "properties": {
+          "region_id": {
+            "type": "number"
+          },
+          "region_name": {
+            "type": "string"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "region_name_cn": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "RegionWithRelations"
+      },
+      "RegionPartial": {
+        "title": "RegionPartial",
+        "type": "object",
+        "description": "(tsType: Partial<Region>, schemaOptions: { partial: true })",
+        "properties": {
+          "region_id": {
+            "type": "number"
+          },
+          "region_name": {
+            "type": "string"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "region_name_cn": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "Partial<Region>"
+      },
+      "Plant": {
+        "title": "Plant",
+        "type": "object",
+        "properties": {
+          "plant_id": {
+            "type": "number"
+          },
+          "site": {
+            "type": "string"
+          },
+          "plant_name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NewPlant": {
+        "title": "NewPlant",
+        "type": "object",
+        "description": "(tsType: Plant, schemaOptions: { title: 'NewPlant' })",
+        "properties": {
+          "plant_id": {
+            "type": "number"
+          },
+          "site": {
+            "type": "string"
+          },
+          "plant_name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "Plant"
+      },
+      "PlantWithRelations": {
+        "title": "PlantWithRelations",
+        "type": "object",
+        "description": "(tsType: PlantWithRelations, schemaOptions: { includeRelations: true })",
+        "properties": {
+          "plant_id": {
+            "type": "number"
+          },
+          "site": {
+            "type": "string"
+          },
+          "plant_name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "PlantWithRelations"
+      },
+      "PlantPartial": {
+        "title": "PlantPartial",
+        "type": "object",
+        "description": "(tsType: Partial<Plant>, schemaOptions: { partial: true })",
+        "properties": {
+          "plant_id": {
+            "type": "number"
+          },
+          "site": {
+            "type": "string"
+          },
+          "plant_name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "Partial<Plant>"
+      },
+      "Employee": {
+        "title": "Employee",
+        "type": "object",
+        "properties": {
+          "employee_id": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "name_a": {
+            "type": "string"
+          },
+          "Sex": {
+            "type": "boolean"
+          },
+          "dept_desc": {
+            "type": "string"
+          },
+          "plant_name": {
+            "type": "string"
+          },
+          "region_name": {
+            "type": "string"
+          },
+          "role_id": {
+            "type": "number"
+          },
+          "hire_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resin_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "boolean"
+          },
+          "hasaccess": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "employee_id"
+        ],
+        "additionalProperties": false
+      },
+      "NewEmployee": {
+        "title": "NewEmployee",
+        "type": "object",
+        "description": "(tsType: Employee, schemaOptions: { title: 'NewEmployee' })",
+        "properties": {
+          "employee_id": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "name_a": {
+            "type": "string"
+          },
+          "Sex": {
+            "type": "boolean"
+          },
+          "dept_desc": {
+            "type": "string"
+          },
+          "plant_name": {
+            "type": "string"
+          },
+          "region_name": {
+            "type": "string"
+          },
+          "role_id": {
+            "type": "number"
+          },
+          "hire_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resin_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "boolean"
+          },
+          "hasaccess": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "employee_id"
+        ],
+        "additionalProperties": false,
+        "x-typescript-type": "Employee"
+      },
+      "EmployeeWithRelations": {
+        "title": "EmployeeWithRelations",
+        "type": "object",
+        "description": "(tsType: EmployeeWithRelations, schemaOptions: { includeRelations: true })",
+        "properties": {
+          "employee_id": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "name_a": {
+            "type": "string"
+          },
+          "Sex": {
+            "type": "boolean"
+          },
+          "dept_desc": {
+            "type": "string"
+          },
+          "plant_name": {
+            "type": "string"
+          },
+          "region_name": {
+            "type": "string"
+          },
+          "role_id": {
+            "type": "number"
+          },
+          "hire_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resin_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "boolean"
+          },
+          "hasaccess": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "employee_id"
+        ],
+        "additionalProperties": false,
+        "x-typescript-type": "EmployeeWithRelations"
+      },
+      "EmployeePartial": {
+        "title": "EmployeePartial",
+        "type": "object",
+        "description": "(tsType: Partial<Employee>, schemaOptions: { partial: true })",
+        "properties": {
+          "employee_id": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "name_a": {
+            "type": "string"
+          },
+          "Sex": {
+            "type": "boolean"
+          },
+          "dept_desc": {
+            "type": "string"
+          },
+          "plant_name": {
+            "type": "string"
+          },
+          "region_name": {
+            "type": "string"
+          },
+          "role_id": {
+            "type": "number"
+          },
+          "hire_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resin_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "boolean"
+          },
+          "hasaccess": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "Partial<Employee>"
+      },
+      "Department": {
+        "title": "Department",
+        "type": "object",
+        "properties": {
+          "dept_id": {
+            "type": "number"
+          },
+          "dept_code": {
+            "type": "string"
+          },
+          "dept_desc": {
+            "type": "string"
+          },
+          "dept_desc_a": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "dept_id"
+        ],
+        "additionalProperties": false
+      },
+      "NewDepartment": {
+        "title": "NewDepartment",
+        "type": "object",
+        "description": "(tsType: Department, schemaOptions: { title: 'NewDepartment' })",
+        "properties": {
+          "dept_id": {
+            "type": "number"
+          },
+          "dept_code": {
+            "type": "string"
+          },
+          "dept_desc": {
+            "type": "string"
+          },
+          "dept_desc_a": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "dept_id"
+        ],
+        "additionalProperties": false,
+        "x-typescript-type": "Department"
+      },
+      "DepartmentWithRelations": {
+        "title": "DepartmentWithRelations",
+        "type": "object",
+        "description": "(tsType: DepartmentWithRelations, schemaOptions: { includeRelations: true })",
+        "properties": {
+          "dept_id": {
+            "type": "number"
+          },
+          "dept_code": {
+            "type": "string"
+          },
+          "dept_desc": {
+            "type": "string"
+          },
+          "dept_desc_a": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "dept_id"
+        ],
+        "additionalProperties": false,
+        "x-typescript-type": "DepartmentWithRelations"
+      },
+      "DepartmentPartial": {
+        "title": "DepartmentPartial",
+        "type": "object",
+        "description": "(tsType: Partial<Department>, schemaOptions: { partial: true })",
+        "properties": {
+          "dept_id": {
+            "type": "number"
+          },
+          "dept_code": {
+            "type": "string"
+          },
+          "dept_desc": {
+            "type": "string"
+          },
+          "dept_desc_a": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "Partial<Department>"
+      },
+      "AuditLogWithRelations": {
+        "title": "AuditLogWithRelations",
+        "type": "object",
+        "description": "(tsType: AuditLogWithRelations, schemaOptions: { includeRelations: true })",
+        "properties": {
+          "log_id": {
+            "type": "number"
+          },
+          "operator_id": {
+            "type": "string"
+          },
+          "operator_name": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "resource_type": {
+            "type": "string"
+          },
+          "resource_id": {
+            "type": "string"
+          },
+          "request_method": {
+            "type": "string"
+          },
+          "request_path": {
+            "type": "string"
+          },
+          "ip_address": {
+            "type": "string"
+          },
+          "old_value": {
+            "type": "string"
+          },
+          "new_value": {
+            "type": "string"
+          },
+          "status_code": {
+            "type": "number"
+          },
+          "error_message": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "operator_id",
+          "action",
+          "resource_type",
+          "request_method",
+          "request_path"
+        ],
+        "additionalProperties": false,
+        "x-typescript-type": "AuditLogWithRelations"
+      },
+      "loopback.Count": {
+        "type": "object",
+        "title": "loopback.Count",
+        "x-typescript-type": "@loopback/repository#Count",
+        "properties": {
+          "count": {
+            "type": "number"
+          }
+        }
+      },
+      "AuditLog.Filter": {
+        "type": "object",
+        "title": "AuditLog.Filter",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 100
+          },
+          "skip": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "order": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "fields": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "log_id": {
+                    "type": "boolean"
+                  },
+                  "operator_id": {
+                    "type": "boolean"
+                  },
+                  "operator_name": {
+                    "type": "boolean"
+                  },
+                  "action": {
+                    "type": "boolean"
+                  },
+                  "resource_type": {
+                    "type": "boolean"
+                  },
+                  "resource_id": {
+                    "type": "boolean"
+                  },
+                  "request_method": {
+                    "type": "boolean"
+                  },
+                  "request_path": {
+                    "type": "boolean"
+                  },
+                  "ip_address": {
+                    "type": "boolean"
+                  },
+                  "old_value": {
+                    "type": "boolean"
+                  },
+                  "new_value": {
+                    "type": "boolean"
+                  },
+                  "status_code": {
+                    "type": "boolean"
+                  },
+                  "error_message": {
+                    "type": "boolean"
+                  },
+                  "created_at": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "log_id",
+                    "operator_id",
+                    "operator_name",
+                    "action",
+                    "resource_type",
+                    "resource_id",
+                    "request_method",
+                    "request_path",
+                    "ip_address",
+                    "old_value",
+                    "new_value",
+                    "status_code",
+                    "error_message",
+                    "created_at"
+                  ],
+                  "example": "log_id"
+                },
+                "uniqueItems": true
+              }
+            ],
+            "title": "AuditLog.Fields"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "@loopback/repository#Filter<AuditLog>"
+      },
+      "AuditLog.Filter1": {
+        "type": "object",
+        "title": "AuditLog.Filter",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 100
+          },
+          "skip": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "order": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "where": {
+            "title": "AuditLog.WhereFilter",
+            "type": "object",
+            "additionalProperties": true
+          },
+          "fields": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "log_id": {
+                    "type": "boolean"
+                  },
+                  "operator_id": {
+                    "type": "boolean"
+                  },
+                  "operator_name": {
+                    "type": "boolean"
+                  },
+                  "action": {
+                    "type": "boolean"
+                  },
+                  "resource_type": {
+                    "type": "boolean"
+                  },
+                  "resource_id": {
+                    "type": "boolean"
+                  },
+                  "request_method": {
+                    "type": "boolean"
+                  },
+                  "request_path": {
+                    "type": "boolean"
+                  },
+                  "ip_address": {
+                    "type": "boolean"
+                  },
+                  "old_value": {
+                    "type": "boolean"
+                  },
+                  "new_value": {
+                    "type": "boolean"
+                  },
+                  "status_code": {
+                    "type": "boolean"
+                  },
+                  "error_message": {
+                    "type": "boolean"
+                  },
+                  "created_at": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "log_id",
+                    "operator_id",
+                    "operator_name",
+                    "action",
+                    "resource_type",
+                    "resource_id",
+                    "request_method",
+                    "request_path",
+                    "ip_address",
+                    "old_value",
+                    "new_value",
+                    "status_code",
+                    "error_message",
+                    "created_at"
+                  ],
+                  "example": "log_id"
+                },
+                "uniqueItems": true
+              }
+            ],
+            "title": "AuditLog.Fields"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "@loopback/repository#Filter<AuditLog>"
+      },
+      "Department.Filter": {
+        "type": "object",
+        "title": "Department.Filter",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 100
+          },
+          "skip": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "order": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "fields": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "dept_id": {
+                    "type": "boolean"
+                  },
+                  "dept_code": {
+                    "type": "boolean"
+                  },
+                  "dept_desc": {
+                    "type": "boolean"
+                  },
+                  "dept_desc_a": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "dept_id",
+                    "dept_code",
+                    "dept_desc",
+                    "dept_desc_a"
+                  ],
+                  "example": "dept_id"
+                },
+                "uniqueItems": true
+              }
+            ],
+            "title": "Department.Fields"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "@loopback/repository#Filter<Department>"
+      },
+      "Department.Filter1": {
+        "type": "object",
+        "title": "Department.Filter",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 100
+          },
+          "skip": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "order": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "where": {
+            "title": "Department.WhereFilter",
+            "type": "object",
+            "additionalProperties": true
+          },
+          "fields": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "dept_id": {
+                    "type": "boolean"
+                  },
+                  "dept_code": {
+                    "type": "boolean"
+                  },
+                  "dept_desc": {
+                    "type": "boolean"
+                  },
+                  "dept_desc_a": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "dept_id",
+                    "dept_code",
+                    "dept_desc",
+                    "dept_desc_a"
+                  ],
+                  "example": "dept_id"
+                },
+                "uniqueItems": true
+              }
+            ],
+            "title": "Department.Fields"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "@loopback/repository#Filter<Department>"
+      },
+      "Employee.Filter": {
+        "type": "object",
+        "title": "Employee.Filter",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 100
+          },
+          "skip": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "order": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "fields": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "employee_id": {
+                    "type": "boolean"
+                  },
+                  "password": {
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "type": "boolean"
+                  },
+                  "name_a": {
+                    "type": "boolean"
+                  },
+                  "Sex": {
+                    "type": "boolean"
+                  },
+                  "dept_desc": {
+                    "type": "boolean"
+                  },
+                  "plant_name": {
+                    "type": "boolean"
+                  },
+                  "region_name": {
+                    "type": "boolean"
+                  },
+                  "role_id": {
+                    "type": "boolean"
+                  },
+                  "hire_date": {
+                    "type": "boolean"
+                  },
+                  "resin_date": {
+                    "type": "boolean"
+                  },
+                  "status": {
+                    "type": "boolean"
+                  },
+                  "hasaccess": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "employee_id",
+                    "password",
+                    "name",
+                    "name_a",
+                    "Sex",
+                    "dept_desc",
+                    "plant_name",
+                    "region_name",
+                    "role_id",
+                    "hire_date",
+                    "resin_date",
+                    "status",
+                    "hasaccess"
+                  ],
+                  "example": "employee_id"
+                },
+                "uniqueItems": true
+              }
+            ],
+            "title": "Employee.Fields"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "@loopback/repository#Filter<Employee>"
+      },
+      "Employee.Filter1": {
+        "type": "object",
+        "title": "Employee.Filter",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 100
+          },
+          "skip": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "order": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "where": {
+            "title": "Employee.WhereFilter",
+            "type": "object",
+            "additionalProperties": true
+          },
+          "fields": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "employee_id": {
+                    "type": "boolean"
+                  },
+                  "password": {
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "type": "boolean"
+                  },
+                  "name_a": {
+                    "type": "boolean"
+                  },
+                  "Sex": {
+                    "type": "boolean"
+                  },
+                  "dept_desc": {
+                    "type": "boolean"
+                  },
+                  "plant_name": {
+                    "type": "boolean"
+                  },
+                  "region_name": {
+                    "type": "boolean"
+                  },
+                  "role_id": {
+                    "type": "boolean"
+                  },
+                  "hire_date": {
+                    "type": "boolean"
+                  },
+                  "resin_date": {
+                    "type": "boolean"
+                  },
+                  "status": {
+                    "type": "boolean"
+                  },
+                  "hasaccess": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "employee_id",
+                    "password",
+                    "name",
+                    "name_a",
+                    "Sex",
+                    "dept_desc",
+                    "plant_name",
+                    "region_name",
+                    "role_id",
+                    "hire_date",
+                    "resin_date",
+                    "status",
+                    "hasaccess"
+                  ],
+                  "example": "employee_id"
+                },
+                "uniqueItems": true
+              }
+            ],
+            "title": "Employee.Fields"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "@loopback/repository#Filter<Employee>"
+      },
+      "PingResponse": {
+        "type": "object",
+        "title": "PingResponse",
+        "properties": {
+          "greeting": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "headers": {
+            "type": "object",
+            "properties": {
+              "Content-Type": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "Plant.Filter": {
+        "type": "object",
+        "title": "Plant.Filter",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 100
+          },
+          "skip": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "order": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "fields": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "plant_id": {
+                    "type": "boolean"
+                  },
+                  "site": {
+                    "type": "boolean"
+                  },
+                  "plant_name": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "plant_id",
+                    "site",
+                    "plant_name"
+                  ],
+                  "example": "plant_id"
+                },
+                "uniqueItems": true
+              }
+            ],
+            "title": "Plant.Fields"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "@loopback/repository#Filter<Plant>"
+      },
+      "Plant.Filter1": {
+        "type": "object",
+        "title": "Plant.Filter",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 100
+          },
+          "skip": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "order": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "where": {
+            "title": "Plant.WhereFilter",
+            "type": "object",
+            "additionalProperties": true
+          },
+          "fields": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "plant_id": {
+                    "type": "boolean"
+                  },
+                  "site": {
+                    "type": "boolean"
+                  },
+                  "plant_name": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "plant_id",
+                    "site",
+                    "plant_name"
+                  ],
+                  "example": "plant_id"
+                },
+                "uniqueItems": true
+              }
+            ],
+            "title": "Plant.Fields"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "@loopback/repository#Filter<Plant>"
+      },
+      "Region.Filter": {
+        "type": "object",
+        "title": "Region.Filter",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 100
+          },
+          "skip": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "order": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "fields": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "region_id": {
+                    "type": "boolean"
+                  },
+                  "region_name": {
+                    "type": "boolean"
+                  },
+                  "longitude": {
+                    "type": "boolean"
+                  },
+                  "latitude": {
+                    "type": "boolean"
+                  },
+                  "region_name_cn": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "region_id",
+                    "region_name",
+                    "longitude",
+                    "latitude",
+                    "region_name_cn"
+                  ],
+                  "example": "region_id"
+                },
+                "uniqueItems": true
+              }
+            ],
+            "title": "Region.Fields"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "@loopback/repository#Filter<Region>"
+      },
+      "Region.Filter1": {
+        "type": "object",
+        "title": "Region.Filter",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 100
+          },
+          "skip": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "order": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "where": {
+            "title": "Region.WhereFilter",
+            "type": "object",
+            "additionalProperties": true
+          },
+          "fields": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "region_id": {
+                    "type": "boolean"
+                  },
+                  "region_name": {
+                    "type": "boolean"
+                  },
+                  "longitude": {
+                    "type": "boolean"
+                  },
+                  "latitude": {
+                    "type": "boolean"
+                  },
+                  "region_name_cn": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "region_id",
+                    "region_name",
+                    "longitude",
+                    "latitude",
+                    "region_name_cn"
+                  ],
+                  "example": "region_id"
+                },
+                "uniqueItems": true
+              }
+            ],
+            "title": "Region.Fields"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "@loopback/repository#Filter<Region>"
+      },
+      "Role.Filter": {
+        "type": "object",
+        "title": "Role.Filter",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 100
+          },
+          "skip": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "order": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "fields": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "role_id": {
+                    "type": "boolean"
+                  },
+                  "role_name": {
+                    "type": "boolean"
+                  },
+                  "home_page_auth": {
+                    "type": "boolean"
+                  },
+                  "report_page_auth": {
+                    "type": "boolean"
+                  },
+                  "auth_page_auth": {
+                    "type": "boolean"
+                  },
+                  "log_page_auth": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "boolean"
+                  },
+                  "is_super_admin": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "role_id",
+                    "role_name",
+                    "home_page_auth",
+                    "report_page_auth",
+                    "auth_page_auth",
+                    "log_page_auth",
+                    "description",
+                    "is_super_admin"
+                  ],
+                  "example": "role_id"
+                },
+                "uniqueItems": true
+              }
+            ],
+            "title": "Role.Fields"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "@loopback/repository#Filter<Role>"
+      },
+      "Role.Filter1": {
+        "type": "object",
+        "title": "Role.Filter",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 100
+          },
+          "skip": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "order": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "where": {
+            "title": "Role.WhereFilter",
+            "type": "object",
+            "additionalProperties": true
+          },
+          "fields": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "role_id": {
+                    "type": "boolean"
+                  },
+                  "role_name": {
+                    "type": "boolean"
+                  },
+                  "home_page_auth": {
+                    "type": "boolean"
+                  },
+                  "report_page_auth": {
+                    "type": "boolean"
+                  },
+                  "auth_page_auth": {
+                    "type": "boolean"
+                  },
+                  "log_page_auth": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "boolean"
+                  },
+                  "is_super_admin": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "role_id",
+                    "role_name",
+                    "home_page_auth",
+                    "report_page_auth",
+                    "auth_page_auth",
+                    "log_page_auth",
+                    "description",
+                    "is_super_admin"
+                  ],
+                  "example": "role_id"
+                },
+                "uniqueItems": true
+              }
+            ],
+            "title": "Role.Fields"
+          }
+        },
+        "additionalProperties": false,
+        "x-typescript-type": "@loopback/repository#Filter<Role>"
+      }
+    }
+  }
+}

@@ -39,6 +39,12 @@
           <span>操作日志</span>
         </a>
       </li>
+      <li nz-menu-item [nzSelected]="activeMenu === 'employees'" (click)="selectMenu('employees')">
+        <a routerLink="/default/employees">
+          <span nz-icon nzType="team"></span>
+          <span>员工管理</span>
+        </a>
+      </li>
       <li nz-menu-divider></li>
       <li nz-menu-item [nzSelected]="isAiPanelOpen" (click)="toggleAiPanel()">
         <span nz-icon nzType="message"></span>

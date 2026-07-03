@@ -88,6 +88,7 @@ export class DefaultComponent implements OnInit, OnDestroy {
   showPermMenu = false;
   showAuditLogMenu = false;
   permissionsLoaded = false;
+  showEmployeeMenu = true
 
   // AI 面板状态
   isAiPanelOpen = false;
